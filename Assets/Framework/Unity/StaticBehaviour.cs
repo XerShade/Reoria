@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using UnityEngine.SceneManagement;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Reoria.Framework.Unity
 {
@@ -9,25 +9,41 @@ namespace Reoria.Framework.Unity
     public class StaticBehaviour : MonoBehaviour
     {
         /// <summary>
-        /// Checks to see if the object has already been set to DontDestroyOnLoad.
+        /// A collection of names of all game objects currently loaded using this script.
         /// </summary>
-        [SerializeField]
-        private bool dontDestroyOnLoad;
+        private static readonly List<string> staticObjects = new List<string>();
 
         /// <summary>
         /// Called when the object is first created.
         /// </summary>
         void Awake()
         {
-            // Check to see if DontDestroyOnLoad is set yet.
-            if (!dontDestroyOnLoad)
+            // Check to see if the object has already been loaded.
+            if (!staticObjects.Contains(gameObject.name))
             {
+                // Add the object to the collection.
+                staticObjects.Add(gameObject.name);
+
                 // Set the object to DontDestroyOnLoad so we can keep it between scenes.
                 DontDestroyOnLoad(gameObject);
-                dontDestroyOnLoad = true;
+            }
+            else
+            {
+                // Woah there, this object is already loaded. This violates the whole static concept.
+                Destroy(gameObject);
+            }
+        }
 
-                // Move it back to the _GameEngine scene, this is the only place static object should exist.
-                SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetSceneByName("_GameEngine"));
+        /// <summary>
+        /// Called when the object is destroyed.
+        /// </summary>
+        private void OnDestroy()
+        {
+            // Check to see if the object has been loaded.
+            if (!staticObjects.Contains(gameObject.name))
+            {
+                // Remove the object from the collection.
+                staticObjects.Remove(gameObject.name);
             }
         }
     }
