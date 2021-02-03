@@ -1,7 +1,8 @@
 ﻿using Reoria.Framework.Objects;
 using UnityEngine;
+using Mirror;
 
-public class DebugScript : MonoBehaviour
+public class DebugScript : NetworkBehaviour
 {
     [SerializeField]
     private float timer = 0f;
@@ -12,7 +13,9 @@ public class DebugScript : MonoBehaviour
     {
         gameObject.transform.position = new Vector3(Random.Range(-5f, 5f), Random.Range(-5f, 5f), gameObject.transform.position.z);
         nextTimer = Random.Range(3f, 7f);
-        MainCamera.Instance.Target = gameObject;
+		
+		if(isLocalPlayer)
+			MainCamera.Instance.Target = gameObject;
     }
     
     // Update is called once per frame
