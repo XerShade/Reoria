@@ -1,35 +1,22 @@
-﻿using UnityEngine;
+using Reoria.Framework;
+using UnityEngine;
 
 namespace Reoria.Framework.Objects
 {
     /// <summary>
-    /// Main camera controller script, controls the main camera object.
+    /// <see cref="CameraController"/> script, controls basic camera functions for most cameras.
     /// </summary>
-    public class MainCamera : MonoBehaviour
+    public class CameraController : MonoBehaviour
     {
         /// <summary>
-        /// Defines the <see cref="MainCamera"/> script instance.
-        /// </summary>
-        private static MainCamera instance;
-        /// <summary>
-        /// Defines the <see cref="MainCamera"/> script instance.
-        /// </summary>
-        public static MainCamera Instance { get { return instance; } }
-
-        /// <summary>
-        /// Defines the main <see cref="UnityEngine.Camera"/> instance.
+        /// Defines the <see cref="UnityEngine.Camera"/> instance this script is attached too.
         /// </summary>
         [SerializeField]
         private new Camera camera;
         /// <summary>
-        /// Defines the main <see cref="UnityEngine.Camera"/> instance.
+        /// Defines the <see cref="UnityEngine.Camera"/> instance this script is attached too.
         /// </summary>
         public Camera Camera => camera;
-
-        /// <summary>
-        /// Defines the <see cref="GameObject"/> the <see cref="Camera"/> is currently tracking.
-        /// </summary>
-        public GameObject Target;
 
         /// <summary>
         /// Defines the target game window resolution.
@@ -79,33 +66,17 @@ namespace Reoria.Framework.Objects
         /// </summary>
         public float ScaleAspectRatio { get { return scaleAspectRatio; } }
 
-        /// <summary>
-        /// Called when the object is first created.
-        /// </summary>
+        // Start is called before the first frame update
         void Awake()
         {
-            // Check to see if we already have an instance.
-            if (Instance != null)
-            {
-                // Write out to the log so they user knows something else tried to make a main camera.
-                Debug.LogWarning($"{gameObject.name} is attempting to create a main camera instance while one is already created and running on {Instance.gameObject.name}. " +
-                    $"The old camera will be destroyed and the script will be stopped so the new object and script can function.");
+            // Get the camera object for reference later.
+            camera = gameObject.GetComponent<Camera>();
 
-                // We do, destroy the old one.
-                Destroy(Instance.gameObject);
-                instance = null;
-            }
-
-            // Set the script instance reference to this instance.
-            instance = this;
-
-            // Cache the main camera instance, Camera.main is slow.
-            camera = Camera.main;
+            // Setup some common properties for the camera that the script needs set.
+            camera.orthographic = true;
         }
 
-        /// <summary>
-        /// Called when the object is updated.
-        /// </summary>
+        // Update is called once per frame
         void Update()
         {
             // Check to see if the client has been resized since we last calculated the view.
@@ -154,33 +125,6 @@ namespace Reoria.Framework.Objects
                     camera.rect = rect;
                 }
             }
-
-            // Calculate the position we want to move the camera to.
-            Vector3 targetPosition = (Target != null) ? new Vector3(Target.transform.position.x, Target.transform.position.y, -10) : (Vector3.back * 10);
-
-            // Adjust the camera's position.
-            camera.transform.position = Vector3.Lerp(camera.transform.position, targetPosition, Time.deltaTime);
-
-            // Check to see if we are within the lerp deadzone vertically.
-            if ((camera.transform.position.y - targetPosition.y < 0f) && (camera.transform.position.y - targetPosition.y > Constants.LERP_SNAP * -0.1f))
-                camera.transform.position = new Vector3(camera.transform.position.x, targetPosition.y, camera.transform.position.z);
-            if ((camera.transform.position.y - targetPosition.y > 0f) && (camera.transform.position.y - targetPosition.y < Constants.LERP_SNAP * 0.1f))
-                camera.transform.position = new Vector3(camera.transform.position.x, targetPosition.y, camera.transform.position.z);
-
-            // Check to see if we are within the lerp deadzone horizontally.
-            if ((camera.transform.position.x - targetPosition.x > 0f) && (camera.transform.position.x - targetPosition.x < Constants.LERP_SNAP * 0.1f))
-                camera.transform.position = new Vector3(targetPosition.x, camera.transform.position.y, camera.transform.position.z);
-            if ((camera.transform.position.x - targetPosition.x < 0f) && (camera.transform.position.x - targetPosition.x > Constants.LERP_SNAP * -0.1f))
-                camera.transform.position = new Vector3(targetPosition.x, camera.transform.position.y, camera.transform.position.z);
-        }
-
-        /// <summary>
-        /// Called when the object is destroyed.
-        /// </summary>
-        private void OnDestroy()
-        {
-            // Remove the script instance reference.
-            instance = null;
         }
     }
 }

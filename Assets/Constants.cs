@@ -28,6 +28,11 @@
             /// Defines the target camera resolution height.
             /// </summary>
             public const float TARGET_RESOLUTION_HEIGHT = 1080f;
+
+            /// <summary>
+            /// Defines the Z position value that cameras should be positioned at.
+            /// </summary>
+            public const float CAMERA_Z_POSITION = -10f;
         }
     }
 }
