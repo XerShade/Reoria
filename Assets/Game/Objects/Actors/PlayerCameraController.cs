@@ -19,16 +19,33 @@ namespace Reoria.Game.Objects.Actors
         private new Camera camera;
 
         /// <summary>
+        /// The <see cref="CameraController"/> script instance the camera is using.
+        /// </summary>
+        private CameraController controller;
+        /// <summary>
+        /// The <see cref="CameraController"/> script instance the camera is using.
+        /// </summary>
+        public CameraController Controller { get { return controller; } }
+
+        /// <summary>
         /// The target that the camera is currently tracking.
         /// </summary>
         [SerializeField]
         private GameObject target;
+        /// <summary>
+        /// The target that the camera is currently tracking.
+        /// </summary>
+        public GameObject Target { get { return target; } }
 
         /// <summary>
         /// The target position that the camera is tracking. <see cref="target"/> must be set to null to use a raw vector.
         /// </summary>
         [SerializeField]
         private Vector3 targetPosition;
+        /// <summary>
+        /// The target position that the camera is tracking. <see cref="target"/> must be set to null to use a raw vector.
+        /// </summary>
+        public Vector3 TargetPosition { get { return targetPosition; } }
 
         /// <summary>
         /// Called when the script is created.
@@ -50,12 +67,30 @@ namespace Reoria.Game.Objects.Actors
                 cameraMount.tag = "MainCamera";
             }
 
-            // Create a reference to the camera component.
+            // Create references to the camera components.
             camera = cameraMount.GetComponent<Camera>();
+            controller = cameraMount.GetComponent<CameraController>();
 
             // Now setup the camera on the server so it can track and control it if needed.
             NetworkServer.Spawn(cameraMount, gameObject);
             CmdSetTarget(gameObject);
+        }
+
+        /// <summary>
+        /// Called when hte script is destroyed.
+        /// </summary>
+        private void OnDestroy()
+        {
+            // Check to see if the camera mount has been destroyed.
+            if(cameraMount != null)
+            {
+                // Remove script and component references.
+                camera = null;
+                controller = null;
+
+                // Tell the server to delete the camera from all other clients.
+                NetworkServer.Destroy(cameraMount);
+            }
         }
 
         /// <summary>

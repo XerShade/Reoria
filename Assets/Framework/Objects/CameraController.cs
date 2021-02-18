@@ -13,10 +13,6 @@ namespace Reoria.Framework.Objects
         /// </summary>
         [SerializeField]
         private new Camera camera;
-        /// <summary>
-        /// Defines the <see cref="UnityEngine.Camera"/> instance this script is attached too.
-        /// </summary>
-        public Camera Camera => camera;
 
         /// <summary>
         /// Defines the target game window resolution.
