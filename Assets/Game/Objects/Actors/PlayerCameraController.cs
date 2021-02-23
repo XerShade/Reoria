@@ -52,28 +52,32 @@ namespace Reoria.Game.Objects.Actors
         /// </summary>
         void Start()
         {
-            // Create the camera game object.
-            cameraMount = new GameObject("Camera", new System.Type[] { typeof(NetworkIdentity), typeof(Camera), typeof(CameraController) });
-            cameraMount.transform.parent = gameObject.transform;
-            cameraMount.transform.position = new Vector3(0, 0, -10);
-
-            // Check to see if the player being spawned is the local client.
-            if (isLocalPlayer)
+            // Check to see if the player being spawned is the local client or a Unity editor.
+            if (isLocalPlayer || Application.isEditor)
             {
-                // Assign components only the local client needs.
-                cameraMount.AddComponent<AudioListener>();
+                // Create the camera game object.
+                cameraMount = new GameObject("Camera", new System.Type[] { typeof(NetworkIdentity), typeof(Camera), typeof(CameraController) });
+                cameraMount.transform.parent = gameObject.transform;
+                cameraMount.transform.position = new Vector3(0, 0, -10);
 
-                // Assign local variables to the camera.
-                cameraMount.tag = "MainCamera";
+                // We only want these on the local client, just in case we're in Unity.
+                if (isLocalPlayer)
+                {
+                    // Assign components only the local client needs.
+                    cameraMount.AddComponent<AudioListener>();
+
+                    // Assign local variables to the camera.
+                    cameraMount.tag = "MainCamera";
+                }
+
+                // Create references to the camera components.
+                camera = cameraMount.GetComponent<Camera>();
+                controller = cameraMount.GetComponent<CameraController>();
+
+                // Now setup the camera on the server so it can track and control it if needed.
+                NetworkServer.Spawn(cameraMount, gameObject);
+                CmdSetTarget(gameObject);
             }
-
-            // Create references to the camera components.
-            camera = cameraMount.GetComponent<Camera>();
-            controller = cameraMount.GetComponent<CameraController>();
-
-            // Now setup the camera on the server so it can track and control it if needed.
-            NetworkServer.Spawn(cameraMount, gameObject);
-            CmdSetTarget(gameObject);
         }
 
         /// <summary>
@@ -82,7 +86,7 @@ namespace Reoria.Game.Objects.Actors
         private void OnDestroy()
         {
             // Check to see if the camera mount has been destroyed.
-            if(cameraMount != null)
+            if (cameraMount != null)
             {
                 // Remove script and component references.
                 camera = null;
@@ -99,7 +103,7 @@ namespace Reoria.Game.Objects.Actors
         void Update()
         {
             // Check to see if we have an attached camera component.
-            if(camera != null)
+            if (camera != null)
             {
                 // Check to see if we are tracking a target, and if so update the position stored on the script.
                 targetPosition = (target != null) ? new Vector3(target.transform.position.x, target.transform.position.y, Constants.Camera.CAMERA_Z_POSITION) : targetPosition;
@@ -129,11 +133,15 @@ namespace Reoria.Game.Objects.Actors
         [Command]
         public void CmdSetTarget(GameObject target)
         {
-            // Update the target the camera is tracking.
-            this.target = target;
+            // Check to see if we have an attached camera component.
+            if (camera != null)
+            {
+                // Update the target the camera is tracking.
+                this.target = target;
 
-            // Update the target position, and if we have no targets move the camera back to 0,0.
-            targetPosition = (target != null) ? new Vector3(target.transform.position.x, target.transform.position.y, Constants.Camera.CAMERA_Z_POSITION) : Vector3.forward * Constants.Camera.CAMERA_Z_POSITION;
+                // Update the target position, and if we have no targets move the camera back to 0,0.
+                targetPosition = (target != null) ? new Vector3(target.transform.position.x, target.transform.position.y, Constants.Camera.CAMERA_Z_POSITION) : Vector3.forward * Constants.Camera.CAMERA_Z_POSITION;
+            }
         }
 
         /// <summary>
@@ -144,11 +152,15 @@ namespace Reoria.Game.Objects.Actors
         [Command]
         public void CmdSetTargetPosition(Vector3 targetPosition)
         {
-            // We are no longer tracking a specific target.
-            target = null;
+            // Check to see if we have an attached camera component.
+            if (camera != null)
+            {
+                // We are no longer tracking a specific target.
+                target = null;
 
-            // Update the target position manually.
-            this.targetPosition = new Vector3(targetPosition.x, targetPosition.y, Constants.Camera.CAMERA_Z_POSITION);
+                // Update the target position manually.
+                this.targetPosition = new Vector3(targetPosition.x, targetPosition.y, Constants.Camera.CAMERA_Z_POSITION);
+            }
         }
     }
 }
