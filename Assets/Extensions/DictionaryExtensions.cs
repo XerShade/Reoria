@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Reoria.Framework.Extensions
+namespace Reoria.Extensions
 {
     /// <summary>
     /// Defines extensions for the <see cref="Dictionary{TKey, TValue}"/> class.

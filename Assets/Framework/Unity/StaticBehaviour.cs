@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Reoria.Framework.Extensions;
+using Reoria.Extensions;
 using UnityEngine;
 
 namespace Reoria.Framework.Unity

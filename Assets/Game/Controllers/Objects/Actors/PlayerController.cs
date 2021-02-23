@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Reoria.Game.Objects.Actors
+namespace Reoria.Game.Controllers.Objects.Actors
 {
     [RequireComponent(typeof(ActorController))]
     public class PlayerController : NetworkBehaviour

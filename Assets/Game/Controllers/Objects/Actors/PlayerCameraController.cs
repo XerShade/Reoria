@@ -1,9 +1,8 @@
 using Mirror;
-using Reoria.Framework;
-using Reoria.Framework.Objects;
+using Reoria.Framework.Controllers.Objects;
 using UnityEngine;
 
-namespace Reoria.Game.Objects.Actors
+namespace Reoria.Game.Controllers.Objects.Actors
 {
     public class PlayerCameraController : NetworkBehaviour
     {

@@ -1,4 +1,4 @@
-﻿namespace Reoria.Framework
+﻿namespace Reoria
 {
     /// <summary>
     /// Defines constants used by scripts.

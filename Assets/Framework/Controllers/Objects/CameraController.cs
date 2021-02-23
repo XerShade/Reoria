@@ -1,7 +1,6 @@
-using Reoria.Framework;
 using UnityEngine;
 
-namespace Reoria.Framework.Objects
+namespace Reoria.Framework.Controllers.Objects
 {
     /// <summary>
     /// <see cref="CameraController"/> script, controls basic camera functions for most cameras.
