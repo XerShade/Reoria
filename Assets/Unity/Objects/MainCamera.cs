@@ -1,8 +1,8 @@
 using UnityEngine;
 using System;
-using Reoria.Framework.Controllers.Objects;
+using Reoria.Controllers.Objects;
 
-namespace Reoria.Framework.Unity.Objects
+namespace Reoria.Unity.Objects
 {
     /// <summary>
     /// <see cref="MainCamera"/> script, creates and maintains the main camera object.

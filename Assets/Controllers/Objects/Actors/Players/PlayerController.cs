@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Reoria.Game.Controllers.Objects.Actors.Players
+namespace Reoria.Controllers.Objects.Actors.Players
 {
     public class PlayerController : ActorController
     {

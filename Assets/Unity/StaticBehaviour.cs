@@ -2,7 +2,7 @@
 using Reoria.Extensions;
 using UnityEngine;
 
-namespace Reoria.Framework.Unity
+namespace Reoria.Unity
 {
     /// <summary>
     /// Changes a <see cref="UnityEngine.GameObject"/> to be static and remain loaded between scene changes.

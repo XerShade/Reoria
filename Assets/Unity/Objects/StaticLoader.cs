@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Reoria.Framework.Unity.Objects
+namespace Reoria.Unity.Objects
 {
     /// <summary>
     /// Static loader script, loads static objects for the game's use.

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Reoria.Game.Controllers.Objects.Actors
+namespace Reoria.Controllers.Objects.Actors
 {
     public class ActorController : NetworkBehaviour
     {
