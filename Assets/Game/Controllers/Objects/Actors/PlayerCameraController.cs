@@ -1,9 +1,14 @@
 using Mirror;
 using Reoria.Framework.Controllers.Objects;
+using Reoria.Framework.Unity.Objects;
+using System;
 using UnityEngine;
 
 namespace Reoria.Game.Controllers.Objects.Actors
 {
+    /// <summary>
+    /// <see cref="PlayerCameraController"/> script, creates and maintains a camera object on each player.
+    /// </summary>
     public class PlayerCameraController : NetworkBehaviour
     {
         /// <summary>
@@ -16,6 +21,11 @@ namespace Reoria.Game.Controllers.Objects.Actors
         /// </summary>
         [SerializeField]
         private new Camera camera;
+        /// <summary>
+        /// The <see cref="NetworkIdentity"/> component instance reference.
+        /// </summary>
+        [SerializeField]
+        private NetworkIdentity identity;
 
         /// <summary>
         /// The <see cref="CameraController"/> script instance the camera is using.
@@ -40,7 +50,7 @@ namespace Reoria.Game.Controllers.Objects.Actors
         /// The target position that the camera is tracking. <see cref="target"/> must be set to null to use a raw vector.
         /// </summary>
         [SerializeField]
-        private Vector3 targetPosition;
+        private Vector3 targetPosition = new Vector3(0, 0, Constants.Camera.CAMERA_Z_POSITION);
         /// <summary>
         /// The target position that the camera is tracking. <see cref="target"/> must be set to null to use a raw vector.
         /// </summary>
@@ -52,26 +62,32 @@ namespace Reoria.Game.Controllers.Objects.Actors
         void Start()
         {
             // Check to see if the player being spawned is the local client or a Unity editor.
-            if (isLocalPlayer || Application.isEditor)
+            if (isLocalPlayer || isServer || Application.isEditor)
             {
                 // Create the camera game object.
-                cameraMount = new GameObject("Camera", new System.Type[] { typeof(NetworkIdentity), typeof(Camera), typeof(CameraController) });
+                cameraMount = new GameObject("Camera", new Type[] { typeof(NetworkIdentity), typeof(Camera), typeof(CameraController) });
                 cameraMount.transform.parent = gameObject.transform;
-                cameraMount.transform.position = new Vector3(0, 0, -10);
-
-                // We only want these on the local client, just in case we're in Unity.
-                if (isLocalPlayer)
-                {
-                    // Assign components only the local client needs.
-                    cameraMount.AddComponent<AudioListener>();
-
-                    // Assign local variables to the camera.
-                    cameraMount.tag = "MainCamera";
-                }
+                cameraMount.transform.position = new Vector3(0, 0, Constants.Camera.CAMERA_Z_POSITION);
 
                 // Create references to the camera components.
                 camera = cameraMount.GetComponent<Camera>();
                 controller = cameraMount.GetComponent<CameraController>();
+                identity = cameraMount.GetComponent<NetworkIdentity>();
+
+                // Setup components for use.
+                camera.enabled = false;
+                identity.serverOnly = false;
+                identity.AssignClientAuthority(gameObject.GetComponent<NetworkIdentity>().connectionToClient);
+
+                // Check to see if this is the local player.
+                if (isLocalPlayer)
+                {
+                    // If in the editor we want to know who we are.
+                    gameObject.name += " (Local Player)";
+
+                    // Mount the main camera on this one.
+                    MainCamera.Mount(cameraMount);
+                }
 
                 // Now setup the camera on the server so it can track and control it if needed.
                 NetworkServer.Spawn(cameraMount, gameObject);
@@ -91,6 +107,13 @@ namespace Reoria.Game.Controllers.Objects.Actors
                 camera = null;
                 controller = null;
 
+                // Check to see if this is the local player.
+                if (isLocalPlayer)
+                {
+                    // Unmount the main camera from this one.
+                    MainCamera.Mount(null);
+                }
+
                 // Tell the server to delete the camera from all other clients.
                 NetworkServer.Destroy(cameraMount);
             }
@@ -108,19 +131,7 @@ namespace Reoria.Game.Controllers.Objects.Actors
                 targetPosition = (target != null) ? new Vector3(target.transform.position.x, target.transform.position.y, Constants.Camera.CAMERA_Z_POSITION) : targetPosition;
 
                 // Adjust the camera's position.
-                camera.transform.position = Vector3.Lerp(camera.transform.position, targetPosition, Time.deltaTime);
-
-                // Check to see if we are within the lerp deadzone vertically.
-                if ((camera.transform.position.y - targetPosition.y < 0f) && (camera.transform.position.y - targetPosition.y > Constants.LERP_SNAP * -0.1f))
-                    camera.transform.position = new Vector3(camera.transform.position.x, targetPosition.y, camera.transform.position.z);
-                if ((camera.transform.position.y - targetPosition.y > 0f) && (camera.transform.position.y - targetPosition.y < Constants.LERP_SNAP * 0.1f))
-                    camera.transform.position = new Vector3(camera.transform.position.x, targetPosition.y, camera.transform.position.z);
-
-                // Check to see if we are within the lerp deadzone horizontally.
-                if ((camera.transform.position.x - targetPosition.x > 0f) && (camera.transform.position.x - targetPosition.x < Constants.LERP_SNAP * 0.1f))
-                    camera.transform.position = new Vector3(targetPosition.x, camera.transform.position.y, camera.transform.position.z);
-                if ((camera.transform.position.x - targetPosition.x < 0f) && (camera.transform.position.x - targetPosition.x > Constants.LERP_SNAP * -0.1f))
-                    camera.transform.position = new Vector3(targetPosition.x, camera.transform.position.y, camera.transform.position.z);
+                camera.transform.position = targetPosition;
             }
         }
 
@@ -139,7 +150,10 @@ namespace Reoria.Game.Controllers.Objects.Actors
                 this.target = target;
 
                 // Update the target position, and if we have no targets move the camera back to 0,0.
-                targetPosition = (target != null) ? new Vector3(target.transform.position.x, target.transform.position.y, Constants.Camera.CAMERA_Z_POSITION) : Vector3.forward * Constants.Camera.CAMERA_Z_POSITION;
+                targetPosition = (target != null) ? new Vector3(target.transform.position.x, target.transform.position.y, Constants.Camera.CAMERA_Z_POSITION) : new Vector3(0, 0, Constants.Camera.CAMERA_Z_POSITION);
+
+                // Update the target position on the clients.
+                RpcUpdateCameraTarget(target, targetPosition);
             }
         }
 
@@ -159,7 +173,23 @@ namespace Reoria.Game.Controllers.Objects.Actors
 
                 // Update the target position manually.
                 this.targetPosition = new Vector3(targetPosition.x, targetPosition.y, Constants.Camera.CAMERA_Z_POSITION);
+
+                // Update the target position on the clients.
+                RpcUpdateCameraTarget(target, targetPosition);
             }
+        }
+
+        /// <summary>
+        /// Updates the camera target position values on all clients.
+        /// </summary>
+        /// <param name="target">The new target to track.</param>
+        /// <param name="targetPosition">The new target position to track.</param>
+        [ClientRpc]
+        private void RpcUpdateCameraTarget(GameObject target, Vector3 targetPosition)
+        {
+            // Update the properties on the client.
+            this.target = target;
+            this.targetPosition = targetPosition;
         }
     }
 }

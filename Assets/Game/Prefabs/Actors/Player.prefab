@@ -115,6 +115,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da7543af9f03f61479d1501facee28af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
 --- !u!114 &7589189243623454556
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -127,6 +129,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 68852b8837c41ce4e9abb720aac9dd6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0
+  tick: 0
+  target: 0
 --- !u!114 &4552759601825286908
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -136,6 +142,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 8058956127332939834}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d4a8c784852e6254aa97426224d46a0c, type: 3}
+  m_Script: {fileID: 11500000, guid: e12c7b056f0676e4dbb35ccaa1fc9392, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
+  cameraMount: {fileID: 0}
+  camera: {fileID: 0}
+  identity: {fileID: 0}
+  target: {fileID: 0}
+  targetPosition: {x: 0, y: 0, z: 0}

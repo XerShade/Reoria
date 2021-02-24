@@ -21,7 +21,7 @@ namespace Reoria.Game.Controllers.Objects.Actors
             {
                 tick += Time.deltaTime;
 
-                if (tick > 10f)
+                if (tick > 5f)
                 {
                     target = Random.Range(0f, 2f);
 
