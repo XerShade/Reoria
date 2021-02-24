@@ -3,10 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Reoria.Game.Controllers.Objects.Actors
+namespace Reoria.Game.Controllers.Objects.Actors.Players
 {
-    [RequireComponent(typeof(ActorController))]
-    public class PlayerController : NetworkBehaviour
+    public class PlayerController : ActorController
     {
         [SerializeField]
         float tick;

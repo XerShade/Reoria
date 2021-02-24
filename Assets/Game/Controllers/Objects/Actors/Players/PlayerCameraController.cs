@@ -4,7 +4,7 @@ using Reoria.Framework.Unity.Objects;
 using System;
 using UnityEngine;
 
-namespace Reoria.Game.Controllers.Objects.Actors
+namespace Reoria.Game.Controllers.Objects.Actors.Players
 {
     /// <summary>
     /// <see cref="PlayerCameraController"/> script, creates and maintains a camera object on each player.
