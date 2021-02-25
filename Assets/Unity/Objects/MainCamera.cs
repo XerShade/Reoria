@@ -1,6 +1,7 @@
-using UnityEngine;
-using System;
+using Reoria.Behaviours;
 using Reoria.Controllers.Objects;
+using System;
+using UnityEngine;
 
 namespace Reoria.Unity.Objects
 {
