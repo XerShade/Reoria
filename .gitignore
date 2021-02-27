@@ -11,7 +11,7 @@
 /[Mm]emoryCaptures/
 
 # Do not commit resources, those are kept in a private repository.
-/[Rr]esources/
+/[Aa]ssets/[Rr]esources/
 
 # Never ignore Asset meta data
 !/[Aa]ssets/**/*.meta
@@ -60,4 +60,3 @@ sysinfo.txt
 
 # Crashlytics generated file
 crashlytics-build.properties
-
