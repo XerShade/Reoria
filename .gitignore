@@ -10,6 +10,9 @@
 /[Ll]ogs/
 /[Mm]emoryCaptures/
 
+# Do not commit resources, those are kept in a private repository.
+/[Rr]esources/
+
 # Never ignore Asset meta data
 !/[Aa]ssets/**/*.meta
 
