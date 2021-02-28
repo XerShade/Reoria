@@ -67,7 +67,7 @@ namespace Reoria.Unity.Objects
         void Start()
         {
             // Set default properties.
-            instance.transform.position = new Vector3(0, 0, Constants.Camera.CAMERA_Z_POSITION);
+            instance.transform.position = new Vector3(Constants.Camera.CAMERA_X_POSITION, Constants.Camera.CAMERA_Y_POSITION, Constants.Camera.CAMERA_Z_POSITION);
             instance.tag = "MainCamera";
 
             // Create references to the camera components.
@@ -85,7 +85,7 @@ namespace Reoria.Unity.Objects
             {
                 // Check to see if we are tracking a target, and if so update the position stored on the script.
                 var targetPosition = (mountPoint != null) ? new Vector3(mountPoint.transform.position.x, mountPoint.transform.position.y, Constants.Camera.CAMERA_Z_POSITION) :
-                    new Vector3(0, 0, Constants.Camera.CAMERA_Z_POSITION);
+                    new Vector3(Constants.Camera.CAMERA_X_POSITION, Constants.Camera.CAMERA_Y_POSITION, Constants.Camera.CAMERA_Z_POSITION);
 
                 // Adjust the camera's position.
                 camera.transform.position = Vector3.Lerp(camera.transform.position, targetPosition, Time.deltaTime);

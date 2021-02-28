@@ -8,7 +8,7 @@
         /// <summary>
         /// Defines the number of pixels per unity unit.
         /// </summary>
-        public const int PIXELS_PER_UNIT = 32;
+        public const int PIXELS_PER_UNIT = 48;
 
         /// <summary>
         /// Defines the range (dead zone) at which lerp values should snap to the target value.
@@ -30,7 +30,15 @@
             public const float TARGET_RESOLUTION_HEIGHT = 1080f;
 
             /// <summary>
-            /// Defines the Z position value that cameras should be positioned at.
+            /// Defines the default X position value that cameras should be positioned at.
+            /// </summary>
+            public const float CAMERA_X_POSITION = 0f;
+            /// <summary>
+            /// Defines the default Y position value that cameras should be positioned at.
+            /// </summary>
+            public const float CAMERA_Y_POSITION = 0f;
+            /// <summary>
+            /// Defines the default Z position value that cameras should be positioned at.
             /// </summary>
             public const float CAMERA_Z_POSITION = -10f;
         }
