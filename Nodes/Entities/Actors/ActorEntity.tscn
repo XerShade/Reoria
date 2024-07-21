@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3 uid="uid://ckjwqu7e45gx1"]
+
+[ext_resource type="PackedScene" uid="uid://drc1pgap3flvm" path="res://Nodes/Entities/KinematicEntity.tscn" id="1_dfphf"]
+[ext_resource type="Script" path="res://Nodes/Entities/Actors/ActorEntity.cs" id="2_23ocr"]
+
+[node name="ActorEntity" instance=ExtResource("1_dfphf")]
+script = ExtResource("2_23ocr")
