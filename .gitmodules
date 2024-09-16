@@ -1,3 +1,3 @@
 [submodule "Assets"]
-	path = Assets
+	path = source/Reoria.Godot/Assets
 	url = https://github.com/XerShade/Reoria.Assets
