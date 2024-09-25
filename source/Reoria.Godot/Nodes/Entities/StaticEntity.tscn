@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cdat5pj232mkt"]
 
-[ext_resource type="Script" path="res://Nodes/Entities/StaticEntity.cs" id="1_qecvq"]
+[ext_resource type="Script" path="res://Source/Nodes/Entities/StaticEntity.cs" id="1_qecvq"]
 
 [node name="StaticEntity" type="StaticBody2D"]
 script = ExtResource("1_qecvq")

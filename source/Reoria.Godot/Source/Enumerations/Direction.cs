@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Reoria.Game.Enumerations;
+namespace Reoria.Godot.Source.Enumerations;
 
 /// <summary>
 /// Represents directional flags for movement or facing in a 2D space.

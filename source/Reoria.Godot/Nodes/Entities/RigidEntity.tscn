@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://n5ykbxv3r3ht"]
 
-[ext_resource type="Script" path="res://Nodes/Entities/RigidEntity.cs" id="1_ax3hi"]
+[ext_resource type="Script" path="res://Source/Nodes/Entities/RigidEntity.cs" id="1_ax3hi"]
 
 [node name="RigidEntity" type="RigidBody2D"]
 script = ExtResource("1_ax3hi")

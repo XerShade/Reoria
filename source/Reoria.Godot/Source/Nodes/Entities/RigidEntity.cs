@@ -1,6 +1,6 @@
 ﻿using Godot;
 
-namespace Reoria.Nodes.Entities;
+namespace Reoria.Godot.Source.Nodes.Entities;
 
 public partial class RigidEntity : RigidBody2D
 {
