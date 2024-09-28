@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://drc1pgap3flvm"]
-
-[ext_resource type="Script" path="res://Source/Nodes/Entities/KinematicEntity.cs" id="1_ht6jl"]
-
-[node name="KinematicEntity" type="CharacterBody2D"]
-script = ExtResource("1_ht6jl")
