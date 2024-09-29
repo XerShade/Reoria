@@ -1,2 +1,5 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+﻿using Reoria.Engine.Interfaces;
+using Reoria.Client.Engine;
+
+IEngineThread clientThread = new ClientThread();
+clientThread.Start();
