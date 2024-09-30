@@ -1,7 +1,6 @@
 ﻿using Reoria.Engine;
 using Reoria.Game.Data;
 using SFML.Graphics;
-using SFML.System;
 using SFML.Window;
 
 namespace Reoria.Client.Engine;

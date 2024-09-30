@@ -3,8 +3,8 @@ using LiteNetLib.Utils;
 using Reoria.Engine.Networking;
 using Reoria.Game.Data;
 using SFML.System;
-using System.Net.Sockets;
 using System.Net;
+using System.Net.Sockets;
 
 namespace Reoria.Client.Engine;
 

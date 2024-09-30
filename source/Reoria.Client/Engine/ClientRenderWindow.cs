@@ -1,9 +1,7 @@
-﻿using Reoria.Engine.Interfaces;
-using Reoria.Game.Data;
+﻿using Reoria.Game.Data;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
-using System.Numerics;
 
 namespace Reoria.Client.Engine;
 public class ClientRenderWindow : RenderWindow

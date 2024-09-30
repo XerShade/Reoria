@@ -1,5 +1,5 @@
-﻿using System.Diagnostics;
-using Reoria.Engine.Interfaces;
+﻿using Reoria.Engine.Interfaces;
+using System.Diagnostics;
 
 namespace Reoria.Engine;
 
