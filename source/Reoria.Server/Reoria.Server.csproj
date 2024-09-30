@@ -10,10 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="LiteNetLib" Version="1.2.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Reoria.Game\Reoria.Game.csproj" />
     <ProjectReference Include="..\Reoria\Reoria.csproj" />
   </ItemGroup>
 
