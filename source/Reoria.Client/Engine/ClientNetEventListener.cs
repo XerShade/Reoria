@@ -4,15 +4,16 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Reoria.Engine.Networking;
 using Reoria.Game.Data;
+using Reoria.Game.State.Interfaces;
 using SFML.System;
 using System.Net;
 using System.Net.Sockets;
 
 namespace Reoria.Client.Engine;
 
-public class ClientNetEventListener(ClientShared shared, ILogger<EngineNetEventListener> logger, IConfigurationRoot configuration) : EngineNetEventListener(logger, configuration)
+public class ClientNetEventListener(IGameState gameState, ILogger<EngineNetEventListener> logger, IConfigurationRoot configuration) : EngineNetEventListener(logger, configuration)
 {
-    private readonly ClientShared shared = shared;
+    private readonly IGameState gameState = gameState;
     private NetPeer? serverPeer = null;
 
     public virtual void Start()
@@ -59,7 +60,7 @@ public class ClientNetEventListener(ClientShared shared, ILogger<EngineNetEventL
         base.OnNetworkReceive(peer, reader, channelNumber, deliveryMethod);
     }
 
-    private void HandleMyId(NetPacketReader reader) => this.shared.LocalPlayerId = reader.GetInt();
+    private void HandleMyId(NetPacketReader reader) => this.gameState.LocalPlayerId = reader.GetInt();
 
     private void HandleExistingPlayers(NetPacketReader reader)
     {
@@ -72,7 +73,7 @@ public class ClientNetEventListener(ClientShared shared, ILogger<EngineNetEventL
                 X = reader.GetFloat(),
                 Y = reader.GetFloat()
             };
-            this.shared.Players.Add(player.Id, player);
+            this.gameState.Players.Add(player);
         }
     }
 
@@ -83,26 +84,33 @@ public class ClientNetEventListener(ClientShared shared, ILogger<EngineNetEventL
             X = reader.GetFloat(),
             Y = reader.GetFloat()
         };
-        this.shared.Players.Add(player.Id, player);
+        this.gameState.Players.Add(player);
     }
 
     private void HandlePlayerLeft(NetPacketReader reader)
     {
         int playerId = reader.GetInt();
+        Player? player = (from p in this.gameState.Players
+                          where p.Id.Equals(playerId)
+                          select p as Player).FirstOrDefault();
 
-        if (this.shared.Players.ContainsKey(playerId))
+        if (player is not null)
         {
-            _ = this.shared.Players.Remove(playerId);
+            _ = this.gameState.Players.Remove(player);
         }
     }
 
     private void HandlePlayerPosition(NetPacketReader reader)
     {
         int playerId = reader.GetInt();
-        if (this.shared.Players.TryGetValue(playerId, out Player? value))
+        Player? player = (from p in this.gameState.Players
+                          where p.Id.Equals(playerId)
+                          select p as Player).FirstOrDefault();
+
+        if (player is not null)
         {
-            value.X = reader.GetFloat();
-            value.Y = reader.GetFloat();
+            player.X = reader.GetFloat();
+            player.Y = reader.GetFloat();
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using Reoria.Game.Data;
+using Reoria.Game.State.Interfaces;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -7,10 +8,12 @@ namespace Reoria.Client.Engine;
 
 public class ClientRenderWindow : RenderWindow
 {
+    private readonly IGameState gameState;
     private readonly ClientNetEventListener network;
 
-    public ClientRenderWindow(ClientNetEventListener network) : base(new VideoMode(1280, 720), "Reoria")
+    public ClientRenderWindow(IGameState gameState, ClientNetEventListener network) : base(new VideoMode(1280, 720), "Reoria")
     {
+        this.gameState = gameState;
         this.network = network;
         this.SetupRenderWindow();
     }
@@ -51,14 +54,14 @@ public class ClientRenderWindow : RenderWindow
         }
     }
 
-    public virtual void RenderPlayers(IEnumerable<Player> players)
+    public virtual void RenderPlayers()
     {
         RectangleShape shape = new(new Vector2f(32, 32))
         {
             FillColor = Color.Green,
         };
 
-        foreach (Player player in players)
+        foreach (Player player in this.gameState.Players)
         {
             shape.Position = new Vector2f(player.X, player.Y);
             this.Draw(shape);

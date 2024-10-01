@@ -6,7 +6,6 @@ namespace Reoria.Client.Engine;
 
 public class ClientThread(IServiceProvider services, int ticksPerSecond = 60) : EngineThread(services, ticksPerSecond)
 {
-    public readonly ClientShared Shared = services.GetRequiredService<ClientShared>();
     public readonly ClientNetEventListener Networking = services.GetRequiredService<ClientNetEventListener>();
     public readonly ClientRenderWindow RenderWindow = services.GetRequiredService<ClientRenderWindow>();
 
@@ -48,7 +47,7 @@ public class ClientThread(IServiceProvider services, int ticksPerSecond = 60) : 
 
         this.RenderWindow.Clear(new Color(100, 149, 237));
 
-        this.RenderWindow.RenderPlayers(this.Shared.Players.Values);
+        this.RenderWindow.RenderPlayers();
 
         this.RenderWindow.Display();
 
