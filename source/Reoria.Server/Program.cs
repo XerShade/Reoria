@@ -1,5 +1,7 @@
-﻿using Reoria.Engine.Interfaces;
+﻿using Reoria.Engine;
+using Reoria.Engine.Interfaces;
 using Reoria.Server.Engine;
 
-IEngineThread serverThread = new ServerThread();
+IEngineServiceProvider serviceProvider = new EngineServiceProvider();
+IEngineThread serverThread = new ServerThread(serviceProvider.ServiceProvider);
 serverThread.Start();

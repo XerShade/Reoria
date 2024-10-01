@@ -1,5 +1,7 @@
 ﻿using Reoria.Engine.Interfaces;
 using Reoria.Client.Engine;
+using Reoria.Engine;
 
-IEngineThread clientThread = new ClientThread();
+IEngineServiceProvider serviceProvider = new EngineServiceProvider();
+IEngineThread clientThread = new ClientThread(serviceProvider.ServiceProvider);
 clientThread.Start();

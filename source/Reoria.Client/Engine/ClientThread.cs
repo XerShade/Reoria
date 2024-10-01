@@ -1,4 +1,5 @@
-﻿using Reoria.Engine;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Reoria.Engine;
 using Reoria.Game.Data;
 using SFML.Graphics;
 using SFML.Window;
@@ -10,6 +11,11 @@ public class ClientThread : EngineThread
     public readonly ClientNetEventListener Networking = new();
     public readonly ClientRenderWindow RenderWindow = new(new VideoMode(1280, 720), "Reoria");
     public readonly Dictionary<int, Player> Players = [];
+
+    public ClientThread(ServiceProvider serviceProvider, int ticksPerSecond = 60) : base(serviceProvider, ticksPerSecond)
+    {
+    }
+
     public int LocalPlayerId { get; internal set; } = 0;
 
     protected override void OnThreadStart()

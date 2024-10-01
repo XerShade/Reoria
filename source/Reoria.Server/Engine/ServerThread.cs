@@ -1,4 +1,6 @@
-﻿using Reoria.Engine;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Reoria.Engine;
 
 namespace Reoria.Server.Engine;
 
@@ -6,10 +8,14 @@ public class ServerThread : EngineThread
 {
     private readonly ServerNetEventListener networking = new();
 
+    public ServerThread(ServiceProvider serviceProvider, int ticksPerSecond = 60) : base(serviceProvider, ticksPerSecond)
+    {
+    }
+
     protected override void OnThreadStart()
     {
         this.networking.Start(5555);
-        Console.WriteLine($"Started server on {this.networking.GetLocalPort()}");
+        this.logger.LogInformation("Started server on {Port}.", this.networking.GetLocalPort());
 
         base.OnThreadStart();
     }
@@ -17,7 +23,7 @@ public class ServerThread : EngineThread
     protected override void OnThreadStop()
     {
         this.networking.Stop();
-        Console.WriteLine($"Stopped listening on {this.networking.GetLocalPort()}");
+        this.logger.LogInformation("Stopped listening on {Port}", this.networking.GetLocalPort());
 
         base.OnThreadStop();
     }
