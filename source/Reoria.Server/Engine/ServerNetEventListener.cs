@@ -4,18 +4,15 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Reoria.Engine.Networking;
 using Reoria.Game.Data;
+using Reoria.Game.State.Interfaces;
 using System.Net;
 using System.Net.Sockets;
 
 namespace Reoria.Server.Engine;
 
-public class ServerNetEventListener : EngineNetEventListener
+public class ServerNetEventListener(IGameState gameState, ILogger<EngineNetEventListener> logger, IConfigurationRoot configuration) : EngineNetEventListener(logger, configuration)
 {
-    private readonly Dictionary<int, Player> players = [];
-
-    public ServerNetEventListener(ILogger<EngineNetEventListener> logger, IConfigurationRoot configuration) : base(logger, configuration)
-    {
-    }
+    private readonly IGameState gameState = gameState;
 
     public virtual void Start() => this.netManager.Start(Convert.ToInt32(this.configuration["Networking:Port"]));
     public virtual void Stop() => this.netManager.Stop();
@@ -31,10 +28,10 @@ public class ServerNetEventListener : EngineNetEventListener
             X = rng.Next(320, 960),
             Y = rng.Next(270, 810)
         };
-        this.players.Add(peer.Id, player);
+        this.gameState.Players.Add(player);
 
         this.SendPlayerId(peer, player);
-        this.SendExistingPlayers(peer, this.players.Values);
+        this.SendExistingPlayers(peer, this.gameState.Players);
         this.SendPlayerJoined(peer, player);
 
         base.OnPeerConnected(peer);
@@ -45,9 +42,13 @@ public class ServerNetEventListener : EngineNetEventListener
         this.logger.LogInformation("Lost connection from {Address}", peer.Address);
         this.SendPlayerLeft(peer);
 
-        if (this.players.ContainsKey(peer.Id))
+        Player? player = (from p in this.gameState.Players
+                          where p.Id.Equals(peer.Id)
+                          select p as Player).FirstOrDefault();
+
+        if (player is not null)
         {
-            _ = this.players.Remove(peer.Id);
+            _ = this.gameState.Players.Remove(player);
         }
 
         base.OnPeerDisconnected(peer, disconnectInfo);
@@ -157,19 +158,31 @@ public class ServerNetEventListener : EngineNetEventListener
 
     private void SendPlayerLeft(NetPeer peer)
     {
-        NetDataWriter writer = new();
-        Player player = this.players[peer.Id];
-        writer.Put("LEFT");
-        writer.Put(player.Id);
-        this.BroadcastToAllBut(peer, writer);
+        Player? player = (from p in this.gameState.Players
+                          where p.Id.Equals(peer.Id)
+                          select p as Player).FirstOrDefault();
+
+        if (player is not null)
+        {
+            NetDataWriter writer = new();
+            writer.Put("LEFT");
+            writer.Put(player.Id);
+            this.BroadcastToAllBut(peer, writer);
+        }      
     }
 
     private void HandlePlayerMove(NetPeer peer, NetPacketReader reader)
     {
-        Player player = this.players[peer.Id];
-        player.X += reader.GetFloat();
-        player.Y += reader.GetFloat();
-        this.logger.LogInformation("Player {Id} moved to {X}, {Y}.", player.Id, player.X, player.Y);
-        this.SendPlayerPosition(player);
+        Player? player = (from p in this.gameState.Players
+                          where p.Id.Equals(peer.Id)
+                          select p as Player).FirstOrDefault();
+
+        if (player is not null)
+        {
+            player.X += reader.GetFloat();
+            player.Y += reader.GetFloat();
+            this.logger.LogInformation("Player {Id} moved to {X}, {Y}.", player.Id, player.X, player.Y);
+            this.SendPlayerPosition(player);
+        }
     }
 }
