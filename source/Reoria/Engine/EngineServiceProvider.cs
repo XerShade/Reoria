@@ -9,7 +9,6 @@ public class EngineServiceProvider : IEngineServiceProvider
 {
     protected readonly ServiceCollection serviceCollection;
     protected readonly IConfigurationRoot configuration;
-    protected readonly ServiceProvider serviceProvider;
 
     public EngineServiceProvider()
     {
@@ -27,10 +26,8 @@ public class EngineServiceProvider : IEngineServiceProvider
             .CreateLogger();
 
         _ = this.serviceCollection.AddLogging(builder => _ = builder.AddSerilog());
-
-        this.serviceProvider = this.serviceCollection.BuildServiceProvider();
     }
 
     public IConfigurationRoot Configuration => this.configuration;
-    public ServiceProvider ServiceProvider => this.serviceProvider;
+    public ServiceProvider ServiceProvider => this.serviceCollection.BuildServiceProvider();
 }

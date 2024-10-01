@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Reoria.Engine.Interfaces;
 using System.Diagnostics;
@@ -27,7 +26,7 @@ public abstract class EngineThread : IEngineThread
     protected virtual void OnThreadSleep() { }
     protected virtual void OnThreadStop() { }
 
-    public EngineThread(ServiceProvider serviceProvider, int ticksPerSecond = 60)
+    public EngineThread(ILogger<EngineThread> logger, IConfigurationRoot configuration, int ticksPerSecond = 60)
     {
         lock (this.threadLock)
         {
@@ -36,8 +35,8 @@ public abstract class EngineThread : IEngineThread
             this.IsRunning = false;
             this.IsPaused = false;
 
-            this.logger = serviceProvider.GetRequiredService<ILogger<EngineThread>>();
-            this.configuration = serviceProvider.GetRequiredService<IConfigurationRoot>();
+            this.logger = logger;
+            this.configuration = configuration;
 
             this.logger.LogInformation("Created new {Name} running on {TicksPerSecond} at {TickRate}ms.", this.GetType(), this.TicksPerSecond, this.TickRate);
 

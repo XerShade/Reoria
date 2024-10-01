@@ -1,5 +1,7 @@
 ﻿using LiteNetLib;
 using LiteNetLib.Utils;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Reoria.Engine.Networking;
 using Reoria.Game.Data;
 using System.Net;
@@ -11,18 +13,17 @@ public class ServerNetEventListener : EngineNetEventListener
 {
     private readonly Dictionary<int, Player> players = [];
 
-    public ServerNetEventListener() : base()
+    public ServerNetEventListener(ILogger<EngineNetEventListener> logger, IConfigurationRoot configuration) : base(logger, configuration)
     {
-
     }
 
-    public virtual void Start(int port) => this.netManager.Start(port);
+    public virtual void Start() => this.netManager.Start(Convert.ToInt32(this.configuration["Networking:Port"]));
     public virtual void Stop() => this.netManager.Stop();
     public virtual int GetLocalPort() => this.netManager.LocalPort;
 
     public override void OnPeerConnected(NetPeer peer)
     {
-        Console.WriteLine($"Received new client connection from {peer.Address}");
+        this.logger.LogInformation("Received new client connection from {Address}.", peer.Address);
 
         Random rng = new();
         Player player = new(peer.Id, peer.Address.ToString())
@@ -41,7 +42,7 @@ public class ServerNetEventListener : EngineNetEventListener
 
     public override void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
     {
-        Console.WriteLine($"Lost connection from {peer.Address}");
+        this.logger.LogInformation("Lost connection from {Address}", peer.Address);
         this.SendPlayerLeft(peer);
 
         if (this.players.ContainsKey(peer.Id))
@@ -70,15 +71,23 @@ public class ServerNetEventListener : EngineNetEventListener
 
     public override void OnConnectionRequest(ConnectionRequest request)
     {
-        _ = request.AcceptIfKey("ReoriaNetworkKey");
+        _ = request.AcceptIfKey(this.configuration["Networking:ConnectionKey"]);
         base.OnConnectionRequest(request);
     }
 
     public override void OnNetworkError(IPEndPoint endPoint, SocketError socketError)
     {
-        Console.WriteLine($"An error has occured on connection from {endPoint}: {socketError}");
+        this.logger.LogInformation("An error has occured on connection from {endPoint}: {socketError}", endPoint, socketError);
 
         base.OnNetworkError(endPoint, socketError);
+    }
+
+    public virtual void BroadcastTo(NetPeer peer, NetDataWriter writer)
+    {
+        if (this.netManager.IsRunning)
+        {
+            peer.Send(writer, DeliveryMethod.ReliableOrdered);
+        }
     }
 
     public virtual void BroadcastToAllBut(NetPeer excludePeer, NetDataWriter writer)
@@ -87,7 +96,7 @@ public class ServerNetEventListener : EngineNetEventListener
         {
             if (peer.Id != excludePeer.Id)
             {
-                peer.Send(writer, DeliveryMethod.ReliableOrdered);
+                this.BroadcastTo(peer, writer);
             }
         }
     }
@@ -96,7 +105,7 @@ public class ServerNetEventListener : EngineNetEventListener
     {
         foreach (NetPeer peer in this.netManager.ConnectedPeerList)
         {
-            peer.Send(writer, DeliveryMethod.ReliableOrdered);
+            this.BroadcastTo(peer, writer);
         }
     }
 
@@ -115,7 +124,7 @@ public class ServerNetEventListener : EngineNetEventListener
         NetDataWriter writer = new();
         writer.Put("ID");
         writer.Put(player.Id);
-        peer.Send(writer, DeliveryMethod.ReliableOrdered);
+        this.BroadcastTo(peer, writer);
     }
 
     private void SendExistingPlayers(NetPeer peer, IEnumerable<Player> players)
@@ -132,7 +141,7 @@ public class ServerNetEventListener : EngineNetEventListener
             writer.Put(player.Y);
         }
 
-        peer.Send(writer, DeliveryMethod.ReliableOrdered);
+        this.BroadcastTo(peer, writer);
     }
 
     private void SendPlayerJoined(NetPeer peer, Player player)
@@ -160,7 +169,7 @@ public class ServerNetEventListener : EngineNetEventListener
         Player player = this.players[peer.Id];
         player.X += reader.GetFloat();
         player.Y += reader.GetFloat();
-        Console.WriteLine($"Player {player.Id} moved to {player.X}, {player.Y}.");
+        this.logger.LogInformation("Player {Id} moved to {X}, {Y}.", player.Id, player.X, player.Y);
         this.SendPlayerPosition(player);
     }
 }

@@ -4,31 +4,21 @@ using SFML.System;
 using SFML.Window;
 
 namespace Reoria.Client.Engine;
+
 public class ClientRenderWindow : RenderWindow
 {
-    private ClientThread? engineThread;
+    private readonly ClientNetEventListener network;
 
-    public ClientRenderWindow(nint handle) : base(handle) => this.SetupRenderWindow();
-    public ClientRenderWindow(VideoMode mode, string title) : base(mode, title) => this.SetupRenderWindow();
-    public ClientRenderWindow(nint handle, ContextSettings settings) : base(handle, settings) => this.SetupRenderWindow();
-    public ClientRenderWindow(VideoMode mode, string title, Styles style) : base(mode, title, style) => this.SetupRenderWindow();
-    public ClientRenderWindow(VideoMode mode, string title, Styles style, ContextSettings settings) : base(mode, title, style, settings) => this.SetupRenderWindow();
-
-    public virtual ClientRenderWindow AttachToThread(ClientThread engineThread)
+    public ClientRenderWindow(ClientNetEventListener network) : base(new VideoMode(1280, 720), "Reoria")
     {
-        this.engineThread = engineThread;
-
-        return this;
+        this.network = network;
+        this.SetupRenderWindow();
     }
 
     private void SetupRenderWindow()
     {
         this.SetVisible(false);
-        this.Closed += (s, e) =>
-        {
-            this.Close();
-            this.engineThread?.Stop();
-        };
+        this.Closed += (s, e) => this.Close();
         this.Clear(new Color(100, 149, 237));
         this.Display();
     }
@@ -57,7 +47,7 @@ public class ClientRenderWindow : RenderWindow
 
         if (velocity.X != 0 || velocity.Y != 0)
         {
-            this.engineThread?.Networking.SendMoveCommand(velocity);
+            this.network.SendMoveCommand(velocity);
         }
     }
 

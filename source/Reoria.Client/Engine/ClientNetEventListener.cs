@@ -1,5 +1,7 @@
 ﻿using LiteNetLib;
 using LiteNetLib.Utils;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Reoria.Engine.Networking;
 using Reoria.Game.Data;
 using SFML.System;
@@ -8,29 +10,22 @@ using System.Net.Sockets;
 
 namespace Reoria.Client.Engine;
 
-public class ClientNetEventListener : EngineNetEventListener
+public class ClientNetEventListener(ClientShared shared, ILogger<EngineNetEventListener> logger, IConfigurationRoot configuration) : EngineNetEventListener(logger, configuration)
 {
-    private ClientThread? engineThread;
+    private readonly ClientShared shared = shared;
     private NetPeer? serverPeer = null;
 
-    public virtual ClientNetEventListener AttachToThread(ClientThread engineThread)
-    {
-        this.engineThread = engineThread;
-
-        return this;
-    }
-
-    public virtual void Start(string ipaddress, int port)
+    public virtual void Start()
     {
         _ = this.netManager.Start();
-        this.serverPeer = this.netManager.Connect(ipaddress, port, "ReoriaNetworkKey");
+        this.serverPeer = this.netManager.Connect(this.configuration["Networking:Address"], Convert.ToInt32(this.configuration["Networking:Port"]), this.configuration["Networking:ConnectionKey"]);
     }
 
     public virtual void Stop() => this.netManager.Stop();
 
     public override void OnNetworkError(IPEndPoint endPoint, SocketError socketError)
     {
-        Console.WriteLine($"A network error has occured: {socketError}");
+        this.logger.LogInformation("A network error has occured: {socketError}", socketError);
 
         base.OnNetworkError(endPoint, socketError);
     }
@@ -38,7 +33,7 @@ public class ClientNetEventListener : EngineNetEventListener
     public override void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
     {
         string command = reader.GetString().ToUpper();
-        Console.WriteLine($"Received packet {command} from the server.");
+        this.logger.LogInformation("Received packet {command} from the server.", command);
 
         switch (command)
         {
@@ -64,13 +59,7 @@ public class ClientNetEventListener : EngineNetEventListener
         base.OnNetworkReceive(peer, reader, channelNumber, deliveryMethod);
     }
 
-    private void HandleMyId(NetPacketReader reader)
-    {
-        if(this.engineThread is not null)
-        {
-            this.engineThread.LocalPlayerId = reader.GetInt();
-        }
-    }
+    private void HandleMyId(NetPacketReader reader) => this.shared.LocalPlayerId = reader.GetInt();
 
     private void HandleExistingPlayers(NetPacketReader reader)
     {
@@ -83,7 +72,7 @@ public class ClientNetEventListener : EngineNetEventListener
                 X = reader.GetFloat(),
                 Y = reader.GetFloat()
             };
-            this.engineThread?.Players.Add(player.Id, player);
+            this.shared.Players.Add(player.Id, player);
         }
     }
 
@@ -94,32 +83,26 @@ public class ClientNetEventListener : EngineNetEventListener
             X = reader.GetFloat(),
             Y = reader.GetFloat()
         };
-        this.engineThread?.Players.Add(player.Id, player);
+        this.shared.Players.Add(player.Id, player);
     }
 
     private void HandlePlayerLeft(NetPacketReader reader)
     {
         int playerId = reader.GetInt();
 
-        if (this.engineThread is not null)
+        if (this.shared.Players.ContainsKey(playerId))
         {
-            if (this.engineThread.Players.ContainsKey(playerId))
-            {
-                _ = this.engineThread.Players.Remove(playerId);
-            }
-        }        
+            _ = this.shared.Players.Remove(playerId);
+        }
     }
 
     private void HandlePlayerPosition(NetPacketReader reader)
     {
         int playerId = reader.GetInt();
-        if (this.engineThread is not null)
+        if (this.shared.Players.TryGetValue(playerId, out Player? value))
         {
-            if (this.engineThread.Players.ContainsKey(playerId))
-            {
-                this.engineThread.Players[playerId].X = reader.GetFloat();
-                this.engineThread.Players[playerId].Y = reader.GetFloat();
-            }
+            value.X = reader.GetFloat();
+            value.Y = reader.GetFloat();
         }
     }
 

@@ -1,4 +1,6 @@
 ﻿using LiteNetLib;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Net.Sockets;
 
@@ -7,8 +9,15 @@ namespace Reoria.Engine.Networking;
 public class EngineNetEventListener : INetEventListener
 {
     protected readonly NetManager netManager;
+    protected readonly ILogger<EngineNetEventListener> logger;
+    protected readonly IConfiguration configuration;
 
-    public EngineNetEventListener() => this.netManager = new NetManager(this);
+    public EngineNetEventListener(ILogger<EngineNetEventListener> logger, IConfigurationRoot configuration)
+    {
+        this.netManager = new NetManager(this);
+        this.logger = logger;
+        this.configuration = configuration;
+    }
 
     public virtual void PollEvents() => this.netManager.PollEvents();
 

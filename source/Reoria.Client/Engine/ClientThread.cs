@@ -1,27 +1,20 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Reoria.Engine;
-using Reoria.Game.Data;
 using SFML.Graphics;
-using SFML.Window;
 
 namespace Reoria.Client.Engine;
 
-public class ClientThread : EngineThread
+public class ClientThread(ClientShared shared, ClientNetEventListener netEventListener, ClientRenderWindow renderWindow, ILogger<ClientThread> logger, IConfigurationRoot configuration, int ticksPerSecond = 60) : EngineThread(logger, configuration, ticksPerSecond)
 {
-    public readonly ClientNetEventListener Networking = new();
-    public readonly ClientRenderWindow RenderWindow = new(new VideoMode(1280, 720), "Reoria");
-    public readonly Dictionary<int, Player> Players = [];
-
-    public ClientThread(ServiceProvider serviceProvider, int ticksPerSecond = 60) : base(serviceProvider, ticksPerSecond)
-    {
-    }
-
-    public int LocalPlayerId { get; internal set; } = 0;
+    public readonly ClientShared Shared = shared;
+    public readonly ClientNetEventListener Networking = netEventListener;
+    public readonly ClientRenderWindow RenderWindow = renderWindow;
 
     protected override void OnThreadStart()
     {
-        this.RenderWindow.AttachToThread(this).SetVisible(true);
-        this.Networking.AttachToThread(this).Start("localhost", 5555);
+        this.RenderWindow.SetVisible(true);
+        this.Networking.Start();
 
         base.OnThreadStart();
     }
@@ -56,7 +49,7 @@ public class ClientThread : EngineThread
 
         this.RenderWindow.Clear(new Color(100, 149, 237));
 
-        this.RenderWindow.RenderPlayers(this.Players.Values);
+        this.RenderWindow.RenderPlayers(this.Shared.Players.Values);
 
         this.RenderWindow.Display();
 

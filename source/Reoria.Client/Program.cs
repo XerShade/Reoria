@@ -1,7 +1,7 @@
-﻿using Reoria.Engine.Interfaces;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Reoria.Client.Engine;
-using Reoria.Engine;
+using Reoria.Engine.Interfaces;
 
-IEngineServiceProvider serviceProvider = new EngineServiceProvider();
-IEngineThread clientThread = new ClientThread(serviceProvider.ServiceProvider);
+IEngineServiceProvider serviceProvider = new ClientServiceProvider();
+IEngineThread clientThread = serviceProvider.ServiceProvider.GetRequiredService<ClientThread>();
 clientThread.Start();
