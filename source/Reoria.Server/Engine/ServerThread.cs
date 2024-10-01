@@ -1,12 +1,12 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Reoria.Engine;
 
 namespace Reoria.Server.Engine;
 
-public class ServerThread(ServerNetEventListener serverNetEventListener, ILogger<ServerThread> logger, IConfigurationRoot configuration, int ticksPerSecond = 60) : EngineThread(logger, configuration, ticksPerSecond)
+public class ServerThread(IServiceProvider services, int ticksPerSecond = 60) : EngineThread(services, ticksPerSecond)
 {
-    private readonly ServerNetEventListener networking = serverNetEventListener;
+    private readonly ServerNetEventListener networking = services.GetRequiredService<ServerNetEventListener>();
 
     protected override void OnThreadStart()
     {

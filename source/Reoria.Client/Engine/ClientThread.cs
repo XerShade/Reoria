@@ -1,15 +1,14 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Reoria.Engine;
 using SFML.Graphics;
 
 namespace Reoria.Client.Engine;
 
-public class ClientThread(ClientShared shared, ClientNetEventListener netEventListener, ClientRenderWindow renderWindow, ILogger<ClientThread> logger, IConfigurationRoot configuration, int ticksPerSecond = 60) : EngineThread(logger, configuration, ticksPerSecond)
+public class ClientThread(IServiceProvider services, int ticksPerSecond = 60) : EngineThread(services, ticksPerSecond)
 {
-    public readonly ClientShared Shared = shared;
-    public readonly ClientNetEventListener Networking = netEventListener;
-    public readonly ClientRenderWindow RenderWindow = renderWindow;
+    public readonly ClientShared Shared = services.GetRequiredService<ClientShared>();
+    public readonly ClientNetEventListener Networking = services.GetRequiredService<ClientNetEventListener>();
+    public readonly ClientRenderWindow RenderWindow = services.GetRequiredService<ClientRenderWindow>();
 
     protected override void OnThreadStart()
     {
