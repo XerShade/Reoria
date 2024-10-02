@@ -4,16 +4,16 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Reoria.Engine.Networking;
 using Reoria.Game.Data;
-using Reoria.Game.State.Interfaces;
+using Reoria.Game.Data.Interfaces;
 using SFML.System;
 using System.Net;
 using System.Net.Sockets;
 
 namespace Reoria.Client.Engine;
 
-public class ClientNetEventListener(IGameState gameState, ILogger<EngineNetEventListener> logger, IConfigurationRoot configuration) : EngineNetEventListener(logger, configuration)
+public class ClientNetEventListener(IGameData gameState, ILogger<EngineNetEventListener> logger, IConfigurationRoot configuration) : EngineNetEventListener(logger, configuration)
 {
-    private readonly IGameState gameState = gameState;
+    private readonly IGameData gameState = gameState;
     private NetPeer? serverPeer = null;
 
     public virtual void Start()

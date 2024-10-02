@@ -1,5 +1,5 @@
 ﻿using Reoria.Game.Data;
-using Reoria.Game.State.Interfaces;
+using Reoria.Game.Data.Interfaces;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -8,10 +8,10 @@ namespace Reoria.Client.Engine;
 
 public class ClientRenderWindow : RenderWindow
 {
-    private readonly IGameState gameState;
+    private readonly IGameData gameState;
     private readonly ClientNetEventListener network;
 
-    public ClientRenderWindow(IGameState gameState, ClientNetEventListener network) : base(new VideoMode(1280, 720), "Reoria")
+    public ClientRenderWindow(IGameData gameState, ClientNetEventListener network) : base(new VideoMode(1280, 720), "Reoria")
     {
         this.gameState = gameState;
         this.network = network;

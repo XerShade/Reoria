@@ -4,15 +4,15 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Reoria.Engine.Networking;
 using Reoria.Game.Data;
-using Reoria.Game.State.Interfaces;
+using Reoria.Game.Data.Interfaces;
 using System.Net;
 using System.Net.Sockets;
 
 namespace Reoria.Server.Engine;
 
-public class ServerNetEventListener(IGameState gameState, ILogger<EngineNetEventListener> logger, IConfigurationRoot configuration) : EngineNetEventListener(logger, configuration)
+public class ServerNetEventListener(IGameData gameState, ILogger<EngineNetEventListener> logger, IConfigurationRoot configuration) : EngineNetEventListener(logger, configuration)
 {
-    private readonly IGameState gameState = gameState;
+    private readonly IGameData gameState = gameState;
 
     public virtual void Start() => this.netManager.Start(Convert.ToInt32(this.configuration["Networking:Port"]));
     public virtual void Stop() => this.netManager.Stop();

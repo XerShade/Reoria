@@ -1,8 +1,8 @@
 ﻿using Reoria.Game.Data;
 
-namespace Reoria.Game.State.Interfaces;
+namespace Reoria.Game.Data.Interfaces;
 
-public interface IGameState
+public interface IGameData
 {
     public List<Player> Players { get; }
     int LocalPlayerId { get; set; }

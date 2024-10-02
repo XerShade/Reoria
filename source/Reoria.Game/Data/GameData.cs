@@ -1,10 +1,9 @@
-﻿using Reoria.Game.Data;
+﻿using Reoria.Game.Data.Interfaces;
 using Reoria.Game.DbContexts;
-using Reoria.Game.State.Interfaces;
 
-namespace Reoria.Game.State;
+namespace Reoria.Game.Data;
 
-public class GameState(GameDbContext dbContext) : IGameState
+public class GameData(GameDbContext dbContext) : IGameData
 {
     private readonly GameDbContext dbContext = dbContext;
     public List<Player> Players { get; protected set; } = [];
