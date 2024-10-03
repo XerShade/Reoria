@@ -10,9 +10,9 @@ using System.Net.Sockets;
 
 namespace Reoria.Server.Engine;
 
-public class ServerNetEventListener(IGameData gameState, ILogger<EngineNetEventListener> logger, IConfigurationRoot configuration) : EngineNetEventListener(logger, configuration)
+public class ServerNetEventListener(IGameData gameData, ILogger<EngineNetEventListener> logger, IConfigurationRoot configuration) : EngineNetEventListener(logger, configuration)
 {
-    private readonly IGameData gameState = gameState;
+    private readonly IGameData gameData = gameData;
 
     public virtual void Start() => this.netManager.Start(Convert.ToInt32(this.configuration["Networking:Port"]));
     public virtual void Stop() => this.netManager.Stop();
@@ -28,10 +28,10 @@ public class ServerNetEventListener(IGameData gameState, ILogger<EngineNetEventL
             X = rng.Next(320, 960),
             Y = rng.Next(270, 810)
         };
-        this.gameState.Players.Add(player);
+        this.gameData.Players.Add(player);
 
         this.SendPlayerId(peer, player);
-        this.SendExistingPlayers(peer, this.gameState.Players);
+        this.SendExistingPlayers(peer, this.gameData.Players);
         this.SendPlayerJoined(peer, player);
 
         base.OnPeerConnected(peer);
@@ -42,13 +42,13 @@ public class ServerNetEventListener(IGameData gameState, ILogger<EngineNetEventL
         this.logger.LogInformation("Lost connection from {Address}", peer.Address);
         this.SendPlayerLeft(peer);
 
-        Player? player = (from p in this.gameState.Players
+        Player? player = (from p in this.gameData.Players
                           where p.Id.Equals(peer.Id)
                           select p as Player).FirstOrDefault();
 
         if (player is not null)
         {
-            _ = this.gameState.Players.Remove(player);
+            _ = this.gameData.Players.Remove(player);
         }
 
         base.OnPeerDisconnected(peer, disconnectInfo);
@@ -158,7 +158,7 @@ public class ServerNetEventListener(IGameData gameState, ILogger<EngineNetEventL
 
     private void SendPlayerLeft(NetPeer peer)
     {
-        Player? player = (from p in this.gameState.Players
+        Player? player = (from p in this.gameData.Players
                           where p.Id.Equals(peer.Id)
                           select p as Player).FirstOrDefault();
 
@@ -173,7 +173,7 @@ public class ServerNetEventListener(IGameData gameState, ILogger<EngineNetEventL
 
     private void HandlePlayerMove(NetPeer peer, NetPacketReader reader)
     {
-        Player? player = (from p in this.gameState.Players
+        Player? player = (from p in this.gameData.Players
                           where p.Id.Equals(peer.Id)
                           select p as Player).FirstOrDefault();
 

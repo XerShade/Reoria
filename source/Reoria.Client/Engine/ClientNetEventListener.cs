@@ -12,9 +12,9 @@ using System.Net.Sockets;
 
 namespace Reoria.Client.Engine;
 
-public class ClientNetEventListener(IGameData gameState, ILogger<EngineNetEventListener> logger, IConfigurationRoot configuration) : EngineNetEventListener(logger, configuration)
+public class ClientNetEventListener(IGameData gameData, ILogger<EngineNetEventListener> logger, IConfigurationRoot configuration) : EngineNetEventListener(logger, configuration)
 {
-    private readonly IGameData gameState = gameState;
+    private readonly IGameData gameData = gameData;
     private NetPeer? serverPeer = null;
 
     public virtual void Start()
@@ -61,7 +61,7 @@ public class ClientNetEventListener(IGameData gameState, ILogger<EngineNetEventL
         base.OnNetworkReceive(peer, reader, channelNumber, deliveryMethod);
     }
 
-    private void HandleMyId(NetPacketReader reader) => this.gameState.SetLocalPlayerId(reader.GetInt());
+    private void HandleMyId(NetPacketReader reader) => this.gameData.SetLocalPlayerId(reader.GetInt());
 
     private void HandleExistingPlayers(NetPacketReader reader)
     {
@@ -74,7 +74,7 @@ public class ClientNetEventListener(IGameData gameState, ILogger<EngineNetEventL
                 X = reader.GetFloat(),
                 Y = reader.GetFloat()
             };
-            this.gameState.Players.Add(player);
+            this.gameData.Players.Add(player);
         }
     }
 
@@ -85,26 +85,26 @@ public class ClientNetEventListener(IGameData gameState, ILogger<EngineNetEventL
             X = reader.GetFloat(),
             Y = reader.GetFloat()
         };
-        this.gameState.Players.Add(player);
+        this.gameData.Players.Add(player);
     }
 
     private void HandlePlayerLeft(NetPacketReader reader)
     {
         int playerId = reader.GetInt();
-        Player? player = (from p in this.gameState.Players
+        Player? player = (from p in this.gameData.Players
                           where p.Id.Equals(playerId)
                           select p as Player).FirstOrDefault();
 
         if (player is not null)
         {
-            _ = this.gameState.Players.Remove(player);
+            _ = this.gameData.Players.Remove(player);
         }
     }
 
     private void HandlePlayerPosition(NetPacketReader reader)
     {
         int playerId = reader.GetInt();
-        Player? player = (from p in this.gameState.Players
+        Player? player = (from p in this.gameData.Players
                           where p.Id.Equals(playerId)
                           select p as Player).FirstOrDefault();
 

@@ -8,12 +8,12 @@ namespace Reoria.Client.Engine;
 
 public class ClientRenderWindow : RenderWindow
 {
-    private readonly IGameData gameState;
+    private readonly IGameData gameData;
     private readonly ClientNetEventListener network;
 
-    public ClientRenderWindow(IGameData gameState, ClientNetEventListener network) : base(new VideoMode(1280, 720), "Reoria")
+    public ClientRenderWindow(IGameData gameData, ClientNetEventListener network) : base(new VideoMode(1280, 720), "Reoria")
     {
-        this.gameState = gameState;
+        this.gameData = gameData;
         this.network = network;
         this.SetupRenderWindow();
     }
@@ -61,7 +61,7 @@ public class ClientRenderWindow : RenderWindow
             FillColor = Color.Green,
         };
 
-        foreach (Player player in this.gameState.Players)
+        foreach (Player player in this.gameData.Players)
         {
             shape.Position = new Vector2f(player.X, player.Y);
             this.Draw(shape);
