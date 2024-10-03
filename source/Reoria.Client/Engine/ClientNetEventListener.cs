@@ -2,6 +2,7 @@
 using LiteNetLib.Utils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Reoria.Client.Data.Extensions;
 using Reoria.Engine.Networking;
 using Reoria.Game.Data;
 using Reoria.Game.Data.Interfaces;
@@ -60,7 +61,7 @@ public class ClientNetEventListener(IGameData gameState, ILogger<EngineNetEventL
         base.OnNetworkReceive(peer, reader, channelNumber, deliveryMethod);
     }
 
-    private void HandleMyId(NetPacketReader reader) => this.gameState.LocalPlayerId = reader.GetInt();
+    private void HandleMyId(NetPacketReader reader) => this.gameState.SetLocalPlayerId(reader.GetInt());
 
     private void HandleExistingPlayers(NetPacketReader reader)
     {
