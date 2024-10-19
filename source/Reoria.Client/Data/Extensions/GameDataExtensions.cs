@@ -20,7 +20,7 @@ public static class GameDataExtensions
                           where p.Id.Equals(localPlayerId)
                           select p as Player).FirstOrDefault();
 
-        if (player is not null)
+        if (player is null)
         {
             localPlayerId = defaultPlayerId;
             return localPlayerId;
@@ -38,10 +38,10 @@ public static class GameDataExtensions
         }
 
         Player? player = (from p in gameData.Players
-                          where p.Id.Equals(localPlayerId)
+                          where p.Id.Equals(newLocalPlayerId)
                           select p as Player).FirstOrDefault();
 
-        if (player is not null)
+        if (player is null)
         {
             localPlayerId = defaultPlayerId;
             return;
