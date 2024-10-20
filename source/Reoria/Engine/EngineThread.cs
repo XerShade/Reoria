@@ -107,6 +107,7 @@ public abstract class EngineThread : IEngineThread
         {
             if (this.IsPaused)
             {
+                this.logger.LogDebug("The game is currently paused, sleeping for 10 ms to lower cpu usage while idling.");
                 Thread.Sleep(10);
                 continue;
             }
@@ -114,8 +115,11 @@ public abstract class EngineThread : IEngineThread
             deltaTime = (float)stopwatch.Elapsed.TotalMilliseconds - lastFrameTime;
             lastFrameTime = (float)stopwatch.Elapsed.TotalMilliseconds;
 
+            this.logger.LogDebug("Delta Time: {DeltaTime} ms", deltaTime);
+
             if (deltaTime > 1000f)
             {
+                this.logger.LogWarning("Delta Time too large, capping at 1000 ms. Actual: {DeltaTime} ms", deltaTime);
                 deltaTime = 1000f;
             }
 
@@ -125,15 +129,18 @@ public abstract class EngineThread : IEngineThread
             while (accumulator >= this.TickRate && loops < this.MaxFrameSkip)
             {
                 this.OnThreadFixedTick();
+                this.logger.LogDebug("Fixed tick executed, accumulator: {Accumulator}, loops: {Loops}", accumulator, loops);
                 accumulator -= this.TickRate;
                 loops++;
             }
 
+            this.logger.LogDebug("Executing dynamic tick with deltaTime (in seconds): {DeltaTimeSeconds}", deltaTime / 1000f);
             this.OnThreadDynamicTick(deltaTime / 1000f);
 
             float sleepTime = frameDuration - deltaTime;
             if (sleepTime > 0)
             {
+                this.logger.LogDebug("Sleeping for {SleepTime} ms to maintain target frame rate.", sleepTime);
                 this.OnThreadSleep();
                 Thread.Sleep((int)sleepTime);
             }
