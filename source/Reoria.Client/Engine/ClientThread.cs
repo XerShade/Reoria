@@ -27,12 +27,12 @@ public class ClientThread(IServiceProvider services, int ticksPerSecond = 60) : 
         base.OnThreadStop();
     }
 
-    protected override void OnThreadTick()
+    protected override void OnThreadDynamicTick(float deltaTime)
     {
         if(!this.RenderWindow.IsOpen)
         {
             this.Stop();
-            base.OnThreadTick();
+            base.OnThreadDynamicTick(deltaTime);
             return;
         }
 
@@ -51,6 +51,6 @@ public class ClientThread(IServiceProvider services, int ticksPerSecond = 60) : 
 
         this.RenderWindow.Display();
 
-        base.OnThreadTick();
+        base.OnThreadDynamicTick(deltaTime);
     }
 }

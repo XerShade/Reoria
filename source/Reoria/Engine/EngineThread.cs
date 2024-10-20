@@ -13,6 +13,8 @@ public abstract class EngineThread : IEngineThread
     protected readonly IConfiguration configuration;
     public readonly int TicksPerSecond;
     public readonly float TickRate;
+    public readonly int MaxFrameSkip;
+    public readonly int TargetFrameRate;
 
     public bool IsRunning { get; private set; }
     public bool IsPaused { get; private set; }
@@ -23,7 +25,8 @@ public abstract class EngineThread : IEngineThread
     protected virtual bool OnThreadPauseRequest() => !this.IsPaused;
     protected virtual bool OnThreadResumeRequest() => this.IsPaused;
     protected virtual void OnThreadStart() { }
-    protected virtual void OnThreadTick() { }
+    protected virtual void OnThreadDynamicTick(float deltaTime) { }
+    protected virtual void OnThreadFixedTick() { }
     protected virtual void OnThreadSleep() { }
     protected virtual void OnThreadStop() { }
 
@@ -33,6 +36,8 @@ public abstract class EngineThread : IEngineThread
         {
             this.TicksPerSecond = ticksPerSecond;
             this.TickRate = 1000f / this.TicksPerSecond;
+            this.MaxFrameSkip = 5;
+            this.TargetFrameRate = 60;
             this.IsRunning = false;
             this.IsPaused = false;
 
@@ -90,6 +95,11 @@ public abstract class EngineThread : IEngineThread
     protected virtual void ExecuteThread()
     {
         Stopwatch stopwatch = new();
+        stopwatch.Start();
+        float accumulator = 0f;
+        float frameDuration = 1000f / this.TargetFrameRate;
+        float lastFrameTime = 0;
+        float deltaTime;
 
         this.OnThreadStart();
 
@@ -101,20 +111,32 @@ public abstract class EngineThread : IEngineThread
                 continue;
             }
 
-            stopwatch.Start();
+            deltaTime = (float)stopwatch.Elapsed.TotalMilliseconds - lastFrameTime;
+            lastFrameTime = (float)stopwatch.Elapsed.TotalMilliseconds;
 
-            this.OnThreadTick();
-
-            stopwatch.Stop();
-
-            int elapsedMs = (int)stopwatch.ElapsedMilliseconds;
-            if (elapsedMs < this.TickRate)
+            if (deltaTime > 1000f)
             {
-                this.OnThreadSleep();
-                Thread.Sleep((int)this.TickRate - elapsedMs);
+                deltaTime = 1000f;
             }
 
-            stopwatch.Reset();
+            accumulator += deltaTime;
+
+            int loops = 0;
+            while (accumulator >= this.TickRate && loops < this.MaxFrameSkip)
+            {
+                this.OnThreadFixedTick();
+                accumulator -= this.TickRate;
+                loops++;
+            }
+
+            this.OnThreadDynamicTick(deltaTime / 1000f);
+
+            float sleepTime = frameDuration - deltaTime;
+            if (sleepTime > 0)
+            {
+                this.OnThreadSleep();
+                Thread.Sleep((int)sleepTime);
+            }
         }
 
         this.OnThreadStop();

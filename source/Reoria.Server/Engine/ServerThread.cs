@@ -24,10 +24,10 @@ public class ServerThread(IServiceProvider services, int ticksPerSecond = 60) : 
         base.OnThreadStop();
     }
 
-    protected override void OnThreadTick()
+    protected override void OnThreadDynamicTick(float deltaTime)
     {
         this.networking.PollEvents();
 
-        base.OnThreadTick();
+        base.OnThreadDynamicTick(deltaTime);
     }
 }
