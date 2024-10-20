@@ -61,10 +61,18 @@ public class ClientRenderWindow : RenderWindow
             FillColor = Color.Green,
         };
 
+        CircleShape circle = new(4)
+        {
+            FillColor = Color.Red,
+        };
+
         foreach (Player player in this.gameData.Players)
         {
-            shape.Position = new Vector2f(player.X, player.Y);
+            shape.Position = new Vector2f(player.X - (shape.Size.X / 2), player.Y - (shape.Size.Y / 2));
             this.Draw(shape);
+
+            circle.Position = new Vector2f(player.X - circle.Radius, player.Y - circle.Radius);
+            this.Draw(circle);
         }
     }
 }
