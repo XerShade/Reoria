@@ -49,4 +49,13 @@ public static class GameDataExtensions
 
         localPlayerId = newLocalPlayerId;
     }
+
+    public static Player? GetLocalPlayer(this IGameData gameData)
+    {
+        return gameData.Players.Count == 0
+            ? default
+            : (from p in gameData.Players
+                where p.Id.Equals(localPlayerId)
+                select p as Player).FirstOrDefault();
+    }
 }
