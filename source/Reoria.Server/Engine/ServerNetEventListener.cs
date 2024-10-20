@@ -30,9 +30,9 @@ public class ServerNetEventListener(IGameData gameData, ILogger<EngineNetEventLi
         };
         this.gameData.Players.Add(player);
 
-        this.SendPlayerId(peer, player);
         this.SendExistingPlayers(peer, this.gameData.Players);
         this.SendPlayerJoined(peer, player);
+        this.SendPlayerId(peer, player);
 
         base.OnPeerConnected(peer);
     }
