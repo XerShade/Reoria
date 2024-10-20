@@ -101,6 +101,9 @@ public abstract class EngineThread : IEngineThread
         float lastFrameTime = 0;
         float deltaTime;
 
+        Process currentProcess = Process.GetCurrentProcess();
+        TimeSpan lastCpuTime = currentProcess.TotalProcessorTime;
+
         this.OnThreadStart();
 
         while (this.IsRunning)
@@ -136,6 +139,14 @@ public abstract class EngineThread : IEngineThread
 
             this.logger.LogDebug("Executing dynamic tick with deltaTime (in seconds): {DeltaTimeSeconds}", deltaTime / 1000f);
             this.OnThreadDynamicTick(deltaTime / 1000f);
+
+            TimeSpan currentCpuTime = currentProcess.TotalProcessorTime;
+            TimeSpan cpuUsage = currentCpuTime - lastCpuTime;
+            lastCpuTime = currentCpuTime;
+
+            long memoryUsageBytes = GC.GetTotalMemory(false);
+
+            this.logger.LogInformation("CPU time used: {CpuUsage} ms, Memory used: {MemoryUsage} KB", cpuUsage.TotalMilliseconds, memoryUsageBytes / 1024);
 
             float sleepTime = frameDuration - deltaTime;
             if (sleepTime > 0)
