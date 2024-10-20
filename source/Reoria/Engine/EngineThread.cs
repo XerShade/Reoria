@@ -35,7 +35,7 @@ public abstract class EngineThread : IEngineThread
         lock (this.threadLock)
         {
             this.TicksPerSecond = ticksPerSecond;
-            this.TickRate = 1000f / this.TicksPerSecond;
+            this.TickRate = 1f / this.TicksPerSecond;
             this.MaxFrameSkip = 5;
             this.TargetFrameRate = 60;
             this.IsRunning = false;
@@ -44,7 +44,7 @@ public abstract class EngineThread : IEngineThread
             this.logger = services.GetRequiredService<ILogger<IEngineThread>>();
             this.configuration = services.GetRequiredService<IConfigurationRoot>();
 
-            this.logger.LogInformation("Created new {Name} running on {TicksPerSecond} at {TickRate}ms.", this.GetType(), this.TicksPerSecond, this.TickRate);
+            this.logger.LogInformation("Created new {Name} running on {TicksPerSecond} at {TickRate}s.", this.GetType(), this.TicksPerSecond, this.TickRate);
 
             this.OnThreadConstructed();
         }
@@ -97,7 +97,7 @@ public abstract class EngineThread : IEngineThread
         Stopwatch stopwatch = new();
         stopwatch.Start();
         float accumulator = 0f;
-        float frameDuration = 1000f / this.TargetFrameRate;
+        float frameDuration = 1f / this.TargetFrameRate;
         float lastFrameTime = 0;
         float deltaTime;
 
@@ -115,15 +115,15 @@ public abstract class EngineThread : IEngineThread
                 continue;
             }
 
-            deltaTime = (float)stopwatch.Elapsed.TotalMilliseconds - lastFrameTime;
-            lastFrameTime = (float)stopwatch.Elapsed.TotalMilliseconds;
+            deltaTime = (float)stopwatch.Elapsed.TotalSeconds - lastFrameTime;
+            lastFrameTime = (float)stopwatch.Elapsed.TotalSeconds;
 
-            this.logger.LogDebug("Delta Time: {DeltaTime} ms", deltaTime);
+            this.logger.LogDebug("Delta Time: {DeltaTime} seconds", deltaTime);
 
-            if (deltaTime > 1000f)
+            if (deltaTime > 1f)
             {
-                this.logger.LogWarning("Delta Time too large, capping at 1000 ms. Actual: {DeltaTime} ms", deltaTime);
-                deltaTime = 1000f;
+                this.logger.LogWarning("Delta Time too large, capping at 1 second. Actual: {DeltaTime} seconds", deltaTime);
+                deltaTime = 1f;
             }
 
             accumulator += deltaTime;
@@ -137,8 +137,8 @@ public abstract class EngineThread : IEngineThread
                 loops++;
             }
 
-            this.logger.LogDebug("Executing dynamic tick with deltaTime (in seconds): {DeltaTimeSeconds}", deltaTime / 1000f);
-            this.OnThreadDynamicTick(deltaTime / 1000f);
+            this.logger.LogDebug("Executing dynamic tick with deltaTime (in seconds): {DeltaTimeSeconds}", deltaTime);
+            this.OnThreadDynamicTick(deltaTime);
 
             TimeSpan currentCpuTime = currentProcess.TotalProcessorTime;
             TimeSpan cpuUsage = currentCpuTime - lastCpuTime;
@@ -146,14 +146,14 @@ public abstract class EngineThread : IEngineThread
 
             long memoryUsageBytes = GC.GetTotalMemory(false);
 
-            this.logger.LogInformation("CPU time used: {CpuUsage} ms, Memory used: {MemoryUsage} KB", cpuUsage.TotalMilliseconds, memoryUsageBytes / 1024);
+            this.logger.LogInformation("CPU time used: {CpuUsage} seconds, Memory used: {MemoryUsage} KB", cpuUsage.TotalSeconds, memoryUsageBytes / 1024);
 
-            float sleepTime = frameDuration - deltaTime;
+            float sleepTime = (float)(frameDuration - deltaTime);
             if (sleepTime > 0)
             {
-                this.logger.LogDebug("Sleeping for {SleepTime} ms to maintain target frame rate.", sleepTime);
+                this.logger.LogDebug("Sleeping for {SleepTime} seconds to maintain target frame rate.", sleepTime);
                 this.OnThreadSleep();
-                Thread.Sleep((int)sleepTime);
+                Thread.Sleep((int)(sleepTime * 1000));
             }
         }
 
