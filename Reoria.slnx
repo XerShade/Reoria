@@ -1,2 +1,22 @@
 <Solution>
+  <Folder Name="/Applications/">
+    <Project Path="Applications/Reoria.Server/Reoria.Server.csproj" Id="e137c6bc-87a9-4237-a3b5-f26b3d5697bb" />
+  </Folder>
+  <Folder Name="/Applications/Clients/">
+    <Project Path="Applications/Reoria.Client.Android/Reoria.Client.Android.csproj" Id="4c6a6661-e9cd-463b-9b5f-2269161332c3">
+      <Deploy />
+    </Project>
+    <Project Path="Applications/Reoria.Client.Desktop/Reoria.Client.Desktop.csproj" />
+    <Project Path="Applications/Reoria.Client.iOS/Reoria.Client.iOS.csproj" Id="48bd5534-2d3e-4e50-9957-a811f467e482">
+      <Deploy />
+    </Project>
+    <Project Path="Applications/Reoria.Client.Windows/Reoria.Client.Windows.csproj" Id="4759549c-9660-4ef3-a15b-1194f5062b9b" />
+  </Folder>
+  <Folder Name="/Source/" />
+  <Folder Name="/Source/Client/">
+    <Project Path="Source/Client/Reoria.Client.Core/Reoria.Client.Core.shproj" Id="7bf2e3ca-9319-4859-ae28-d5ace9aec580" />
+  </Folder>
+  <Folder Name="/Source/Engine/">
+    <Project Path="Source/Engine/Reoria.Engine.Core/Reoria.Engine.Core.shproj" Id="08427bad-cf8b-4a68-a994-cdd2fefbfbe2" />
+  </Folder>
 </Solution>
