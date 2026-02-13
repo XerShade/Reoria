@@ -1,4 +1,9 @@
 <Solution>
+  <Folder Name="/.SolutionItems/">
+    <File Path=".env" />
+    <File Path="default.env" />
+    <File Path="docker-compose.yml" />
+  </Folder>
   <Folder Name="/Applications/">
     <Project Path="Applications/Reoria.Server/Reoria.Server.csproj" Id="e137c6bc-87a9-4237-a3b5-f26b3d5697bb" />
   </Folder>

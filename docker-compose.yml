@@ -1,0 +1,14 @@
+services:
+   reoria.services.server:
+     build: 
+       context: .
+       dockerfile: applications/Reoria.Server/Dockerfile
+     restart: no # Temporary, until the server is ready to run as a service. Will be changed to "unless-stopped" in the future.
+     env_file:
+        - .env
+     container_name: reoria.applications.server
+
+networks:
+  default:
+    external: true
+    name: system.nginx.proxy

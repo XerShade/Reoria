@@ -1,28 +1,45 @@
-# See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
-
-# This stage is used when running from VS in fast mode (Default for Debug configuration)
-FROM mcr.microsoft.com/dotnet/runtime:10.0 AS base
-USER $APP_UID
-WORKDIR /app
-
-
-# This stage is used to build the service project
+# =========================
+# Build Stage
+# =========================
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+
+# Set the build configuration
 ARG BUILD_CONFIGURATION=Release
+
+# Set the working directory
 WORKDIR /src
-COPY ["Applications/Reoria.Server/Reoria.Server.csproj", "Applications/Reoria.Server/"]
-RUN dotnet restore "./Applications/Reoria.Server/Reoria.Server.csproj"
+
+# Copy only project file first (better caching)
+COPY Applications/Reoria.Server/Reoria.Server.csproj Applications/Reoria.Server/
+
+# Restore dependencies
+RUN dotnet restore Applications/Reoria.Server/Reoria.Server.csproj
+
+# Copy everything else
 COPY . .
-WORKDIR "/src/Applications/Reoria.Server"
-RUN dotnet build "./Reoria.Server.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
-# This stage is used to publish the service project to be copied to the final stage
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./Reoria.Server.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+# Change to the project directory
+WORKDIR /src/Applications/Reoria.Server
 
-# This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
-FROM base AS final
+# Publish directly (skip separate build stage)
+RUN dotnet publish Reoria.Server.csproj \
+    -c $BUILD_CONFIGURATION \
+    -o /app/publish \
+    /p:PublishTrimmed=true
+
+# =========================
+# Runtime Stage
+# =========================
+FROM mcr.microsoft.com/dotnet/runtime:10.0 AS final
+
+# Set the working directory
 WORKDIR /app
-COPY --from=publish /app/publish .
+
+# Set the user
+USER $APP_UID
+
+# Copy the application
+COPY --from=build /app/publish .
+
+# Define the entry point
 ENTRYPOINT ["dotnet", "Reoria.Server.dll"]
