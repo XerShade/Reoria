@@ -1,9 +1,10 @@
-using Android.App;
 using Android.Content.PM;
-using Android.OS;
 using Android.Views;
 using Microsoft.Xna.Framework;
 using Reoria.Client.Core;
+using Reoria.Engine.Application;
+using Reoria.Engine.Application.Services.Interfaces;
+using Reoria.Engine.Core.Configuration.Providers;
 
 namespace Reoria.Client.Android;
 
@@ -24,6 +25,10 @@ public class Activity1 : AndroidGameActivity
     protected override void OnCreate(Bundle bundle)
     {
         base.OnCreate(bundle);
+
+        IFileProviderService.SetFileProvider(new AndroidAssetFileProvider(this.Assets!));
+
+        new AppBuilder([]).Build();
 
         _game = new Game1();
         _view = _game.Services.GetService(typeof(View)) as View;

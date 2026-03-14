@@ -22,6 +22,6 @@
     <Project Path="Source/Client/Reoria.Client.Core/Reoria.Client.Core.shproj" Id="7bf2e3ca-9319-4859-ae28-d5ace9aec580" />
   </Folder>
   <Folder Name="/Source/Engine/">
-    <Project Path="Source/Engine/Reoria.Engine.Core/Reoria.Engine.Core.shproj" Id="08427bad-cf8b-4a68-a994-cdd2fefbfbe2" />
+    <Project Path="Source/Engine/Reoria.Engine.Application/Reoria.Engine.Application.shproj" Id="76cf7146-64a3-4d1a-b60e-3cbe3c1e4cb5" />
   </Folder>
 </Solution>
