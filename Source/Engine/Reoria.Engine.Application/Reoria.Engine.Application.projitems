@@ -17,6 +17,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Modules\IBootStrapModules.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\FileProviderService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IFileProviderService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threads\GameThreadModule.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threads\IGameThread.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)appsettings.json">

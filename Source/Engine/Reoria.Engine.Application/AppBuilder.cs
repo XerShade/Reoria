@@ -1,9 +1,11 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Reoria.Engine.Application.Configuration;
 using Reoria.Engine.Application.Modules;
+using Reoria.Engine.Application.Threads;
 using Serilog;
 using Serilog.Extensions.Logging;
 using System.Diagnostics;
@@ -56,10 +58,10 @@ public partial class AppBuilder
         this.Logger = this.BootStrapper.GetLogger<AppBuilder>();
         this.Logger.LogInformation("Starting game engine creation and initialization.");
 
-        // Start a new stopwatch to measure the bootstrapping time.
+        // Start a new stopwatch to measure the application time.
         Stopwatch stopwatch = Stopwatch.StartNew();
 
-        // Discover the bootstrapping modules.
+        // Discover the application modules.
         this.Modules = this.DiscoverModules();
 
         // Get the configuration instance.
@@ -73,20 +75,20 @@ public partial class AppBuilder
         this.Services = this.GetServices();
         this.Provider = this.GetServiceProvider();
 
-        // Stop the stopwatch to measure the bootstrapping time.
+        // Stop the stopwatch to measure the application time.
         stopwatch.Stop();
     }
 
     /// <summary>
-    /// Discovers bootstrapping modules within all assemblies in the current app domain.
+    /// Discovers application modules within all assemblies in the current app domain.
     /// </summary>
-    /// <returns>A list of bootstrapping modules.</returns>
+    /// <returns>A list of application modules.</returns>
     protected virtual List<IApplicationModule> DiscoverModules()
     {
         // Create a list to store the modules in.
         List<IApplicationModule> modules = [];
 
-        // Discover the bootstrapping modules.
+        // Discover the application modules.
         Assembly[] assemblies = [.. AppDomain.CurrentDomain.GetAssemblies()];
         Type[] types = [.. assemblies
                 .SelectMany(a =>{ try { return a.GetTypes(); } catch { return []; }})
@@ -99,6 +101,9 @@ public partial class AppBuilder
             {
                 // Attempt to create the module.
                 IApplicationModule module = (IApplicationModule)Activator.CreateInstance(type)!;
+
+                // Add the module to the list.
+                modules.Add(module);
             }
             catch (Exception ex)
             {
@@ -112,10 +117,10 @@ public partial class AppBuilder
     }
 
     /// <summary>
-    /// Sorts the provided list of bootstrapping modules using topological sorting based on their dependencies.
+    /// Sorts the provided list of application modules using topological sorting based on their dependencies.
     /// </summary>
-    /// <param name="modules">The list of bootstrapping modules to sort.</param>
-    /// <returns>A sorted list of bootstrapping modules.</returns>
+    /// <param name="modules">The list of application modules to sort.</param>
+    /// <returns>A sorted list of application modules.</returns>
     protected List<IApplicationModule> SortModules(List<IApplicationModule> modules)
     {
         // Create a dictionary to store the modules by type.
@@ -140,7 +145,7 @@ public partial class AppBuilder
     }
 
     /// <summary>
-    /// Visits a bootstrapping module and its dependencies, performing topological sorting.
+    /// Visits a application module and its dependencies, performing topological sorting.
     /// </summary>
     /// <param name="module">The module being visited.</param>
     /// <param name="moduleLookup">The dictionary of modules by type.</param>
@@ -323,13 +328,9 @@ public partial class AppBuilder
     /// <summary>
     /// Builds and runs the main thread of the application.
     /// </summary>
-    public virtual void Build()
+    public virtual IGameThread Build()
     {
-        // Check if logging is enabled.
-        if(this.Logger.IsEnabled(LogLevel.Information))
-        {
-            // Print a message to the console.
-            this.Logger.LogInformation("Hello world!");
-        }
+        // Attempt to get the main thread.
+        return this.Provider.GetRequiredKeyedService<IGameThread>("MainThread") ?? throw new InvalidOperationException("Failed to get main thread.");
     }
 }

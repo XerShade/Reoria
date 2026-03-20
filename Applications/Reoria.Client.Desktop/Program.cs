@@ -1,2 +1,5 @@
-﻿using var game = new Reoria.Client.Core.Game1();
-game.Run();
+﻿using Reoria.Engine.Application;
+using Reoria.Engine.Application.Threads;
+
+IGameThread engine = new AppBuilder(args).Build();
+engine.Run();

@@ -95,6 +95,9 @@ public partial class AppBootStrapper
             {
                 // Attempt to create the module.
                 IBootStrapModule module = (IBootStrapModule)Activator.CreateInstance(type)!;
+
+                // Add the module to the list.
+                modules.Add(module);
             }
             catch (Exception ex)
             {

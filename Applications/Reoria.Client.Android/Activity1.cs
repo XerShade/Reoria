@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Reoria.Client.Core;
 using Reoria.Engine.Application;
 using Reoria.Engine.Application.Services.Interfaces;
+using Reoria.Engine.Application.Threads;
 using Reoria.Engine.Core.Configuration.Providers;
 
 namespace Reoria.Client.Android;
@@ -19,21 +20,16 @@ namespace Reoria.Client.Android;
 )]
 public class Activity1 : AndroidGameActivity
 {
-    private Game1 _game;
-    private View _view;
-
     protected override void OnCreate(Bundle bundle)
     {
         base.OnCreate(bundle);
 
         IFileProviderService.SetFileProvider(new AndroidAssetFileProvider(this.Assets!));
 
-        new AppBuilder([]).Build();
+        IGameThread engine = new AppBuilder([]).Build();
+        View? view = engine.Services.GetService(typeof(View)) as View;
 
-        _game = new Game1();
-        _view = _game.Services.GetService(typeof(View)) as View;
-
-        SetContentView(_view);
-        _game.Run();
+        this.SetContentView(view ?? throw new InvalidOperationException("Unable to resolve view."));
+        engine.Run();
     }
 }

@@ -52,7 +52,7 @@ public interface IBootStrapLoggingModule : IBootStrapModule
 /// <summary>
 /// Defines an abstraction contract for a module that can add dependency injection functionality to the application bootstrapper.
 /// </summary>
-public interface IBootStrapServicesModule
+public interface IBootStrapServicesModule : IBootStrapModule
 {
     /// <summary>
     /// Invoked when the bootstrapper gets its dependency injection container.

@@ -52,7 +52,7 @@ public interface IApplicationLoggingModule : IApplicationModule
 /// <summary>
 /// Defines an abstraction contract for a module that can add dependency injection functionality to the application.
 /// </summary>
-public interface IApplicationServicesModule
+public interface IApplicationServicesModule : IApplicationModule
 {
     /// <summary>
     /// Invoked when the application gets its dependency injection container.
