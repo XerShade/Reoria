@@ -12,6 +12,10 @@ public class GameThread : Game, IGameThread
 {
     private GraphicsDeviceManager GraphicsDeviceManager { get; set; }
     private SpriteBatch? SpriteBatch { get; set; }
+    protected TimeSpan Accumulator { get; set; }
+    protected TimeSpan FixedStep { get; init; } = TimeSpan.FromSeconds(1.0 / 30.0);
+    protected int MaxSteps { get; init; } = 5;
+    protected int Steps { get; set; } = 0;
 
     public GameThread()
     {
@@ -32,7 +36,32 @@ public class GameThread : Game, IGameThread
         }
 #endif
 
+        this.Accumulator += gameTime.ElapsedGameTime;
+
+        this.VariableUpdate(gameTime);
+
+        while (this.Accumulator >= this.FixedStep && this.Steps < this.MaxSteps)
+        {
+            GameTime fixedGameTime = new(gameTime.TotalGameTime, this.FixedStep);
+            this.FixedUpdate(fixedGameTime);
+
+            this.Accumulator -= this.FixedStep;
+            this.Steps++;
+        }
+
+        this.Steps = 0;
+
         base.Update(gameTime);
+    }
+
+    protected virtual void VariableUpdate(GameTime gameTime)
+    {
+
+    }
+
+    protected virtual void FixedUpdate(GameTime gameTime)
+    {
+
     }
 
     protected override void Draw(GameTime gameTime)

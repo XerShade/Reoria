@@ -12,6 +12,8 @@ public interface IGameThread
     /// </summary>
     GameServiceContainer Services { get; }
 
+    void Exit();
+
     /// <summary>
     /// Runs the thread and executes logic.
     /// </summary>
