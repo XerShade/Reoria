@@ -1,13 +1,15 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
 using Reoria.Engine.Application.Threads;
+using Reoria.Engine.Network.Sockets;
 using System.Diagnostics;
 
 namespace Reoria.Server.Threads;
 
-public class GameThread(ILogger<IGameThread> logger) : IGameThread
+public class GameThread(ILogger<IGameThread> logger, ServerSocket socket) : IGameThread
 {
     protected virtual ILogger<IGameThread> Logger { get; init; } = logger;
+    protected virtual ServerSocket Socket { get; init; } = socket;
     protected virtual Stopwatch Timer { get; init; } = new();
     protected virtual TimeSpan PreviousTime { get; set; }
     protected virtual TimeSpan Accumulator { get; set; }
@@ -24,8 +26,12 @@ public class GameThread(ILogger<IGameThread> logger) : IGameThread
         this.Timer.Start();
         this.PreviousTime = this.Timer.Elapsed;
 
+        this.Socket.Start();
+
         while (this.Running)
         {
+            this.Socket.Update();
+
             TimeSpan now = this.Timer.Elapsed;
             TimeSpan frameTime = now - this.PreviousTime;
             this.PreviousTime = now;
@@ -48,6 +54,8 @@ public class GameThread(ILogger<IGameThread> logger) : IGameThread
 
             Thread.Sleep(1);
         }
+
+        this.Socket.Stop();
     }
 
     protected virtual void VariableUpdate(GameTime gameTime)
