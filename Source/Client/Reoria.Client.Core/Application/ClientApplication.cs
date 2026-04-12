@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Reoria.Engine.Application.Configuration;
@@ -28,23 +29,20 @@ public class ClientApplication : Game, IApplication
     protected IConfiguration Configuration { get; init; }
     protected ILoggerFactory LoggerFactory { get; init; }
     protected ContainerBuilder ContainerServices { get; init; }
-    protected IServiceProvider Provider { get; init; }
+    protected IServiceProvider Provider { get; set; }
     private GraphicsDeviceManager GraphicsDeviceManager { get; set; }
     private SpriteBatch? SpriteBatch { get; set; }
     protected TimeSpan Accumulator { get; set; }
     protected TimeSpan FixedStep { get; init; } = TimeSpan.FromSeconds(1.0 / 30.0);
     protected int MaxSteps { get; init; } = 5;
     protected int Steps { get; set; } = 0;
-    protected ClientSocket Socket { get; init; }
+    protected ClientSocket Socket { get; set; }
 
     public ClientApplication(ILogger<IApplication> logger, [KeyFilter("CommandLineArgs")] string[] args)
     {
         // Store the logger and report the initialization.
         this.Logger = logger;
         this.Logger.LogInformation("Initializing server application...");
-
-        // Start a new stopwatch to measure the application time.
-        Stopwatch stopwatch = Stopwatch.StartNew();
 
         // Discover the application injectors.
         this.Injectors = this.DiscoverInjectors();
@@ -58,13 +56,6 @@ public class ClientApplication : Game, IApplication
 
         // Get the service collection and service provider instances.
         this.ContainerServices = this.GetServices();
-        this.Provider = this.GetServiceProvider();
-
-        // Get the server network socket.
-        this.Socket = this.Provider.GetRequiredService<ClientSocket>();
-
-        // Stop the stopwatch to measure the application time.
-        stopwatch.Stop();
 
         this.GraphicsDeviceManager = new GraphicsDeviceManager(this);
         this.Content.RootDirectory = "Content";
@@ -258,6 +249,60 @@ public class ClientApplication : Game, IApplication
         return services;
     }
 
+    /// <inheritdoc />
+    protected override void Initialize()
+    {
+        // Registe the graphics device manager.
+        _ = this.ContainerServices.RegisterInstance<GraphicsDeviceManager>(this.GraphicsDeviceManager)
+            .Keyed<GraphicsDeviceManager>("GraphicsDeviceManager")
+            .As<GraphicsDeviceManager>()
+            .SingleInstance();
+
+        // Register the graphics device.
+        _ = this.ContainerServices.RegisterInstance<GraphicsDevice>(this.GraphicsDevice)
+            .Keyed<GraphicsDevice>("GraphicsDevice")
+            .As<GraphicsDevice>()
+            .SingleInstance();
+
+        // Register the content manager.
+        _ = this.ContainerServices.RegisterInstance<ContentManager>(this.Content)
+            .Keyed<ContentManager>("ContentManager")
+            .As<ContentManager>()
+            .SingleInstance();
+
+        // Call the base method.
+        base.Initialize();
+    }
+
+    /// <inheritdoc />
+    protected override void LoadContent()
+    {
+        // Create the sprite batch.
+        this.SpriteBatch = new SpriteBatch(this.GraphicsDevice);
+
+        // Register the sprite batch.
+        _ = this.ContainerServices.RegisterInstance<SpriteBatch>(this.SpriteBatch)
+            .Keyed<SpriteBatch>("SpriteBatch")
+            .As<SpriteBatch>()
+            .SingleInstance();
+
+        // Call the base method.
+        base.LoadContent();
+    }
+
+    /// <inheritdoc />
+    protected override void BeginRun()
+    {
+        // Get the service provider.
+        this.Provider = this.GetServiceProvider();
+
+        // Get the server network socket.
+        this.Socket = this.Provider.GetRequiredService<ClientSocket>();
+
+        // Call the base method.
+        base.BeginRun();
+    }
+
     protected virtual IServiceProvider GetServiceProvider()
     {
         IContainer container = this.ContainerServices.Build();
@@ -271,9 +316,6 @@ public class ClientApplication : Game, IApplication
 
         return provider;
     }
-
-    protected override void LoadContent()
-        => this.SpriteBatch = new SpriteBatch(this.GraphicsDevice);
 
     protected override void Update(GameTime gameTime)
     {
