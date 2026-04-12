@@ -12,6 +12,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)AppBootStrapper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Configuration\AppConfigurationBuilder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Configuration\Interfaces\IAppConfigurationBuilder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\ApplicationConfigurationExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\ApplicationInjectorExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\ApplicationLoggingExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\ApplicationServiceExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IApplication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Modules\IApplicationInjectors.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Modules\IBootStrapInjectors.cs" />

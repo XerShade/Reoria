@@ -1,29 +1,34 @@
 ﻿using Autofac;
-using Autofac.Extensions.DependencyInjection;
 using Autofac.Features.AttributeFilters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
-using Reoria.Engine.Application.Configuration;
-using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Application.Extensions;
 using Reoria.Engine.Application.Injectors;
+using Reoria.Engine.Application.Interfaces;
 using Reoria.Engine.Network.Sockets;
-using Serilog;
-using Serilog.Extensions.Logging;
 using System.Diagnostics;
-using System.Reflection;
 
 namespace Reoria.Server.Application;
 
+/// <summary>
+/// Defines the server application and its functionality.
+/// </summary>
 public class ServerApplication : IApplication
 {
-    protected virtual ILogger<IApplication> Logger { get; init; }
-    protected virtual List<IApplicationInjector> Injectors { get; init; }
-    protected IConfiguration Configuration { get; init; }
-    protected ILoggerFactory LoggerFactory { get; init; }
-    protected ContainerBuilder Services { get; init; }
-    protected IServiceProvider Provider { get; init; }
+    /// <inheritdoc />
+    public virtual ILogger<IApplication> Logger { get; init; }
+    /// <inheritdoc />
+    public virtual List<IApplicationInjector> Injectors { get; init; } = [];
+    /// <inheritdoc />
+    public virtual IConfiguration Configuration { get; init; }
+    /// <inheritdoc />
+    public virtual ILoggerFactory LoggerFactory { get; init; }
+    /// <inheritdoc />
+    public virtual ContainerBuilder ContainerBuilder { get; init; }
+    /// <inheritdoc />
+    public virtual IServiceProvider Provider { get; init; }
 
     public ServerApplication(ILogger<IApplication> logger, [KeyFilter("CommandLineArgs")] string[] args)
     {
@@ -42,10 +47,10 @@ public class ServerApplication : IApplication
 
         // Get the logger factory and logger instances.
         this.LoggerFactory = this.GetLoggerFactory();
-        this.Logger = this.GetLogger();
+        this.Logger = this.LoggerFactory.CreateLogger<IApplication>();
 
         // Get the service collection and service provider instances.
-        this.Services = this.GetServices();
+        this.ContainerBuilder = this.GetServices();
         this.Provider = this.GetServiceProvider();
 
         // Get the server network socket.
@@ -56,262 +61,115 @@ public class ServerApplication : IApplication
     }
 
     /// <summary>
-    /// Discovers application injectors within all assemblies in the current app domain.
+    /// Gets a value indicating whether the application is running.
     /// </summary>
-    /// <returns>A list of application injectors.</returns>
-    protected virtual List<IApplicationInjector> DiscoverInjectors()
-    {
-        // Create a list to store the injectors in.
-        List<IApplicationInjector> injectors = [];
-
-        // Discover the application injectors.
-        Assembly[] assemblies = [.. AppDomain.CurrentDomain.GetAssemblies()];
-        Type[] types = [.. assemblies
-                .SelectMany(a =>{ try { return a.GetTypes(); } catch { return []; }})
-                .Where(t => typeof(IApplicationInjector).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)];
-
-        // Iterate over the types found.
-        foreach (Type type in types)
-        {
-            try
-            {
-                // Attempt to create the injector.
-                IApplicationInjector injector = (IApplicationInjector)Activator.CreateInstance(type)!;
-
-                // Add the injector to the list.
-                injectors.Add(injector);
-            }
-            catch (Exception ex)
-            {
-                // Log the error.
-                Console.WriteLine($"Failed to create bootstrap injector {type.Name}: {ex.Message}");
-            }
-        }
-
-        // Return and sort the injectors.
-        return this.SortInjectors(injectors);
-    }
-
-    /// <summary>
-    /// Sorts the provided list of application injectors using topological sorting based on their dependencies.
-    /// </summary>
-    /// <param name="injectors">The list of application injectors to sort.</param>
-    /// <returns>A sorted list of application injectors.</returns>
-    protected List<IApplicationInjector> SortInjectors(List<IApplicationInjector> injectors)
-    {
-        // Create a dictionary to store the injectors by type.
-        Dictionary<Type, IApplicationInjector> injectorLookup = injectors.ToDictionary(m => m.GetType());
-
-        // Create a list to store the sorted injectors.
-        List<IApplicationInjector> sorted = [];
-
-        // Create sets to track visited and visiting injectors.
-        HashSet<Type> visited = [];
-        HashSet<Type> visiting = [];
-
-        // Iterate over the injectors and perform topological sorting.
-        foreach (IApplicationInjector injector in injectors)
-        {
-            // Visit the injector.
-            this.VisitInjector(injector, injectorLookup, visited, visiting, sorted);
-        }
-
-        // Return and initialize the sorted injectors.
-        return sorted;
-    }
-
-    /// <summary>
-    /// Visits a application injector and its dependencies, performing topological sorting.
-    /// </summary>
-    /// <param name="injector">The injector being visited.</param>
-    /// <param name="injectorLookup">The dictionary of injectors by type.</param>
-    /// <param name="visited">The set of visited injectors.</param>
-    /// <param name="visiting">The set of injectors currently being visited.</param>
-    /// <param name="sorted">The list of sorted injectors.</param>
-    /// <exception cref="InvalidOperationException"></exception>
-    protected void VisitInjector(IApplicationInjector injector, Dictionary<Type, IApplicationInjector> injectorLookup, HashSet<Type> visited, HashSet<Type> visiting, List<IApplicationInjector> sorted)
-    {
-        // Get the injector type.
-        Type injectorType = injector.GetType();
-
-        // Check if the injector has already been visited.
-        if (visited.Contains(injectorType))
-        {
-            return;
-        }
-
-        // Check if the injector is currently being visited.
-        if (visiting.Contains(injectorType))
-        {
-            throw new InvalidOperationException($"Circular dependency detected involving {injectorType.Name}");
-        }
-
-        // Add the injector to the visiting set.
-        _ = visiting.Add(injectorType);
-
-        // Iterate over the injector's dependencies.
-        foreach (Type dependency in injector.Dependencies)
-        {
-            // Check if the dependency has not been found.
-            if (!injectorLookup.TryGetValue(dependency, out IApplicationInjector? depInjector))
-            {
-                // Throw an exception.
-                throw new InvalidOperationException(
-                    $"Injector {injectorType.Name} depends on {dependency.Name}, but it was not found.");
-            }
-
-            // Visit the dependency injector.
-            this.VisitInjector(depInjector, injectorLookup, visited, visiting, sorted);
-        }
-
-        // Remove the injector from the visiting set.
-        _ = visiting.Remove(injectorType);
-
-        // Add the injector to the visited set.
-        _ = visited.Add(injectorType);
-
-        // Add the injector to the sorted list.
-        sorted.Add(injector);
-    }
-
-    protected virtual IConfiguration GetConfiguration(string[] args)
-    {
-        AppConfigurationBuilder builder = new();
-
-        _ = builder.AddConfigurationSource("appsettings.json", false, true);
-        _ = builder.AddConfigurationSource("appsettings.logging.json", true, true);
-        _ = builder.AddConfigurationSource("appsettings.serilog.json", true, true);
-
-        foreach (IApplicationConfigurationInjector injector in this.Injectors.OfType<IApplicationConfigurationInjector>())
-        {
-            injector.OnGetConfiguration(builder);
-        }
-
-        _ = builder.AddCommandLine(args);
-
-        return builder.Build() ?? throw new InvalidOperationException("Failed to build configuration.");
-    }
-
-    protected virtual ILoggerFactory GetLoggerFactory()
-    {
-        LoggerFactory loggerFactory = new();
-
-        Log.CloseAndFlush();
-
-        Log.Logger = this.Configuration is not null
-            ? new LoggerConfiguration()
-                .ReadFrom.Configuration(this.Configuration)
-                .CreateLogger()
-            : new LoggerConfiguration()
-                .WriteTo.Console()
-                .CreateLogger();
-
-        loggerFactory.AddProvider(new SerilogLoggerProvider(Log.Logger));
-
-        foreach (IApplicationLoggingInjector injector in this.Injectors.OfType<IApplicationLoggingInjector>())
-        {
-            injector.OnGetLoggerFactory(loggerFactory, this.Configuration!);
-        }
-
-        return loggerFactory;
-    }
-
-    protected ILogger<IApplication> GetLogger()
-        // Use the logger factory to create a logger for the application.
-        => this.LoggerFactory.CreateLogger<IApplication>();
-
-    protected virtual ContainerBuilder GetServices()
-    {
-        ContainerBuilder services = new();
-
-        _ = services.RegisterInstance(this.Configuration)
-            .As<IConfiguration>()
-            .SingleInstance();
-        _ = services.RegisterInstance(this.LoggerFactory)
-            .As<ILoggerFactory>()
-            .SingleInstance();
-        _ = services.RegisterGeneric(typeof(Logger<>))
-            .As(typeof(ILogger<>))
-            .SingleInstance();
-
-        foreach (IApplicationServicesInjector injector in this.Injectors.OfType<IApplicationServicesInjector>())
-        {
-            injector.OnGetServices(services);
-        }
-
-        return services;
-    }
-
-    protected virtual IServiceProvider GetServiceProvider()
-    {
-        IContainer container = this.Services.Build();
-
-        AutofacServiceProvider provider = new(container);
-
-        foreach (IApplicationServicesInjector injector in this.Injectors.OfType<IApplicationServicesInjector>())
-        {
-            injector.OnConfigureServices(provider);
-        }
-
-        return provider;
-    }
-
-    protected virtual ServerSocket Socket { get; init; }
-    protected virtual Stopwatch Timer { get; init; } = new();
-    protected virtual TimeSpan PreviousTime { get; set; }
-    protected virtual TimeSpan Accumulator { get; set; }
-    protected virtual TimeSpan FixedStep { get; init; } = TimeSpan.FromSeconds(1.0 / 30.0);
     protected virtual bool Running { get; set; } = true;
-    protected virtual int MaxSteps { get; init; } = 5;
-    protected virtual int Steps { get; set; } = 0;
+    /// <summary>
+    /// Gets the stopwatch to measure the application time.
+    /// </summary>
+    protected virtual Stopwatch Timer { get; init; } = new();
+    /// <summary>
+    /// Gets the previous time for the update loop.
+    /// </summary>
+    protected virtual TimeSpan PreviousTime { get; set; }
+    /// <summary>
+    /// Gets the accumulator for the fixed update loop.
+    /// </summary>
+    protected TimeSpan Accumulator { get; set; }
+    /// <summary>
+    /// Gets the fixed step for the fixed update loop.
+    /// </summary>
+    protected TimeSpan FixedStep { get; init; } = TimeSpan.FromSeconds(1.0 / 30.0);
+    /// <summary>
+    /// Gets the maximum steps for the fixed update loop allowed per update cycle.
+    /// </summary>
+    protected int MaxSteps { get; init; } = 5;
+    /// <summary>
+    /// Gets the current number of steps for the fixed update loop.
+    /// </summary>
+    protected int Steps { get; set; } = 0;
+    /// <summary>
+    /// Gets an instance of <see cref="ServerSocket"/> to manage the networking functionality.
+    /// </summary>
+    protected ServerSocket Socket { get; set; }
 
+    /// <inheritdoc />
     public virtual void Run()
     {
+        // Start the stopwatch to measure the application time.
         this.Timer.Start();
         this.PreviousTime = this.Timer.Elapsed;
 
+        // Start the network socket.
         this.Socket.Start();
 
+        // Start the update loop.
         while (this.Running)
         {
+            // Update the network socket.
             this.Socket.Update();
 
+            // Calculate the elapsed time since the last update.
             TimeSpan now = this.Timer.Elapsed;
             TimeSpan frameTime = now - this.PreviousTime;
             this.PreviousTime = now;
 
+            // Increment the accumulator.
             this.Accumulator += frameTime;
 
-            GameTime variableGameTime = new(now, frameTime);
-            this.VariableUpdate(variableGameTime);
+            // Calculate the game time for the current update cycle.
+            GameTime gameTime = new(now, frameTime);
 
+            // Increment the accumulator.
+            this.Accumulator += gameTime.ElapsedGameTime;
+
+            // Call the variable update function.
+            this.VariableUpdate(gameTime);
+
+            // Iterate the fixed update function if the accumulator is greater than or equal to the fixed step.
             while (this.Accumulator >= this.FixedStep && this.Steps < this.MaxSteps)
             {
-                GameTime fixedGameTime = new(now, this.FixedStep);
+                // Calculate the fixed game time.
+                GameTime fixedGameTime = new(gameTime.TotalGameTime, this.FixedStep);
+
+                // Call the fixed update function.
                 this.FixedUpdate(fixedGameTime);
 
+                // Decrement the accumulator and increment the step counter.
                 this.Accumulator -= this.FixedStep;
                 this.Steps++;
             }
 
+            // Reset the step counter.
             this.Steps = 0;
 
+            // Pause thread execution to reduce CPU usage.
             Thread.Sleep(1);
         }
 
+        // Stop the network socket.
         this.Socket.Stop();
     }
 
+    /// <summary>
+    /// Called on a variable timescale withing the update function.
+    /// </summary>
+    /// <param name="gameTime">The elapsed time since the last call to <see cref="FixedUpdate(GameTime)"/>.</param>
     protected virtual void VariableUpdate(GameTime gameTime)
     {
 
     }
 
+    /// <summary>
+    /// Called on a fixed timescale withing the update function.
+    /// </summary>
+    /// <param name="gameTime">The elapsed time since the last call to <see cref="FixedUpdate(GameTime)"/>.</param>
     protected virtual void FixedUpdate(GameTime gameTime)
     {
 
     }
 
+    /// <inheritdoc />
     public virtual void Exit()
         => this.Running = false;
 
