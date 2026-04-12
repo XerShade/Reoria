@@ -10,15 +10,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AppBootStrapper.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)AppBuilder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Configuration\AppConfigurationBuilder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Configuration\Interfaces\IAppConfigurationBuilder.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Modules\IApplicationModules.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Modules\IBootStrapModules.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IApplication.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Modules\IApplicationInjectors.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Modules\IBootStrapInjectors.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\FileProviderService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IFileProviderService.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Threads\GameThreadModule.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Threads\IGameThread.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)appsettings.json">

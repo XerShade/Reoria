@@ -1,5 +1,6 @@
-﻿using Reoria.Engine.Application;
-using Reoria.Engine.Application.Threads;
+﻿using Reoria.Client.Core.Application;
+using Reoria.Engine.Application;
+using Reoria.Engine.Application.Interfaces;
 
 namespace Reoria.Client.iOS;
 
@@ -19,7 +20,7 @@ internal class Program : UIApplicationDelegate
 
     public override void FinishedLaunching(UIApplication app)
     {
-        IGameThread engine = new AppBuilder(Args).Build();
-        engine.Run();
+        using ClientApplication application = new AppBootStrapper([]).CreateApplication<ClientApplication>();
+        application.Run();
     }
 }

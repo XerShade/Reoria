@@ -1,11 +1,11 @@
 ﻿using Autofac;
 using LiteNetLib;
 using Microsoft.Extensions.Logging;
-using Reoria.Engine.Application.Modules;
+using Reoria.Engine.Application.Injectors;
 
 namespace Reoria.Engine.Network.Sockets;
 
-public class ServerSocketInjector : IApplicationServicesModule
+public class ServerSocketInjector : IApplicationServicesInjector
 {
     public string Name
         => "ServerSocket Injector";

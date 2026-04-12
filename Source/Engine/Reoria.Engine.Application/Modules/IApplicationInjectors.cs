@@ -3,31 +3,31 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Reoria.Engine.Application.Configuration.Interfaces;
 
-namespace Reoria.Engine.Application.Modules;
+namespace Reoria.Engine.Application.Injectors;
 
 /// <summary>
-/// Defines an abstraction contract for a module that can add functionality to the application.
+/// Defines an abstraction contract for a injector that can add functionality to the application.
 /// </summary>
-public interface IApplicationModule
+public interface IApplicationInjector
 {
     /// <summary>
-    /// Gets the name of the module.
+    /// Gets the name of the injector.
     /// </summary>
     string Name { get; }
     /// <summary>
-    /// Gets a description of what the module does.
+    /// Gets a description of what the injector does.
     /// </summary>
     string Description { get; }
     /// <summary>
-    /// Gets the dependencies of the module represented as a list of types.
+    /// Gets the dependencies of the injector represented as a list of types.
     /// </summary>
     Type[] Dependencies { get; }
 }
 
 /// <summary>
-/// Defines an abstraction contract for a module that can add configuration functionality to the application.
+/// Defines an abstraction contract for a injector that can add configuration functionality to the application.
 /// </summary>
-public interface IApplicationConfigurationModule : IApplicationModule
+public interface IApplicationConfigurationInjector : IApplicationInjector
 {
     /// <summary>
     /// Invoked when the application gets its configuration object.
@@ -37,9 +37,9 @@ public interface IApplicationConfigurationModule : IApplicationModule
 }
 
 /// <summary>
-/// Defines an abstraction contract for a module that can add logging functionality to the application.
+/// Defines an abstraction contract for a injector that can add logging functionality to the application.
 /// </summary>
-public interface IApplicationLoggingModule : IApplicationModule
+public interface IApplicationLoggingInjector : IApplicationInjector
 {
     /// <summary>
     /// Invoked when the application gets its logger factory object.
@@ -50,9 +50,9 @@ public interface IApplicationLoggingModule : IApplicationModule
 }
 
 /// <summary>
-/// Defines an abstraction contract for a module that can add dependency injection functionality to the application.
+/// Defines an abstraction contract for a injector that can add dependency injection functionality to the application.
 /// </summary>
-public interface IApplicationServicesModule : IApplicationModule
+public interface IApplicationServicesInjector : IApplicationInjector
 {
     /// <summary>
     /// Invoked when the application gets its dependency injection container.

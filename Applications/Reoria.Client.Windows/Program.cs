@@ -1,5 +1,5 @@
-﻿using Reoria.Engine.Application;
-using Reoria.Engine.Application.Threads;
+﻿using Reoria.Client.Core.Application;
+using Reoria.Engine.Application;
 
-IGameThread engine = new AppBuilder(args).Build();
-engine.Run();
+using ClientApplication application = new AppBootStrapper(args).CreateApplication<ClientApplication>();
+application.Run();

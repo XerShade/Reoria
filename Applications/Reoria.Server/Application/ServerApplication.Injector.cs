@@ -1,0 +1,35 @@
+﻿using Autofac;
+using Reoria.Engine.Application.Injectors;
+using Reoria.Engine.Application.Interfaces;
+
+namespace Reoria.Server.Application;
+
+/// <summary>
+/// Defines an inejector for injecting the server application.
+/// </summary>
+public class ServerApplicationInjector : IBootStrapApplicationInjector
+{
+    /// <inheritdoc />
+    public string Name
+        => "Server Application Injector";
+
+    /// <inheritdoc />
+    public string Description 
+        => "Injects the server application into the bootstrap container.";
+
+    /// <inheritdoc />
+    public Type[] Dependencies
+        => [];
+
+    /// <inheritdoc />
+    public void OnGetServices(ContainerBuilder services) 
+        => services.RegisterType<ServerApplication>()
+        .Keyed<IApplication>("ServerApplication")
+        .As<ServerApplication>()
+        .As<IApplication>()
+        .SingleInstance();
+
+    /// <inheritdoc />
+    public void OnConfigureServices(IServiceProvider provider) 
+    { }
+}

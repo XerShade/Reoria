@@ -1,10 +1,9 @@
 using Android.Content.PM;
 using Android.Views;
 using Microsoft.Xna.Framework;
-using Reoria.Client.Core;
+using Reoria.Client.Core.Application;
 using Reoria.Engine.Application;
 using Reoria.Engine.Application.Services.Interfaces;
-using Reoria.Engine.Application.Threads;
 using Reoria.Engine.Core.Configuration.Providers;
 
 namespace Reoria.Client.Android;
@@ -26,10 +25,10 @@ public class Activity1 : AndroidGameActivity
 
         IFileProviderService.SetFileProvider(new AndroidAssetFileProvider(this.Assets!));
 
-        IGameThread engine = new AppBuilder([]).Build();
-        View? view = engine.Services.GetService(typeof(View)) as View;
+        using ClientApplication application = new AppBootStrapper([]).CreateApplication<ClientApplication>();
+        View? view = application.Services.GetService(typeof(View)) as View;
 
         this.SetContentView(view ?? throw new InvalidOperationException("Unable to resolve view."));
-        engine.Run();
+        application.Run();
     }
 }
