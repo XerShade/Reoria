@@ -10,7 +10,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Sockets\ClientSocket.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Sockets\ClientSocket.Injector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sockets\ServerSocket.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Sockets\ServerSocket.Injector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sockets\Socket.cs" />
   </ItemGroup>
 </Project>
