@@ -183,12 +183,8 @@ public class ClientApplication : Game, IApplication
                 // Start the socket.
                 this.Socket.Start();
 
-                // Attempt to connect to the server.
-                if (!this.Socket.Connect("127.0.0.1", 7234))
-                {
-                    // Connection failed, log the error.
-                    this.Logger.LogError("Unable to connect to the server, check that it is running.");
-                }
+                // Attempt to connect to the server using async method.
+                _ = this.ConnectToServerAsync();
             }
         }
 
@@ -249,6 +245,32 @@ public class ClientApplication : Game, IApplication
     protected virtual void FixedUpdate(GameTime gameTime)
     {
 
+    }
+
+    /// <summary>
+    /// Asynchronously connects to the server using configuration values.
+    /// </summary>
+    private async Task ConnectToServerAsync()
+    {
+        try
+        {
+            this.Logger.LogInformation("Attempting to connect to server...");
+            
+            bool connected = await this.Socket.ConnectAsync();
+            
+            if (connected)
+            {
+                this.Logger.LogInformation("Successfully connected to the server.");
+            }
+            else
+            {
+                this.Logger.LogError("Unable to connect to the server, check that it is running.");
+            }
+        }
+        catch (Exception ex)
+        {
+            this.Logger.LogError(ex, "Error occurred while connecting to the server.");
+        }
     }
 
     /// <inheritdoc />
