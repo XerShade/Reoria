@@ -10,8 +10,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AppBootStrapper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AppBootContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Configuration\AppConfigurationBuilder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Configuration\Interfaces\IAppConfigurationBuilder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enumerations\Platform.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\ApplicationConfigurationExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\ApplicationInjectorExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\ApplicationLoggingExtensions.cs" />

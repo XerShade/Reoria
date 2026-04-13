@@ -7,6 +7,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Reoria.Engine.Application;
+using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Extensions;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
@@ -22,6 +24,8 @@ namespace Reoria.Client.Core.Application;
 /// </summary>
 public class ClientApplication : Game, IApplication
 {
+    /// <inheritdoc />
+    public virtual Platform Platform { get; init; }
     /// <inheritdoc />
     public virtual ILogger<IApplication> Logger { get; init; }
     /// <inheritdoc />
@@ -70,8 +74,12 @@ public class ClientApplication : Game, IApplication
     /// </summary>
     /// <param name="logger">A logger instance to log messages to.</param>
     /// <param name="args">The command line arguments.</param>
-    public ClientApplication(ILogger<IApplication> logger, [KeyFilter("CommandLineArgs")] string[] args)
+    /// <param name="context">The application boot context.</param>
+    public ClientApplication(ILogger<IApplication> logger, [KeyFilter("CommandLineArgs")] string[] args, AppBootContext context)
     {
+        // Store the platform.
+        this.Platform = context.Platform;
+
         // Store the logger and report the initialization.
         this.Logger = logger;
         this.Logger.LogInformation("Initializing server application...");

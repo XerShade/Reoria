@@ -4,6 +4,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
+using Reoria.Engine.Application;
+using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Extensions;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
@@ -18,6 +20,8 @@ namespace Reoria.Server.Application;
 public class ServerApplication : IApplication
 {
     /// <inheritdoc />
+    public virtual Platform Platform { get; init; }
+    /// <inheritdoc />
     public virtual ILogger<IApplication> Logger { get; init; }
     /// <inheritdoc />
     public virtual List<IApplicationInjector> Injectors { get; init; } = [];
@@ -30,8 +34,17 @@ public class ServerApplication : IApplication
     /// <inheritdoc />
     public virtual IServiceProvider Provider { get; init; }
 
-    public ServerApplication(ILogger<IApplication> logger, [KeyFilter("CommandLineArgs")] string[] args)
+    /// <summary>
+    /// Constructs a new instance of <see cref="ServerApplication"/>.
+    /// </summary>
+    /// <param name="logger">A logger instance to log messages to.</param>
+    /// <param name="args">The command line arguments.</param>
+    /// <param name="context">The application boot context.</param>
+    public ServerApplication(ILogger<IApplication> logger, [KeyFilter("CommandLineArgs")] string[] args, AppBootContext context)
     {
+        // Store the platform.
+        this.Platform = context.Platform;
+
         // Store the logger and report the initialization.
         this.Logger = logger;
         this.Logger.LogInformation("Initializing server application...");

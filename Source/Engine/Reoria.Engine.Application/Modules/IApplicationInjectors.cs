@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Reoria.Engine.Application.Configuration.Interfaces;
+using Reoria.Engine.Application.Enumerations;
 
 namespace Reoria.Engine.Application.Injectors;
 
@@ -22,6 +23,10 @@ public interface IApplicationInjector
     /// Gets the dependencies of the injector represented as a list of types.
     /// </summary>
     Type[] Dependencies { get; }
+    /// <summary>
+    /// Gets the platform(s) that the injector is compatible with.
+    /// </summary>
+    Platform Platform { get; }
 }
 
 /// <summary>

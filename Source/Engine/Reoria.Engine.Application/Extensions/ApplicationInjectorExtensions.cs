@@ -1,4 +1,5 @@
-﻿using Reoria.Engine.Application.Injectors;
+﻿using Reoria.Engine.Application.Enumerations;
+using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
 using System.Reflection;
 
@@ -31,6 +32,13 @@ public static class ApplicationInjectorExtensions
             {
                 // Attempt to create the injector.
                 IApplicationInjector injector = (IApplicationInjector)Activator.CreateInstance(type)!;
+
+                // Check if the injector matches the application's platform.
+                if (!injector.Platform.Matches(application.Platform))
+                {
+                    // Skip the injector.
+                    continue;
+                }
 
                 // Add the injector to the list.
                 injectors.Add(injector);

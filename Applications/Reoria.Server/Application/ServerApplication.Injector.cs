@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
 
@@ -20,6 +21,10 @@ public class ServerApplicationInjector : IBootStrapApplicationInjector
     /// <inheritdoc />
     public Type[] Dependencies
         => [];
+
+    /// <inheritdoc />
+    public Platform Platform
+        => Platform.Server;
 
     /// <inheritdoc />
     public void OnGetServices(ContainerBuilder services) 

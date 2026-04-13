@@ -4,12 +4,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Reoria.Engine.Application.Configuration;
-using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Injectors;
+using Reoria.Engine.Application.Interfaces;
 using Serilog;
 using Serilog.Extensions.Logging;
 using System.Diagnostics;
 using System.Reflection;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Reoria.Engine.Application;
 
@@ -19,6 +21,10 @@ namespace Reoria.Engine.Application;
 /// <remarks>This step of the application life cycle should only load the bare minimum of dependencies and configuration required to bootstrap the application.</remarks>
 public partial class AppBootStrapper
 {
+    /// <summary>
+    /// Gets the platform that the application is running on.
+    /// </summary>
+    protected Platform Platform { get; init; }
     /// <summary>
     /// Gets a collection of injectors that will be used to bootstrap the application.
     /// </summary>
@@ -48,10 +54,13 @@ public partial class AppBootStrapper
     /// Initializes a new instance of the <see cref="AppBootStrapper"/> class.
     /// </summary>
     /// <param name="args">The command line arguments.</param>
-    public AppBootStrapper(string[] args)
+    public AppBootStrapper(Platform platform, string[] args)
     {
         // Start a new stopwatch to measure the bootstrapping time.
         Stopwatch stopwatch = Stopwatch.StartNew();
+
+        // Check to see if only one Platform value is selected, and if it is, assign it to the Platform property.
+        this.Platform = platform.HasSingleFlag() ? platform : throw new InvalidOperationException("Only one Platform value can be selected.");
 
         // Discover the bootstrapping injectors.
         this.Injectors = this.DiscoverInjectors();
@@ -96,6 +105,13 @@ public partial class AppBootStrapper
             {
                 // Attempt to create the injector.
                 IBootStrapInjector injector = (IBootStrapInjector)Activator.CreateInstance(type)!;
+
+                // Check if the injector matches the application's platform.
+                if (!injector.Platform.Matches(this.Platform))
+                {
+                    // Skip the injector.
+                    continue;
+                }
 
                 // Add the injector to the list.
                 injectors.Add(injector);
@@ -286,9 +302,15 @@ public partial class AppBootStrapper
         _ = services.RegisterGeneric(typeof(Logger<>))
             .As(typeof(ILogger<>))
             .SingleInstance();
+
+        // Register the command-line arguments and app boot context as singletons.
         _ = services.RegisterInstance(args)
             .Keyed<string[]>("CommandLineArgs")
             .As<string[]>()
+            .SingleInstance();
+        _ = services.RegisterInstance(new AppBootContext(this.Platform))
+            .Keyed<AppBootContext>("AppContext")
+            .As<AppBootContext>()
             .SingleInstance();
 
         // Iterate over the services injectors.

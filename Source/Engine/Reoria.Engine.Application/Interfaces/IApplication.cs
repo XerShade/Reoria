@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Injectors;
 
 namespace Reoria.Engine.Application.Interfaces;
@@ -10,6 +11,10 @@ namespace Reoria.Engine.Application.Interfaces;
 /// </summary>
 public interface IApplication : IDisposable
 {
+    /// <summary>
+    /// Gets the platform that the application is running on.
+    /// </summary>
+    Platform Platform { get; }
     /// <summary>
     /// Gets an instance of <see cref="ILogger"/> that can be used to log messages.
     /// </summary>

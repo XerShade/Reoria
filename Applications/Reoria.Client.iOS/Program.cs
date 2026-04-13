@@ -1,5 +1,6 @@
 ﻿using Reoria.Client.Core.Application;
 using Reoria.Engine.Application;
+using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Interfaces;
 
 namespace Reoria.Client.iOS;
@@ -20,7 +21,7 @@ internal class Program : UIApplicationDelegate
 
     public override void FinishedLaunching(UIApplication app)
     {
-        using ClientApplication application = new AppBootStrapper([]).CreateApplication<ClientApplication>();
+        using ClientApplication application = new AppBootStrapper(Platform.iOS, []).CreateApplication<ClientApplication>();
         application.Run();
     }
 }

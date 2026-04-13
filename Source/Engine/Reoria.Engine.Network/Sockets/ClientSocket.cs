@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using LiteNetLib;
 using Microsoft.Extensions.Logging;
+using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Injectors;
 using System.Diagnostics;
 
@@ -16,6 +17,9 @@ public class ClientSocketInjector : IApplicationServicesInjector
 
     public Type[] Dependencies
         => [];
+
+    public Platform Platform
+        => Platform.All & ~Platform.Server;
 
     public void OnGetServices(ContainerBuilder services)
         => services.RegisterType<ClientSocket>().As<ClientSocket>().SingleInstance();
