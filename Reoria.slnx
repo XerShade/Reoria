@@ -19,6 +19,7 @@
   </Folder>
   <Folder Name="/Source/" />
   <Folder Name="/Source/Client/">
+    <Project Path="Source/Client/Reoria.Client.Assets/Reoria.Client.Assets.shproj" Id="c7a644e4-fedf-42da-a30e-4795c9fb82d5" />
     <Project Path="Source/Client/Reoria.Client.Core/Reoria.Client.Core.shproj" Id="7bf2e3ca-9319-4859-ae28-d5ace9aec580" />
   </Folder>
   <Folder Name="/Source/Engine/">

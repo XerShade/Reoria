@@ -9,9 +9,6 @@
     <Import_RootNamespace>Reoria.Client.Core</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)Content\Content.mgcb" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Application\ClientApplication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Application\ClientApplication.Injector.cs" />
   </ItemGroup>

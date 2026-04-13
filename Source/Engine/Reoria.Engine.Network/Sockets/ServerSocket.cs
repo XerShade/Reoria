@@ -1,24 +1,29 @@
 ﻿using LiteNetLib;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Reoria.Engine.Network.Sockets;
 
 public class ServerSocket : Socket
 {
-    public ServerSocket(ILogger<ServerSocket> logger)
+    protected virtual int MaxConnections { get; init; }
+    protected virtual int Port { get; init; }
+
+    public ServerSocket(ILogger<ServerSocket> logger, IConfiguration configuration)
         : base(logger)
     {
-
+        this.MaxConnections = Convert.ToInt32(configuration["Networking:MaxConnections"] ?? "10");
+        this.Port = Convert.ToInt32(configuration["Networking:Port"] ?? "7234");
     }
 
     public override void Start()
-        => this.Manager.Start(7234);
+        => this.Manager.Start(this.Port);
 
     protected override void OnConnectionRequest(ConnectionRequest request)
     {
         this.Logger.LogInformation("Recieved connection request from {Address}.", request.RemoteEndPoint.Address.ToString());
 
-        if (this.Manager.ConnectedPeersCount < 10)
+        if (this.Manager.ConnectedPeersCount < this.MaxConnections)
         {
             NetPeer peer = request.AcceptIfKey("Reoria");
 
