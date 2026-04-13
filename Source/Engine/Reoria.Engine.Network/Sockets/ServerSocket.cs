@@ -7,14 +7,10 @@ namespace Reoria.Engine.Network.Sockets;
 public class ServerSocket : Socket
 {
     protected virtual int MaxConnections { get; init; }
-    protected virtual int Port { get; init; }
 
     public ServerSocket(ILogger<ServerSocket> logger, IConfiguration configuration)
-        : base(logger)
-    {
-        this.MaxConnections = Convert.ToInt32(configuration["Networking:MaxConnections"] ?? "10");
-        this.Port = Convert.ToInt32(configuration["Networking:Port"] ?? "7234");
-    }
+        : base(logger, configuration) 
+        => this.MaxConnections = Convert.ToInt32(configuration["Networking:MaxConnections"] ?? "10");
 
     public override void Start()
         => this.Manager.Start(this.Port);

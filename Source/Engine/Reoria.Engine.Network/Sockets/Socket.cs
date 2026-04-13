@@ -1,4 +1,5 @@
 ﻿using LiteNetLib;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Net.Sockets;
@@ -7,17 +8,22 @@ namespace Reoria.Engine.Network.Sockets;
 
 public abstract class Socket : IDisposable
 {
-    protected ILogger<Socket> Logger { get; init; }
-    protected EventBasedNetListener Listener { get; init; }
-    protected NetManager Manager { get; init; }
+    protected virtual ILogger<Socket> Logger { get; init; }
+    protected virtual EventBasedNetListener Listener { get; init; }
+    protected virtual NetManager Manager { get; init; }
+    protected virtual string ConnectionKey { get; init; }
+    protected virtual int Port { get; init; }
 
     public virtual bool IsRunning => this.Manager.IsRunning;
 
-    protected Socket(ILogger<Socket> logger)
+    protected Socket(ILogger<Socket> logger, IConfiguration configuration)
     {
         this.Logger = logger;
         this.Listener = new EventBasedNetListener();
         this.Manager = new NetManager(this.Listener);
+
+        this.ConnectionKey = configuration["Networking:ConnectionKey"] ?? "Reoria";
+        this.Port = Convert.ToInt32(configuration["Networking:Port"] ?? "7234");
 
         this.AttachEvents();
     }
