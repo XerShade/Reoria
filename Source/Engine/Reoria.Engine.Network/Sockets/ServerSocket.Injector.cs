@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Microsoft.Xna.Framework;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Injectors;
 
@@ -18,7 +19,7 @@ public class ServerSocketInjector : IApplicationServicesInjector
     public Platform Platform
         => Platform.Server;
 
-    public void OnGetServices(ContainerBuilder services)
+    public void OnBuildServices(ContainerBuilder services)
         => services.RegisterType<ServerSocket>().As<ServerSocket>().SingleInstance();
 
     public void OnConfigureServices(IServiceProvider provider)

@@ -1,13 +1,18 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Reoria.Engine.Application.Configuration;
-using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Application.Injectors;
 
 namespace Reoria.Engine.Application.Extensions;
 
 /// <summary>
 /// Defines extension methods for adding configuration functionality to an application.
 /// </summary>
+/// <remarks>
+/// These extensions provide configuration building capabilities for applications,
+/// allowing injectors to participate in the configuration process and add custom
+/// configuration sources or transformers.
+/// </remarks>
 public static class ApplicationConfigurationExtensions
 {
     /// <summary>
@@ -17,6 +22,14 @@ public static class ApplicationConfigurationExtensions
     /// <param name="args">The command-line arguments.</param>
     /// <returns>An instance of <see cref="IConfiguration"/>.</returns>
     /// <exception cref="InvalidOperationException">Raised when the configuration cannot be built.</exception>
+    /// <remarks>
+    /// This method builds the application configuration by:
+    /// 1. Creating a new configuration builder
+    /// 2. Adding default configuration sources (appsettings.json files)
+    /// 3. Invoking application configuration injectors
+    /// 4. Adding command-line arguments
+    /// 5. Building the final configuration
+    /// </remarks>
     public static IConfiguration GetConfiguration(this IApplication application, string[] args)
     {
         // Create a new configuration builder.
@@ -27,14 +40,13 @@ public static class ApplicationConfigurationExtensions
         _ = builder.AddConfigurationSource("appsettings.logging.json", true, true);
         _ = builder.AddConfigurationSource("appsettings.serilog.json", true, true);
 
-        // Iterate over the injectors.
+        // Invoke application configuration injectors to add custom configuration sources.
         foreach (IApplicationConfigurationInjector injector in application.Injectors.OfType<IApplicationConfigurationInjector>())
         {
-            // Invoke the injector.
-            injector.OnGetConfiguration(builder);
+            injector.OnBuildConfiguration(builder);
         }
 
-        // Add the command-line arguments.
+        // Add command-line arguments to override configuration values.
         _ = builder.AddCommandLine(args);
 
         // Build the configuration and return it.

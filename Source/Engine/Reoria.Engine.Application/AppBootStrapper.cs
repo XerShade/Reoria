@@ -11,7 +11,6 @@ using Serilog;
 using Serilog.Extensions.Logging;
 using System.Diagnostics;
 using System.Reflection;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Reoria.Engine.Application;
 
@@ -124,7 +123,7 @@ public partial class AppBootStrapper
         }
 
         // Return and sort the injectors.
-        return this.SortInjectors(injectors);
+        return SortInjectors(injectors);
     }
 
     /// <summary>
@@ -132,7 +131,7 @@ public partial class AppBootStrapper
     /// </summary>
     /// <param name="injectors">The list of bootstrapping injectors to sort.</param>
     /// <returns>A sorted list of bootstrapping injectors.</returns>
-    protected List<IBootStrapInjector> SortInjectors(List<IBootStrapInjector> injectors)
+    protected static List<IBootStrapInjector> SortInjectors(List<IBootStrapInjector> injectors)
     {
         // Create a dictionary to store the injectors by type.
         Dictionary<Type, IBootStrapInjector> injectorLookup = injectors.ToDictionary(m => m.GetType());
@@ -148,7 +147,7 @@ public partial class AppBootStrapper
         foreach (IBootStrapInjector injector in injectors)
         {
             // Visit the injector.
-            this.VisitInjector(injector, injectorLookup, visited, visiting, sorted);
+            VisitInjector(injector, injectorLookup, visited, visiting, sorted);
         }
 
         // Return and initialize the sorted injectors.
@@ -164,7 +163,7 @@ public partial class AppBootStrapper
     /// <param name="visiting">The set of injectors currently being visited.</param>
     /// <param name="sorted">The list of sorted injectors.</param>
     /// <exception cref="InvalidOperationException"></exception>
-    protected void VisitInjector(IBootStrapInjector injector, Dictionary<Type, IBootStrapInjector> injectorLookup, HashSet<Type> visited, HashSet<Type> visiting, List<IBootStrapInjector> sorted)
+    protected static void VisitInjector(IBootStrapInjector injector, Dictionary<Type, IBootStrapInjector> injectorLookup, HashSet<Type> visited, HashSet<Type> visiting, List<IBootStrapInjector> sorted)
     {
         // Get the injector type.
         Type injectorType = injector.GetType();
@@ -196,7 +195,7 @@ public partial class AppBootStrapper
             }
 
             // Visit the dependency injector.
-            this.VisitInjector(depInjector, injectorLookup, visited, visiting, sorted);
+            VisitInjector(depInjector, injectorLookup, visited, visiting, sorted);
         }
 
         // Remove the injector from the visiting set.
@@ -228,8 +227,8 @@ public partial class AppBootStrapper
         // Iterate over the configuration injectors.
         foreach (IBootStrapConfigurationInjector injector in this.Injectors.OfType<IBootStrapConfigurationInjector>())
         {
-            // Invoke the injector's OnGetConfiguration method.
-            injector.OnGetConfiguration(builder);
+            // Invoke the injector's OnBuildConfiguration method.
+            injector.OnBuildConfiguration(builder);
         }
 
         // Add the command-line arguments.
@@ -266,8 +265,8 @@ public partial class AppBootStrapper
         // Iterate over the logging injectors.
         foreach (IBootStrapLoggingInjector injector in this.Injectors.OfType<IBootStrapLoggingInjector>())
         {
-            // Invoke the injector's OnGetLoggerFactory method.
-            injector.OnGetLoggerFactory(loggerFactory, this.Configuration!);
+            // Invoke the injector's OnCreateLoggerFactory method.
+            injector.OnCreateLoggerFactory(loggerFactory, this.Configuration!);
         }
 
         // Return the logger factory.
@@ -316,15 +315,15 @@ public partial class AppBootStrapper
         // Iterate over the services injectors.
         foreach (IBootStrapServicesInjector injector in this.Injectors.OfType<IBootStrapServicesInjector>())
         {
-            // Invoke the injector's OnGetServices method.
-            injector.OnGetServices(services);
+            // Invoke the injector's OnBuildServices method.
+            injector.OnBuildServices(services);
         }
 
         // Iterate over the application injectors.
         foreach(IBootStrapApplicationInjector injector in this.Injectors.OfType<IBootStrapApplicationInjector>())
         {
-            // Invoke the injector's OnGetServices method.
-            injector.OnGetServices(services);
+            // Invoke the injector's OnBuildServices method.
+            injector.OnBuildServices(services);
         }
 
         // Return the container builder.

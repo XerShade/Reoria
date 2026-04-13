@@ -7,6 +7,8 @@ using Microsoft.Xna.Framework;
 using Reoria.Engine.Application;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Extensions;
+using Reoria.Engine.Application.GameLoop;
+using Reoria.Engine.Application.GameLoop.Phases;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
 using Reoria.Engine.Network.Sockets;
@@ -69,6 +71,9 @@ public class ServerApplication : IApplication
         // Get the server network socket.
         this.Socket = this.Provider.GetRequiredService<ServerSocket>();
 
+        // Initialize the game loop with phases.
+        this.GameLoop = this.InitializeGameLoop();
+
         // Stop the stopwatch to measure the application time.
         stopwatch.Stop();
     }
@@ -105,81 +110,188 @@ public class ServerApplication : IApplication
     /// Gets an instance of <see cref="ServerSocket"/> to manage the networking functionality.
     /// </summary>
     protected ServerSocket Socket { get; set; }
+    /// <summary>
+    /// Gets the game loop instance that manages the update cycle.
+    /// </summary>
+    protected IGameLoop GameLoop { get; set; }
 
     /// <inheritdoc />
     public virtual void Run()
     {
-        // Start the stopwatch to measure the application time.
-        this.Timer.Start();
-        this.PreviousTime = this.Timer.Elapsed;
+        this.Logger.LogInformation("Starting server application main loop...");
+
+        try
+        {
+            // Start the application components.
+            this.StartApplication();
+
+            // Start the game loop.
+            this.GameLoop.Start();
+
+            // Start the stopwatch to measure the application time.
+            this.Timer.Start();
+            this.PreviousTime = this.Timer.Elapsed;
+
+            // Main application loop.
+            while (this.Running)
+            {
+                // Calculate the elapsed time since the last update.
+                TimeSpan now = this.Timer.Elapsed;
+                TimeSpan frameTime = now - this.PreviousTime;
+                this.PreviousTime = now;
+
+                // Create game time for the current update cycle.
+                GameTime gameTime = new(now, frameTime);
+
+                // Process a single tick through the game loop.
+                this.GameLoop.Tick(gameTime);
+
+                // Pause thread execution to reduce CPU usage.
+                Thread.Sleep(1);
+            }
+        }
+        catch (Exception ex)
+        {
+            this.Logger.LogError(ex, "An error occurred in the main application loop");
+            throw;
+        }
+        finally
+        {
+            // Ensure cleanup happens even if an exception occurs.
+            this.StopApplication();
+        }
+
+        this.Logger.LogInformation("Server application main loop ended");
+    }
+
+    /// <summary>
+    /// Initializes the game loop with all required phases.
+    /// </summary>
+    /// <returns>A configured game loop instance.</returns>
+    protected virtual IGameLoop InitializeGameLoop()
+    {
+        this.Logger.LogDebug("Initializing game loop with phases...");
+
+        List<IGameLoopPhase> phases =
+        [
+            // Network updates happen first (highest priority)
+            new NetworkUpdatePhase(this.LoggerFactory.CreateLogger<NetworkUpdatePhase>(), this.Socket),
+            
+            // Custom application logic phases can be added here
+            // Example: new CustomLogicPhase(...),
+            
+            // Injector execution happens after network updates
+            new InjectorExecutionPhase(this.LoggerFactory.CreateLogger<InjectorExecutionPhase>(), this)
+        ];
+
+        // Add any custom phases from injectors that implement IGameLoopPhase
+        List<IGameLoopPhase> injectorPhases = [.. this.Injectors.OfType<IGameLoopPhase>()];
+        phases.AddRange(injectorPhases);
+
+        if (injectorPhases.Count > 0)
+        {
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Added {Count} injector phases to game loop", injectorPhases.Count);
+            }
+        }
+
+        IGameLoop gameLoop = new DefaultGameLoop(
+            this.LoggerFactory.CreateLogger<DefaultGameLoop>(), 
+            phases);
+
+        if (this.Logger.IsEnabled(LogLevel.Information))
+        {
+            this.Logger.LogInformation("Game loop initialized with {PhaseCount} phases", phases.Count);
+        }
+
+        return gameLoop;
+    }
+
+    /// <summary>
+    /// Starts the application components.
+    /// </summary>
+    protected virtual void StartApplication()
+    {
+        this.Logger.LogDebug("Starting application components...");
 
         // Start the network socket.
         this.Socket.Start();
 
-        // Start the update loop.
-        while (this.Running)
+        // Notify application lifecycle injectors that the application is starting.
+        List<IApplicationLifecycleInjector> lifecycleInjectors = [.. this.Injectors.OfType<IApplicationLifecycleInjector>()];
+        foreach (IApplicationLifecycleInjector? injector in lifecycleInjectors)
         {
-            // Update the network socket.
-            this.Socket.Update();
-
-            // Calculate the elapsed time since the last update.
-            TimeSpan now = this.Timer.Elapsed;
-            TimeSpan frameTime = now - this.PreviousTime;
-            this.PreviousTime = now;
-
-            // Increment the accumulator.
-            this.Accumulator += frameTime;
-
-            // Calculate the game time for the current update cycle.
-            GameTime gameTime = new(now, frameTime);
-
-            // Increment the accumulator.
-            this.Accumulator += gameTime.ElapsedGameTime;
-
-            // Call the variable update function.
-            this.VariableUpdate(gameTime);
-
-            // Iterate the fixed update function if the accumulator is greater than or equal to the fixed step.
-            while (this.Accumulator >= this.FixedStep && this.Steps < this.MaxSteps)
+            try
             {
-                // Calculate the fixed game time.
-                GameTime fixedGameTime = new(gameTime.TotalGameTime, this.FixedStep);
-
-                // Call the fixed update function.
-                this.FixedUpdate(fixedGameTime);
-
-                // Decrement the accumulator and increment the step counter.
-                this.Accumulator -= this.FixedStep;
-                this.Steps++;
+                injector.OnApplicationStart();
             }
-
-            // Reset the step counter.
-            this.Steps = 0;
-
-            // Pause thread execution to reduce CPU usage.
-            Thread.Sleep(1);
+            catch (Exception ex)
+            {
+                this.Logger.LogError(ex, "Application lifecycle injector {InjectorType} failed during application start", injector.GetType().Name);
+            }
         }
 
-        // Stop the network socket.
-        this.Socket.Stop();
+        this.Logger.LogInformation("Application components started successfully");
     }
 
     /// <summary>
-    /// Called on a variable timescale withing the update function.
+    /// Stops the application components.
+    /// </summary>
+    protected virtual void StopApplication()
+    {
+        this.Logger.LogDebug("Stopping application components...");
+
+        try
+        {
+            // Stop the game loop.
+            this.GameLoop?.Stop();
+
+            // Stop the network socket.
+            this.Socket?.Stop();
+
+            // Notify application lifecycle injectors that the application is stopping.
+            List<IApplicationLifecycleInjector> lifecycleInjectors = [.. this.Injectors.OfType<IApplicationLifecycleInjector>()];
+            foreach (IApplicationLifecycleInjector? injector in lifecycleInjectors)
+            {
+                try
+                {
+                    injector.OnApplicationStop();
+                }
+                catch (Exception ex)
+                {
+                    this.Logger.LogError(ex, "Application lifecycle injector {InjectorType} failed during application stop", injector.GetType().Name);
+                }
+            }
+
+            this.Logger.LogInformation("Application components stopped successfully");
+        }
+        catch (Exception ex)
+        {
+            this.Logger.LogError(ex, "Error occurred while stopping application components");
+        }
+    }
+
+    /// <summary>
+    /// Called on a variable timescale within the update function.
+    /// Override this method to add custom variable update logic.
     /// </summary>
     /// <param name="gameTime">The elapsed time since the last call to <see cref="FixedUpdate(GameTime)"/>.</param>
     protected virtual void VariableUpdate(GameTime gameTime)
     {
-
+        // Custom variable update logic can be added here
+        // Consider creating a custom IGameLoopPhase instead for better modularity
     }
 
     /// <summary>
-    /// Called on a fixed timescale withing the update function.
+    /// Called on a fixed timescale within the update function.
+    /// Override this method to add custom fixed update logic.
     /// </summary>
     /// <param name="gameTime">The elapsed time since the last call to <see cref="FixedUpdate(GameTime)"/>.</param>
     protected virtual void FixedUpdate(GameTime gameTime)
     {
-
+        // Custom fixed update logic can be added here
+        // Consider creating a custom IGameLoopPhase instead for better modularity
     }
 
     /// <inheritdoc />
@@ -188,5 +300,20 @@ public class ServerApplication : IApplication
 
     /// <inheritdoc />
     public virtual void Dispose()
-        => GC.SuppressFinalize(this);
+    {
+        try
+        {
+            this.StopApplication();
+            this.GameLoop?.Dispose();
+            this.Socket?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            this.Logger.LogError(ex, "Error occurred during application disposal");
+        }
+        finally
+        {
+            GC.SuppressFinalize(this);
+        }
+    }
 }

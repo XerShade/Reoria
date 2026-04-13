@@ -18,9 +18,19 @@
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\ApplicationInjectorExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\ApplicationLoggingExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\ApplicationServiceExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\DefaultGameLoop.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\DefaultGameLoopContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\IGameLoop.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\IGameLoopContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\IGameLoopPhase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\InjectorExecutionPhase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\NetworkUpdatePhase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\DrawingPhase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IApplication.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Modules\IApplicationInjectors.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Modules\IBootStrapInjectors.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Injectors\IGameLoopInjectors.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Injectors\IApplicationInjectors.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Injectors\IBootStrapInjectors.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Injectors\IInjector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\FileProviderService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IFileProviderService.cs" />
   </ItemGroup>

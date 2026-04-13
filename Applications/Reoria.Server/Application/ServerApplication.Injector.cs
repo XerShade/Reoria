@@ -27,7 +27,7 @@ public class ServerApplicationInjector : IBootStrapApplicationInjector
         => Platform.Server;
 
     /// <inheritdoc />
-    public void OnGetServices(ContainerBuilder services) 
+    public void OnBuildServices(ContainerBuilder services) 
         => services.RegisterType<ServerApplication>()
         .Keyed<IApplication>("ServerApplication")
         .As<ServerApplication>()

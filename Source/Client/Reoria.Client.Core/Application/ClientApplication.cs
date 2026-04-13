@@ -1,4 +1,4 @@
-﻿using Autofac;
+using Autofac;
 using Autofac.Features.AttributeFilters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +10,8 @@ using Microsoft.Xna.Framework.Input;
 using Reoria.Engine.Application;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Extensions;
+using Reoria.Engine.Application.GameLoop;
+using Reoria.Engine.Application.GameLoop.Phases;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
 using Reoria.Engine.Network.Sockets;
@@ -22,7 +24,7 @@ namespace Reoria.Client.Core.Application;
 /// <summary>
 /// Defines the client application and its functionality.
 /// </summary>
-public class ClientApplication : Game, IApplication
+public class ClientApplication : Game, IApplication, IDisposable
 {
     /// <inheritdoc />
     public virtual Platform Platform { get; init; }
@@ -54,7 +56,7 @@ public class ClientApplication : Game, IApplication
     /// <summary>
     /// Gets the fixed step for the fixed update loop.
     /// </summary>
-    protected TimeSpan FixedStep { get; init; } = TimeSpan.FromSeconds(1.0 / 30.0);
+    protected TimeSpan FixedStep { get; init; } = TimeSpan.FromSeconds(1.0 / 60.0);
     /// <summary>
     /// Gets the maximum steps for the fixed update loop allowed per update cycle.
     /// </summary>
@@ -64,9 +66,37 @@ public class ClientApplication : Game, IApplication
     /// </summary>
     protected int Steps { get; set; } = 0;
     /// <summary>
+    /// Gets the target frame rate for frame rate limiting.
+    /// </summary>
+    protected int TargetFrameRate { get; init; } = 60;
+    /// <summary>
+    /// Gets the minimum frame time for frame rate limiting.
+    /// </summary>
+    protected TimeSpan MinFrameTime { get; init; } = TimeSpan.FromSeconds(1.0 / 60.0);
+    /// <summary>
+    /// Gets the previous total game time for delta time calculation.
+    /// </summary>
+    protected TimeSpan PreviousTotalGameTime { get; set; }
+    /// <summary>
+    /// Gets the smoothed delta time for stable updates.
+    /// </summary>
+    protected TimeSpan SmoothedDeltaTime { get; set; }
+    /// <summary>
+    /// Gets the smoothing factor for delta time (0-1, higher = more smoothing).
+    /// </summary>
+    protected float DeltaTimeSmoothingFactor { get; init; } = 0.9f;
+    /// <summary>
     /// Gets an instance of <see cref="ClientSocket"/> to manage the networking functionality.
     /// </summary>
     protected ClientSocket Socket { get; set; }
+    /// <summary>
+    /// Gets a value indicating whether this instance has been disposed.
+    /// </summary>
+    protected bool IsDisposed { get; private set; }
+    /// <summary>
+    /// Gets the game loop instance that manages the update cycle.
+    /// </summary>
+    protected IGameLoop GameLoop { get; set; }
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     /// <summary>
@@ -82,7 +112,7 @@ public class ClientApplication : Game, IApplication
 
         // Store the logger and report the initialization.
         this.Logger = logger;
-        this.Logger.LogInformation("Initializing server application...");
+        this.Logger.LogInformation("Initializing client application...");
 
         // Discover the application injectors.
         this.Injectors = this.DiscoverInjectors();
@@ -111,19 +141,19 @@ public class ClientApplication : Game, IApplication
     /// <inheritdoc />
     protected override void Initialize()
     {
-        // Registe the graphics device manager.
+        // Register the graphics device manager with proper lifetime (not singleton to prevent memory leaks)
         _ = this.ContainerBuilder.RegisterInstance<GraphicsDeviceManager>(this.GraphicsDeviceManager)
             .Keyed<GraphicsDeviceManager>("GraphicsDeviceManager")
             .As<GraphicsDeviceManager>()
             .SingleInstance();
 
-        // Register the graphics device.
+        // Register the graphics device with proper lifetime
         _ = this.ContainerBuilder.RegisterInstance<GraphicsDevice>(this.GraphicsDevice)
             .Keyed<GraphicsDevice>("GraphicsDevice")
             .As<GraphicsDevice>()
             .SingleInstance();
 
-        // Register the content manager.
+        // Register the content manager with proper lifetime
         _ = this.ContainerBuilder.RegisterInstance<ContentManager>(this.Content)
             .Keyed<ContentManager>("ContentManager")
             .As<ContentManager>()
@@ -139,7 +169,7 @@ public class ClientApplication : Game, IApplication
         // Create the sprite batch.
         this.SpriteBatch = new SpriteBatch(this.GraphicsDevice);
 
-        // Register the sprite batch.
+        // Register the sprite batch with proper lifetime
         _ = this.ContainerBuilder.RegisterInstance<SpriteBatch>(this.SpriteBatch)
             .Keyed<SpriteBatch>("SpriteBatch")
             .As<SpriteBatch>()
@@ -158,13 +188,83 @@ public class ClientApplication : Game, IApplication
         // Get the server network socket.
         this.Socket = this.Provider.GetRequiredService<ClientSocket>();
 
+        // Initialize the game loop with phases.
+        this.GameLoop = this.InitializeGameLoop();
+
+        // Start the game loop.
+        this.GameLoop.Start();
+
+        // Notify application lifecycle injectors that the application is starting.
+        List<IApplicationLifecycleInjector> lifecycleInjectors = [.. this.Injectors.OfType<IApplicationLifecycleInjector>()];
+        foreach (IApplicationLifecycleInjector injector in lifecycleInjectors)
+        {
+            try
+            {
+                injector.OnApplicationStart();
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogError(ex, "Application lifecycle injector {InjectorType} failed during application start", injector.GetType().Name);
+            }
+        }
+
         // Call the base method.
         base.BeginRun();
+    }
+
+    /// <summary>
+    /// Initializes the game loop with all required phases.
+    /// </summary>
+    /// <returns>A configured game loop instance.</returns>
+    protected virtual IGameLoop InitializeGameLoop()
+    {
+        this.Logger.LogDebug("Initializing client game loop with phases...");
+
+        List<IGameLoopPhase> phases =
+        [
+            // Network updates happen first (highest priority)
+            new NetworkUpdatePhase(this.LoggerFactory.CreateLogger<NetworkUpdatePhase>(), this.Socket),
+            
+            // Injector execution happens after network updates
+            new InjectorExecutionPhase(this.LoggerFactory.CreateLogger<InjectorExecutionPhase>(), this),
+            
+            // Drawing happens last (lowest priority)
+            new DrawingPhase(this.LoggerFactory.CreateLogger<DrawingPhase>(), this.Injectors.OfType<IDrawingInjector>())
+        ];
+
+        // Add any custom phases from injectors that implement IGameLoopPhase
+        List<IGameLoopPhase> injectorPhases = [.. this.Injectors.OfType<IGameLoopPhase>()];
+        phases.AddRange(injectorPhases);
+
+        if (injectorPhases.Count > 0)
+        {
+            if(this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Added {Count} injector phases to client game loop", injectorPhases.Count);
+            }
+        }
+
+        IGameLoop gameLoop = new DefaultGameLoop(
+            this.LoggerFactory.CreateLogger<DefaultGameLoop>(), 
+            phases);
+
+        if (this.Logger.IsEnabled(LogLevel.Information))
+        {
+            this.Logger.LogInformation("Client game loop initialized with {PhaseCount} phases", phases.Count);
+        }
+
+        return gameLoop;
     }
 
     /// <inheritdoc />
     protected override void Update(GameTime gameTime)
     {
+        // Apply frame rate limiting
+        this.ApplyFrameRateLimiting(gameTime);
+
+        // Calculate smoothed delta time
+        this.CalculateSmoothedDeltaTime(gameTime);
+
 #if !IOS
         // Check to see if the back button or the escape key was pressed.
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
@@ -199,31 +299,12 @@ public class ClientApplication : Game, IApplication
             }
         }
 
-        // Update the socket.
-        this.Socket.Update();
+        // Process a single tick through the game loop with smoothed delta time.
+        GameTime smoothedGameTime = new(gameTime.TotalGameTime, this.SmoothedDeltaTime);
+        this.GameLoop?.Tick(smoothedGameTime);
 
-        // Increment the accumulator.
-        this.Accumulator += gameTime.ElapsedGameTime;
-
-        // Call the variable update function.
-        this.VariableUpdate(gameTime);
-
-        // Iterate the fixed update function if the accumulator is greater than or equal to the fixed step.
-        while (this.Accumulator >= this.FixedStep && this.Steps < this.MaxSteps)
-        {
-            // Calculate the fixed game time.
-            GameTime fixedGameTime = new(gameTime.TotalGameTime, this.FixedStep);
-
-            // Call the fixed update function.
-            this.FixedUpdate(fixedGameTime);
-
-            // Decrement the accumulator and increment the step counter.
-            this.Accumulator -= this.FixedStep;
-            this.Steps++;
-        }
-
-        // Reset the step counter.
-        this.Steps = 0;
+        // Update the previous game time for next frame.
+        this.PreviousTotalGameTime = gameTime.TotalGameTime;
 
         // Call the base method.
         base.Update(gameTime);
@@ -245,6 +326,46 @@ public class ClientApplication : Game, IApplication
     protected virtual void FixedUpdate(GameTime gameTime)
     {
 
+    }
+
+    /// <summary>
+    /// Applies frame rate limiting to prevent excessive CPU usage.
+    /// </summary>
+    /// <param name="gameTime">The current game time.</param>
+    protected virtual void ApplyFrameRateLimiting(GameTime gameTime)
+    {
+        // Calculate the time since the last frame
+        TimeSpan currentFrameTime = gameTime.TotalGameTime - this.PreviousTotalGameTime;
+        
+        // If the frame was too fast, wait to maintain the target frame rate
+        if (currentFrameTime < this.MinFrameTime)
+        {
+            TimeSpan waitTime = this.MinFrameTime - currentFrameTime;
+            System.Threading.Thread.Sleep(waitTime);
+        }
+    }
+
+    /// <summary>
+    /// Calculates smoothed delta time to reduce frame time jitter.
+    /// </summary>
+    /// <param name="gameTime">The current game time.</param>
+    protected virtual void CalculateSmoothedDeltaTime(GameTime gameTime)
+    {
+        // Initialize smoothed delta time on the first frame
+        if (this.PreviousTotalGameTime == TimeSpan.Zero)
+        {
+            this.SmoothedDeltaTime = gameTime.ElapsedGameTime;
+            return;
+        }
+
+        // Calculate the current delta time
+        TimeSpan currentDeltaTime = gameTime.ElapsedGameTime;
+
+        // Apply exponential moving average smoothing
+        double smoothedTicks = (this.DeltaTimeSmoothingFactor * this.SmoothedDeltaTime.Ticks) + 
+                              ((1.0 - this.DeltaTimeSmoothingFactor) * currentDeltaTime.Ticks);
+        
+        this.SmoothedDeltaTime = TimeSpan.FromTicks((long)smoothedTicks);
     }
 
     /// <summary>
@@ -281,5 +402,55 @@ public class ClientApplication : Game, IApplication
 
         // Call the base method.
         base.Draw(gameTime);
+    }
+
+    /// <summary>
+    /// Releases all resources used by ClientApplication.
+    /// </summary>
+    protected override void Dispose(bool disposing)
+    {
+        if (!this.IsDisposed && disposing)
+        {
+            try
+            {
+                // Stop the game loop if it exists
+                this.GameLoop?.Stop();
+                this.GameLoop?.Dispose();
+
+                // Notify application lifecycle injectors that the application is stopping
+                List<IApplicationLifecycleInjector> lifecycleInjectors = [.. this.Injectors.OfType<IApplicationLifecycleInjector>()];
+                foreach (IApplicationLifecycleInjector injector in lifecycleInjectors)
+                {
+                    try
+                    {
+                        injector.OnApplicationStop();
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Logger.LogError(ex, "Application lifecycle injector {InjectorType} failed during application stop", injector.GetType().Name);
+                    }
+                }
+
+                // Dispose the socket if it exists
+                this.Socket?.Dispose();
+
+                // Dispose the sprite batch if it exists
+                this.SpriteBatch?.Dispose();
+
+                // Dispose the graphics device manager if it exists
+                this.GraphicsDeviceManager?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogError(ex, "Error occurred during client application disposal");
+            }
+            finally
+            {
+                this.IsDisposed = true;
+            }
+        }
+        
+        // Call the base dispose method
+        base.Dispose(disposing);
     }
 }
