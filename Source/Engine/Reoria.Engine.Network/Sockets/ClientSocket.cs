@@ -12,13 +12,7 @@ public class ClientSocket : Socket
 
     }
 
-    public override void Start() 
-        => this.Manager.Start();
-
-    public override void Stop()
-        => this.Manager.Stop();
-
-    public virtual bool Connect(string address, int port, int timeout = 5)
+    public override bool Connect(string address, int port, int timeout = 5)
     {
         NetPeer peer = this.Manager.Connect(address, port, "Reoria");
         Stopwatch sw = Stopwatch.StartNew();

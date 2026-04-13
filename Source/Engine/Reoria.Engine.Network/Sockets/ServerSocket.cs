@@ -11,6 +11,9 @@ public class ServerSocket : Socket
 
     }
 
+    public override void Start()
+        => this.Manager.Start(7234);
+
     protected override void OnConnectionRequest(ConnectionRequest request)
     {
         this.Logger.LogInformation("Recieved connection request from {Address}.", request.RemoteEndPoint.Address.ToString());
@@ -34,10 +37,4 @@ public class ServerSocket : Socket
             request.Reject();
         }
     }
-
-    public override void Start()
-        => this.Manager.Start(7234);
-
-    public override void Stop()
-        => this.Manager.Stop();
 }

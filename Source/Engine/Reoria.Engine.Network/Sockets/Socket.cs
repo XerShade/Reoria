@@ -57,13 +57,22 @@ public abstract class Socket : IDisposable
     protected virtual void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
         => this.Logger.LogInformation("Peer {Address} has disconnected, reason: {Reason}.", peer.Address.ToString(), disconnectInfo.Reason);
 
-    public abstract void Start();
+    public virtual void Start()
+        => this.Manager.Start();
 
-    public abstract void Stop();
+    public virtual void Stop()
+        => this.Manager.Stop();
 
     public virtual void Update()
         => this.Manager.PollEvents();
 
     public void Dispose()
         => GC.SuppressFinalize(this);
+
+    public virtual bool Connect(string address, int port, int timeout = 5)
+    {
+        this.Logger.LogError("Unable to connect to host {Host}:{Port}, this socket does not have outgoing connectivity support.", address, port);
+
+        return false;
+    }
 }
