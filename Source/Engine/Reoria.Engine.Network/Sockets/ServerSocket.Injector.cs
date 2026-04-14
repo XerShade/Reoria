@@ -20,7 +20,7 @@ public class ServerSocketInjector : IApplicationServicesInjector
         => Platform.Server;
 
     public void OnBuildServices(ContainerBuilder services)
-        => services.RegisterType<ServerSocket>().As<ServerSocket>().SingleInstance();
+        => services.RegisterType<ServerSocket>().As<ServerSocket>().As<Socket>().SingleInstance();
 
     public void OnConfigureServices(IServiceProvider provider)
     { }

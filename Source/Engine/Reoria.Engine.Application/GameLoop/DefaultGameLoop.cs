@@ -162,7 +162,21 @@ public class DefaultGameLoop : IGameLoop
             try
             {
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-                await phase.ExecuteAsync(context, cancellationToken);
+                
+                // Check if phase supports async execution
+                if (phase.IsAsync)
+                {
+                    // Phase has async override - use ExecuteAsync
+                    this.logger.LogTrace("Executing phase {PhaseName} asynchronously", phase.Name);
+                    await phase.ExecuteAsync(context, cancellationToken);
+                }
+                else
+                {
+                    // Phase uses synchronous Execute - call directly
+                    this.logger.LogTrace("Executing phase {PhaseName} synchronously", phase.Name);
+                    phase.Execute(context, cancellationToken).GetAwaiter().GetResult();
+                }
+                
                 stopwatch.Stop();
 
                 this.logger.LogTrace("Phase {PhaseName} executed in {ElapsedMilliseconds}ms", 

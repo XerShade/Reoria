@@ -213,54 +213,32 @@ public class ClientApplication : Game, IApplication, IDisposable
     }
 
     /// <summary>
-    /// Initializes the game loop with all required phases.
+    /// Initializes the game loop using the DI-based factory pattern.
     /// </summary>
     /// <returns>A configured game loop instance.</returns>
     protected virtual IGameLoop InitializeGameLoop()
     {
-        this.Logger.LogDebug("Initializing client game loop with phases...");
+        this.Logger.LogDebug("Initializing client game loop using DI factory...");
 
-        // Get required services from DI container
-        var graphicsDevice = this.Provider.GetRequiredService<GraphicsDevice>();
-        var spriteBatch = this.Provider.GetRequiredService<SpriteBatch>();
+        // Get the game loop factory from DI container
+        var gameLoopFactory = this.Provider.GetRequiredService<IGameLoopFactory>();
 
-        List<IGameLoopPhase> phases =
-        [
-            // Network updates happen first (highest priority)
-            new NetworkUpdatePhase(this.LoggerFactory.CreateLogger<NetworkUpdatePhase>(), this.Socket),
-            
-            // Injector execution happens after network updates
-            new InjectorExecutionPhase(this.LoggerFactory.CreateLogger<InjectorExecutionPhase>(), this),
-            
-            // Pre-draw setup (prepares SpriteBatch and graphics device)
-            new PreDrawPhase(this.LoggerFactory.CreateLogger<PreDrawPhase>(), graphicsDevice, spriteBatch, this.Injectors.OfType<IPreDrawInjector>()),
-            
-            // Drawing phase (executes drawing injectors with SpriteBatch)
-            new DrawingPhase(this.LoggerFactory.CreateLogger<DrawingPhase>(), this.Injectors.OfType<IDrawingInjector>(), spriteBatch),
-            
-            // Post-draw cleanup (finalizes SpriteBatch)
-            new PostDrawPhase(this.LoggerFactory.CreateLogger<PostDrawPhase>(), spriteBatch, graphicsDevice, this.Injectors.OfType<IPostDrawInjector>())
-        ];
-
-        // Add any custom phases from injectors that implement IGameLoopPhase
+        // Get any custom phases from injectors that implement IGameLoopPhase
         List<IGameLoopPhase> injectorPhases = [.. this.Injectors.OfType<IGameLoopPhase>()];
-        phases.AddRange(injectorPhases);
 
-        if (injectorPhases.Count > 0)
+        // Create the game loop with auto-discovered phases plus any injector phases
+        IGameLoop gameLoop = injectorPhases.Count > 0 
+            ? gameLoopFactory.CreateGameLoop(injectorPhases)
+            : gameLoopFactory.CreateGameLoop();
+
+        if (injectorPhases.Count > 0 && this.Logger.IsEnabled(LogLevel.Debug))
         {
-            if(this.Logger.IsEnabled(LogLevel.Debug))
-            {
-                this.Logger.LogDebug("Added {Count} injector phases to client game loop", injectorPhases.Count);
-            }
+            this.Logger.LogDebug("Added {Count} injector phases to client game loop", injectorPhases.Count);
         }
-
-        IGameLoop gameLoop = new DefaultGameLoop(
-            this.LoggerFactory.CreateLogger<DefaultGameLoop>(), 
-            phases);
 
         if (this.Logger.IsEnabled(LogLevel.Information))
         {
-            this.Logger.LogInformation("Client game loop initialized with {PhaseCount} phases", phases.Count);
+            this.Logger.LogInformation("Client game loop initialized with {PhaseCount} phases", gameLoop.Phases.Count);
         }
 
         return gameLoop;

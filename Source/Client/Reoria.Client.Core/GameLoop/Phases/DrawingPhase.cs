@@ -1,13 +1,12 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Application.GameLoop;
 using Reoria.Engine.Application.Injectors;
 
-namespace Reoria.Engine.Application.GameLoop.Phases;
+namespace Reoria.Client.Core.GameLoop.Phases;
 
 /// <summary>
-/// A game loop phase that handles drawing operations for client applications.
+/// A game loop phase that handles drawing operations.
 /// </summary>
 public class DrawingPhase : IGameLoopPhase
 {
@@ -20,8 +19,11 @@ public class DrawingPhase : IGameLoopPhase
     /// </summary>
     /// <param name="logger">The logger instance.</param>
     /// <param name="drawingInjectors">The collection of drawing injectors.</param>
-    /// <param name="spriteBatch">The sprite batch for 2D drawing operations.</param>
-    public DrawingPhase(ILogger<DrawingPhase> logger, IEnumerable<IDrawingInjector> drawingInjectors, SpriteBatch spriteBatch)
+    /// <param name="spriteBatch">The sprite batch for drawing operations.</param>
+    public DrawingPhase(
+        ILogger<DrawingPhase> logger, 
+        IEnumerable<IDrawingInjector> drawingInjectors, 
+        SpriteBatch spriteBatch)
     {
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.drawingInjectors = drawingInjectors ?? throw new ArgumentNullException(nameof(drawingInjectors));

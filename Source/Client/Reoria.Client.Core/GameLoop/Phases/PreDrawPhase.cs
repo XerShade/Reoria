@@ -1,14 +1,14 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Application.GameLoop;
 using Reoria.Engine.Application.Injectors;
 using Color = Microsoft.Xna.Framework.Color;
 
-namespace Reoria.Engine.Application.GameLoop.Phases;
+namespace Reoria.Client.Core.GameLoop.Phases;
 
 /// <summary>
-/// A game loop phase that prepares the rendering pipeline for drawing operations.
+/// A game loop phase that sets up the rendering pipeline before drawing operations.
 /// </summary>
 public class PreDrawPhase : IGameLoopPhase
 {
@@ -21,10 +21,14 @@ public class PreDrawPhase : IGameLoopPhase
     /// Initializes a new instance of the <see cref="PreDrawPhase"/> class.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
-    /// <param name="graphicsDevice">The graphics device for rendering operations.</param>
-    /// <param name="spriteBatch">The sprite batch for 2D drawing operations.</param>
+    /// <param name="graphicsDevice">The graphics device.</param>
+    /// <param name="spriteBatch">The sprite batch.</param>
     /// <param name="preDrawInjectors">The collection of pre-draw injectors.</param>
-    public PreDrawPhase(ILogger<PreDrawPhase> logger, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, IEnumerable<IPreDrawInjector> preDrawInjectors)
+    public PreDrawPhase(
+        ILogger<PreDrawPhase> logger, 
+        GraphicsDevice graphicsDevice, 
+        SpriteBatch spriteBatch, 
+        IEnumerable<IPreDrawInjector> preDrawInjectors)
     {
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
@@ -56,6 +60,10 @@ public class PreDrawPhase : IGameLoopPhase
             // Set up the graphics device for drawing
             this.graphicsDevice.BlendState = BlendState.AlphaBlend;
             this.graphicsDevice.SamplerStates[0] = SamplerState.LinearClamp;
+            this.graphicsDevice.DepthStencilState = DepthStencilState.Default;
+            this.graphicsDevice.RasterizerState = RasterizerState.CullNone;
+
+            // Clear the screen with a different color to verify the code is working
             this.graphicsDevice.Clear(Color.Cyan);
 
             // Begin the sprite batch
@@ -64,7 +72,7 @@ public class PreDrawPhase : IGameLoopPhase
             // Execute pre-draw injectors
             if (this.preDrawInjectors.Any())
             {
-                this.logger.LogTrace("Executing {InjectorCount} pre-draw injectors for tick {TickNumber}",
+                this.logger.LogTrace("Executing {InjectorCount} pre-draw injectors for tick {TickNumber}", 
                     this.preDrawInjectors.Count(), context.TickNumber);
 
                 foreach (var injector in this.preDrawInjectors)
@@ -79,7 +87,7 @@ public class PreDrawPhase : IGameLoopPhase
 
                         injectorStopwatch.Stop();
 
-                        this.logger.LogTrace("Post-draw injector {InjectorType} executed in {ElapsedMilliseconds}ms",
+                        this.logger.LogTrace("Pre-draw injector {InjectorType} executed in {ElapsedMilliseconds}ms", 
                             injector.GetType().Name, injectorStopwatch.ElapsedMilliseconds);
                     }
                     catch (Exception ex)

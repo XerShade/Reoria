@@ -36,7 +36,7 @@ public class ClientSocketInjector : IApplicationServicesInjector
     /// exists per application lifetime, which is appropriate for network connections.
     /// </remarks>
     public void OnBuildServices(ContainerBuilder services)
-        => services.RegisterType<ClientSocket>().As<ClientSocket>().SingleInstance();
+        => services.RegisterType<ClientSocket>().As<ClientSocket>().As<Socket>().SingleInstance();
 
     /// <inheritdoc />
     /// <remarks>

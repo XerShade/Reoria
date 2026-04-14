@@ -3,7 +3,7 @@ using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
 
-namespace Reoria.Server.Application;
+namespace Reoria.Server.Core.Application;
 
 /// <summary>
 /// Defines an inejector for injecting the server application.

@@ -1,13 +1,12 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Application.GameLoop;
 using Reoria.Engine.Application.Injectors;
 
-namespace Reoria.Engine.Application.GameLoop.Phases;
+namespace Reoria.Client.Core.GameLoop.Phases;
 
 /// <summary>
-/// A game loop phase that finalizes drawing operations and cleans up the rendering pipeline.
+/// A game loop phase that finalizes rendering pipeline after drawing operations.
 /// </summary>
 public class PostDrawPhase : IGameLoopPhase
 {
@@ -20,10 +19,14 @@ public class PostDrawPhase : IGameLoopPhase
     /// Initializes a new instance of the <see cref="PostDrawPhase"/> class.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
-    /// <param name="spriteBatch">The sprite batch for 2D drawing operations.</param>
-    /// <param name="graphicsDevice">The graphics device for rendering operations.</param>
+    /// <param name="spriteBatch">The sprite batch.</param>
+    /// <param name="graphicsDevice">The graphics device.</param>
     /// <param name="postDrawInjectors">The collection of post-draw injectors.</param>
-    public PostDrawPhase(ILogger<PostDrawPhase> logger, SpriteBatch spriteBatch, GraphicsDevice graphicsDevice, IEnumerable<IPostDrawInjector> postDrawInjectors)
+    public PostDrawPhase(
+        ILogger<PostDrawPhase> logger, 
+        SpriteBatch spriteBatch, 
+        GraphicsDevice graphicsDevice, 
+        IEnumerable<IPostDrawInjector> postDrawInjectors)
     {
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.spriteBatch = spriteBatch ?? throw new ArgumentNullException(nameof(spriteBatch));

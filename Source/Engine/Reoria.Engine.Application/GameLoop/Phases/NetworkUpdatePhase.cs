@@ -33,6 +33,9 @@ public class NetworkUpdatePhase : IGameLoopPhase
     public bool IsEnabled => true;
 
     /// <inheritdoc />
+    public bool IsAsync => true;
+
+    /// <inheritdoc />
     public async Task ExecuteAsync(IGameLoopContext context, CancellationToken cancellationToken = default)
     {
         try
@@ -49,5 +52,24 @@ public class NetworkUpdatePhase : IGameLoopPhase
         }
 
         await Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task Execute(IGameLoopContext context, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Update the network socket
+            this.socket.Update();
+            
+            this.logger.LogTrace("Network socket updated successfully for tick {TickNumber}", context.TickNumber);
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogError(ex, "Failed to update network socket for tick {TickNumber}", context.TickNumber);
+            throw;
+        }
+
+        return Task.CompletedTask;
     }
 }

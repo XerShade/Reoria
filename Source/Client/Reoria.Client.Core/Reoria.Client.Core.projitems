@@ -11,5 +11,10 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Application\ClientApplication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Application\ClientApplication.Injector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Application\ClientGameLoopInjector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\ClientDrawingPhasesInjector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\PreDrawPhase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\DrawingPhase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\PostDrawPhase.cs" />
   </ItemGroup>
 </Project>
