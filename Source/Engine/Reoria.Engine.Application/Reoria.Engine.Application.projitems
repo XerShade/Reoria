@@ -25,7 +25,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)GameLoop\IGameLoopPhase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\InjectorExecutionPhase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\NetworkUpdatePhase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\PreDrawPhase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\DrawingPhase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\PostDrawPhase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IApplication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\IGameLoopInjectors.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\IApplicationInjectors.cs" />

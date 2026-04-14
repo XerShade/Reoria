@@ -220,6 +220,10 @@ public class ClientApplication : Game, IApplication, IDisposable
     {
         this.Logger.LogDebug("Initializing client game loop with phases...");
 
+        // Get required services from DI container
+        var graphicsDevice = this.Provider.GetRequiredService<GraphicsDevice>();
+        var spriteBatch = this.Provider.GetRequiredService<SpriteBatch>();
+
         List<IGameLoopPhase> phases =
         [
             // Network updates happen first (highest priority)
@@ -228,8 +232,14 @@ public class ClientApplication : Game, IApplication, IDisposable
             // Injector execution happens after network updates
             new InjectorExecutionPhase(this.LoggerFactory.CreateLogger<InjectorExecutionPhase>(), this),
             
-            // Drawing happens last (lowest priority)
-            new DrawingPhase(this.LoggerFactory.CreateLogger<DrawingPhase>(), this.Injectors.OfType<IDrawingInjector>())
+            // Pre-draw setup (prepares SpriteBatch and graphics device)
+            new PreDrawPhase(this.LoggerFactory.CreateLogger<PreDrawPhase>(), graphicsDevice, spriteBatch, this.Injectors.OfType<IPreDrawInjector>()),
+            
+            // Drawing phase (executes drawing injectors with SpriteBatch)
+            new DrawingPhase(this.LoggerFactory.CreateLogger<DrawingPhase>(), this.Injectors.OfType<IDrawingInjector>(), spriteBatch),
+            
+            // Post-draw cleanup (finalizes SpriteBatch)
+            new PostDrawPhase(this.LoggerFactory.CreateLogger<PostDrawPhase>(), spriteBatch, graphicsDevice, this.Injectors.OfType<IPostDrawInjector>())
         ];
 
         // Add any custom phases from injectors that implement IGameLoopPhase
@@ -310,23 +320,6 @@ public class ClientApplication : Game, IApplication, IDisposable
         base.Update(gameTime);
     }
 
-    /// <summary>
-    /// Called on a variable timescale withing the update function.
-    /// </summary>
-    /// <param name="gameTime">The elapsed time since the last call to <see cref="FixedUpdate(GameTime)"/>.</param>
-    protected virtual void VariableUpdate(GameTime gameTime)
-    {
-
-    }
-
-    /// <summary>
-    /// Called on a fixed timescale withing the update function.
-    /// </summary>
-    /// <param name="gameTime">The elapsed time since the last call to <see cref="FixedUpdate(GameTime)"/>.</param>
-    protected virtual void FixedUpdate(GameTime gameTime)
-    {
-
-    }
 
     /// <summary>
     /// Applies frame rate limiting to prevent excessive CPU usage.
@@ -397,10 +390,8 @@ public class ClientApplication : Game, IApplication, IDisposable
     /// <inheritdoc />
     protected override void Draw(GameTime gameTime)
     {
-        // Clear the screen.
-        this.GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        // Call the base method.
+        // All drawing is handled by PreDrawPhase, DrawingPhase, and PostDrawPhase
+        // through their respective injector interfaces
         base.Draw(gameTime);
     }
 

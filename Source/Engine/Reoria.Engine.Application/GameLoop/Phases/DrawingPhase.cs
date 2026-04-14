@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Reoria.Engine.Application.Interfaces;
 using Reoria.Engine.Application.Injectors;
 
@@ -12,16 +13,19 @@ public class DrawingPhase : IGameLoopPhase
 {
     private readonly ILogger<DrawingPhase> logger;
     private readonly IEnumerable<IDrawingInjector> drawingInjectors;
+    private readonly SpriteBatch spriteBatch;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DrawingPhase"/> class.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
     /// <param name="drawingInjectors">The collection of drawing injectors.</param>
-    public DrawingPhase(ILogger<DrawingPhase> logger, IEnumerable<IDrawingInjector> drawingInjectors)
+    /// <param name="spriteBatch">The sprite batch for 2D drawing operations.</param>
+    public DrawingPhase(ILogger<DrawingPhase> logger, IEnumerable<IDrawingInjector> drawingInjectors, SpriteBatch spriteBatch)
     {
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.drawingInjectors = drawingInjectors ?? throw new ArgumentNullException(nameof(drawingInjectors));
+        this.spriteBatch = spriteBatch ?? throw new ArgumentNullException(nameof(spriteBatch));
     }
 
     /// <inheritdoc />
@@ -54,7 +58,7 @@ public class DrawingPhase : IGameLoopPhase
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
                 
                 // Execute the drawing injector
-                injector.OnDraw(context.GameTime);
+                injector.OnDraw(context.GameTime, this.spriteBatch);
                 
                 stopwatch.Stop();
 
