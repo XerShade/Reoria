@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
+using Reoria.Engine.Application.GameLoop.Interfaces;
+using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
 using Reoria.Engine.Application.Injectors;
-using Reoria.Engine.Application.Interfaces;
 
 namespace Reoria.Engine.Application.GameLoop.Phases;
 

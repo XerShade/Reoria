@@ -1,6 +1,6 @@
 using Autofac;
 using Reoria.Engine.Application.Enumerations;
-using Reoria.Engine.Application.GameLoop;
+using Reoria.Engine.Application.GameLoop.Extensions;
 
 namespace Reoria.Engine.Application.Injectors;
 

@@ -20,14 +20,14 @@
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\ApplicationServiceExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GameLoop\DefaultGameLoop.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GameLoop\DefaultGameLoopContext.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\GameLoopFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Factories\GameLoopFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GameLoop\GameLoopPhaseRegistry.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\GameLoopServiceExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\IGameLoop.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\IGameLoopContext.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\IGameLoopFactory.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\IGameLoopPhase.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\IGameLoopPhaseRegistry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Extensions\GameLoopServiceExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Interfaces\IGameLoop.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Interfaces\IGameLoopContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Factories\Interfaces\IGameLoopFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\Interfaces\IGameLoopPhase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Interfaces\IGameLoopPhaseRegistry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\InjectorExecutionPhase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\NetworkUpdatePhase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\PreDrawPhase.cs" />
@@ -46,5 +46,11 @@
     <Content Include="$(MSBuildThisFileDirectory)appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)GameLoop\Factories\Interfaces\" />
+    <Folder Include="$(MSBuildThisFileDirectory)GameLoop\Interfaces\" />
+    <Folder Include="$(MSBuildThisFileDirectory)GameLoop\Extensions\" />
+    <Folder Include="$(MSBuildThisFileDirectory)GameLoop\Phases\Interfaces\" />
   </ItemGroup>
 </Project>

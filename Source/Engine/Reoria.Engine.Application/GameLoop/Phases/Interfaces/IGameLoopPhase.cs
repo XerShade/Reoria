@@ -1,6 +1,6 @@
-using Microsoft.Xna.Framework;
+using Reoria.Engine.Application.GameLoop.Interfaces;
 
-namespace Reoria.Engine.Application.GameLoop;
+namespace Reoria.Engine.Application.GameLoop.Phases.Interfaces;
 
 /// <summary>
 /// Defines the contract for a phase within the game loop.

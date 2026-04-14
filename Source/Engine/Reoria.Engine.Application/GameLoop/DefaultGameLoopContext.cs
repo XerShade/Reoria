@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using Reoria.Engine.Application.GameLoop.Interfaces;
 
 namespace Reoria.Engine.Application.GameLoop;
 

@@ -1,4 +1,6 @@
-namespace Reoria.Engine.Application.GameLoop;
+using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
+
+namespace Reoria.Engine.Application.GameLoop.Interfaces;
 
 /// <summary>
 /// Defines the contract for a game loop phase registry service.

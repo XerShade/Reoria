@@ -1,4 +1,7 @@
-namespace Reoria.Engine.Application.GameLoop;
+using Reoria.Engine.Application.GameLoop.Interfaces;
+using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
+
+namespace Reoria.Engine.Application.GameLoop.Factories.Interfaces;
 
 /// <summary>
 /// Defines the contract for a game loop factory service.

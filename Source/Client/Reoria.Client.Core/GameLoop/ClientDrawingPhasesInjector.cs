@@ -5,6 +5,7 @@ using Reoria.Engine.Application.Extensions;
 using Reoria.Engine.Application.Interfaces;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Injectors;
+using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
 
 namespace Reoria.Client.Core.GameLoop;
 
@@ -30,15 +31,15 @@ public class ClientDrawingPhasesInjector : IApplicationServicesInjector
     {
         // Register client-specific drawing phases
         services.RegisterType<Reoria.Client.Core.GameLoop.Phases.PreDrawPhase>()
-               .As<Reoria.Engine.Application.GameLoop.IGameLoopPhase>()
+               .As<IGameLoopPhase>()
                .InstancePerDependency();
 
         services.RegisterType<Reoria.Client.Core.GameLoop.Phases.DrawingPhase>()
-               .As<Reoria.Engine.Application.GameLoop.IGameLoopPhase>()
+               .As<IGameLoopPhase>()
                .InstancePerDependency();
 
         services.RegisterType<Reoria.Client.Core.GameLoop.Phases.PostDrawPhase>()
-               .As<Reoria.Engine.Application.GameLoop.IGameLoopPhase>()
+               .As<IGameLoopPhase>()
                .InstancePerDependency();
     }
 

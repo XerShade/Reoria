@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
+using Reoria.Engine.Application.GameLoop.Interfaces;
+using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
 
 namespace Reoria.Engine.Application.GameLoop;
 

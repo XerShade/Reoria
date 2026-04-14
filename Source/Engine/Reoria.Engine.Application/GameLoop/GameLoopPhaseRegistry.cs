@@ -1,6 +1,7 @@
-using Microsoft.Extensions.Logging;
 using Autofac;
-using Reoria.Engine.Application.Interfaces;
+using Microsoft.Extensions.Logging;
+using Reoria.Engine.Application.GameLoop.Interfaces;
+using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
 
 namespace Reoria.Engine.Application.GameLoop;
 

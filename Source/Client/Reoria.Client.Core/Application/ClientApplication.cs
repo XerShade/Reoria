@@ -10,13 +10,13 @@ using Microsoft.Xna.Framework.Input;
 using Reoria.Engine.Application;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Extensions;
-using Reoria.Engine.Application.GameLoop;
-using Reoria.Engine.Application.GameLoop.Phases;
+using Reoria.Engine.Application.GameLoop.Factories.Interfaces;
+using Reoria.Engine.Application.GameLoop.Interfaces;
+using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
 using Reoria.Engine.Network.Sockets;
 using ButtonState = Microsoft.Xna.Framework.Input.ButtonState;
-using Color = Microsoft.Xna.Framework.Color;
 using Keys = Microsoft.Xna.Framework.Input.Keys;
 
 namespace Reoria.Client.Core.Application;

@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace Reoria.Engine.Application.GameLoop;
+namespace Reoria.Engine.Application.GameLoop.Interfaces;
 
 /// <summary>
 /// Provides context information for a game loop tick.

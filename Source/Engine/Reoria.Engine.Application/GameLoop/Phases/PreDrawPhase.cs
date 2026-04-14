@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Application.GameLoop.Interfaces;
+using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
 using Reoria.Engine.Application.Injectors;
 using Color = Microsoft.Xna.Framework.Color;
 

@@ -1,7 +1,11 @@
 using Autofac;
+using Reoria.Engine.Application.GameLoop.Factories;
+using Reoria.Engine.Application.GameLoop.Factories.Interfaces;
+using Reoria.Engine.Application.GameLoop.Interfaces;
 using Reoria.Engine.Application.GameLoop.Phases;
+using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
 
-namespace Reoria.Engine.Application.GameLoop;
+namespace Reoria.Engine.Application.GameLoop.Extensions;
 
 /// <summary>
 /// Extension methods for registering game loop services in the DI container.

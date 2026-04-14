@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
-using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Application.GameLoop.Interfaces;
+using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
 using Reoria.Engine.Network.Sockets;
 
 namespace Reoria.Engine.Application.GameLoop.Phases;

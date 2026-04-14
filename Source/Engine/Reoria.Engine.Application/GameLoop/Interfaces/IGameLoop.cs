@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
+using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
 
-namespace Reoria.Engine.Application.GameLoop;
+namespace Reoria.Engine.Application.GameLoop.Interfaces;
 
 /// <summary>
 /// Defines the contract for a game loop that manages the update cycle.

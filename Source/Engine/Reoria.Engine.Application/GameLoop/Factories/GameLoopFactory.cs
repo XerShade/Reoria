@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
+using Reoria.Engine.Application.GameLoop.Factories.Interfaces;
+using Reoria.Engine.Application.GameLoop.Interfaces;
+using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
 
-namespace Reoria.Engine.Application.GameLoop;
+namespace Reoria.Engine.Application.GameLoop.Factories;
 
 /// <summary>
 /// A factory service for creating game loops with properly injected phases.
