@@ -1,6 +1,7 @@
 ﻿using LiteNetLib;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Reoria.Engine.Network.Packets.Interfaces;
 using Reoria.Engine.Network.Sockets;
 
 namespace Reoria.Client.Network.Sockets;
@@ -13,7 +14,8 @@ namespace Reoria.Client.Network.Sockets;
 /// configurable connection parameters, timeout handling, and comprehensive logging.
 /// It inherits from the base Socket class and implements client-specific connection logic.
 /// </remarks>
-public class ClientSocket(ILogger<ClientSocket> logger, IConfiguration configuration) : Socket(logger, configuration)
+public class ClientSocket(ILogger<ClientSocket> logger, IConfiguration configuration, IPacketManager packetManager) 
+    : Socket(logger, configuration, packetManager)
 {
     /// <summary>
     /// Gets the default server address to connect to.

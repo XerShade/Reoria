@@ -1,6 +1,8 @@
 ﻿using LiteNetLib;
+using LiteNetLib.Utils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Reoria.Engine.Network.Packets.Interfaces;
 using System.Net;
 using System.Net.Sockets;
 
@@ -30,6 +32,11 @@ public abstract class Socket : IDisposable
     /// Gets the LiteNetLib network manager for this socket.
     /// </summary>
     protected virtual NetManager Manager { get; init; }
+
+    /// <summary>
+    /// Gets the packet manager for this socket.
+    /// </summary>
+    protected virtual IPacketManager PacketManager { get; init; }
     
     /// <summary>
     /// Gets the connection key used for authentication.
@@ -66,11 +73,12 @@ public abstract class Socket : IDisposable
     /// - Configuration values for connection key and port
     /// - Event handlers for all network operations
     /// </remarks>
-    protected Socket(ILogger<Socket> logger, IConfiguration configuration)
+    protected Socket(ILogger<Socket> logger, IConfiguration configuration, IPacketManager packetManager)
     {
         this.Logger = logger;
         this.Listener = new EventBasedNetListener();
         this.Manager = new NetManager(this.Listener);
+        this.PacketManager = packetManager;
 
         // Load configuration values with defaults.
         this.ConnectionKey = configuration["Networking:ConnectionKey"] ?? "Reoria";
@@ -138,7 +146,11 @@ public abstract class Socket : IDisposable
     /// to implement custom message processing and handling logic.
     /// </remarks>
     protected virtual void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
-        => this.Logger.LogInformation("Received message from peer {Address}.", peer.Address.ToString());
+    {
+        this.Logger.LogInformation("Received packet from peer {Address}.", peer.Address.ToString());
+
+        this.PacketManager.HandleIncomingPacket(peer, reader, channel, deliveryMethod);
+    }
 
     /// <summary>
     /// Called when an unconnected message is received.
@@ -151,7 +163,11 @@ public abstract class Socket : IDisposable
     /// to implement custom handling for connectionless messages like discovery broadcasts.
     /// </remarks>
     protected virtual void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
-        => this.Logger.LogInformation("Received unconnected message from {Address}.", remoteEndPoint.Address.ToString());
+    {
+        this.Logger.LogInformation("Received unconnected message from {Address}.", remoteEndPoint.Address.ToString());
+
+        this.PacketManager.HandleIncomingPacket(remoteEndPoint, reader, messageType);
+    }
 
     /// <summary>
     /// Called when a peer's address changes.
@@ -175,7 +191,13 @@ public abstract class Socket : IDisposable
     /// to implement custom connection handling, initialization, or notification logic.
     /// </remarks>
     protected virtual void OnPeerConnected(NetPeer peer)
-        => this.Logger.LogInformation("Peer {Address} has connected.", peer.Address.ToString());
+    {
+        this.Logger.LogInformation("Peer {Address} has connected.", peer.Address.ToString());
+
+        NetDataWriter writer = this.PacketManager.ComposeOutgoingPacket("Handshake");
+
+        peer.Send(writer, DeliveryMethod.ReliableOrdered);
+    }
 
     /// <summary>
     /// Called when a peer disconnects.

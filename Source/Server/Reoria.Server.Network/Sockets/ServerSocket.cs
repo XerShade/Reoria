@@ -6,6 +6,7 @@ using Reoria.Server.Network.Sessions;
 using Reoria.Server.Network.Sessions.Interfaces;
 using Reoria.Server.Network.Players;
 using Reoria.Server.Network.Players.Interfaces;
+using Reoria.Engine.Network.Packets.Interfaces;
 
 namespace Reoria.Server.Network.Sockets;
 
@@ -18,7 +19,8 @@ namespace Reoria.Server.Network.Sockets;
 /// It inherits from the base Socket class and implements server-specific connection logic.
 /// </remarks>
 /// <inheritdoc />
-public class ServerSocket(ILogger<ServerSocket> logger, IConfiguration configuration, ISessionManager sessionManager, IPlayerManager playerManager) : Socket(logger, configuration)
+public class ServerSocket(ILogger<ServerSocket> logger, IConfiguration configuration, ISessionManager sessionManager, IPlayerManager playerManager, IPacketManager packetManager)
+    : Socket(logger, configuration, packetManager)
 {
     /// <summary>
     /// Gets the maximum number of concurrent connections allowed.
