@@ -6,7 +6,8 @@ using Reoria.Engine.Network.Sockets;
 namespace Reoria.Engine.Application.GameLoop.Phases;
 
 /// <summary>
-/// A game loop phase that handles network socket updates.
+/// A game loop phase that handles network socket updates during each game tick.
+/// This phase ensures that network communication is processed regularly as part of the game loop.
 /// </summary>
 public class NetworkUpdatePhase : IGameLoopPhase
 {
