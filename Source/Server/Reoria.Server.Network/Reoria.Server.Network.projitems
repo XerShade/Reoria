@@ -10,6 +10,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\ServerSocket.Injector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Injectors\Sessions.Injector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Sessions\Interfaces\ISessionManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Sessions\Session.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Sessions\SessionManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sockets\ServerSocket.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Sessions\Factories\Interfaces\" />
   </ItemGroup>
 </Project>

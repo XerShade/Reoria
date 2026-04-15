@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Reoria.Engine.Network.Sockets;
+using Reoria.Server.Network.Sessions;
+using Reoria.Server.Network.Sessions.Interfaces;
 
 namespace Reoria.Server.Network.Sockets;
 
@@ -13,7 +15,8 @@ namespace Reoria.Server.Network.Sockets;
 /// configurable maximum connections, connection request handling, and comprehensive logging.
 /// It inherits from the base Socket class and implements server-specific connection logic.
 /// </remarks>
-public class ServerSocket(ILogger<ServerSocket> logger, IConfiguration configuration) : Socket(logger, configuration)
+/// <inheritdoc />
+public class ServerSocket(ILogger<ServerSocket> logger, IConfiguration configuration, ISessionManager sessionManager) : Socket(logger, configuration)
 {
     /// <summary>
     /// Gets the maximum number of concurrent connections allowed.
@@ -23,6 +26,11 @@ public class ServerSocket(ILogger<ServerSocket> logger, IConfiguration configura
     /// This limit helps prevent server overload and manages resource usage.
     /// </remarks>
     protected virtual int MaxConnections { get; init; } = Convert.ToInt32(configuration["Networking:MaxConnections"] ?? "10");
+
+    /// <summary>
+    /// Gets the session manager associated with the server socket.
+    /// </summary>
+    protected virtual ISessionManager SessionManager { get;init; } = sessionManager;
 
     /// <summary>
     /// Starts the server and begins listening for client connections.
@@ -58,10 +66,13 @@ public class ServerSocket(ILogger<ServerSocket> logger, IConfiguration configura
 
             if (peer != null)
             {
+                // Open the session for the accepted peer.
+                Session session = this.SessionManager.Open(peer);
+
                 // Log successful connection acceptance.
                 if (this.Logger.IsEnabled(LogLevel.Information))
                 {
-                    this.Logger.LogInformation("Connection request from {Address} was accepted.", request.RemoteEndPoint.Address.ToString());
+                    this.Logger.LogInformation("Connection request from {Address} was accepted, session {SessionId} opened.", request.RemoteEndPoint.Address.ToString(), session.Guid);
                 }
             }
             else
@@ -76,5 +87,19 @@ public class ServerSocket(ILogger<ServerSocket> logger, IConfiguration configura
             this.Logger.LogWarning("Connection request from {Address} was rejected, server is full.", request.RemoteEndPoint.Address.ToString());
             request.Reject();
         }
+    }
+
+    /// <summary>
+    /// Handles the disconnection of a client from the server.
+    /// </summary>
+    /// <param name="peer">The peer that has disconnected.</param>
+    /// <param name="disconnectInfo">The reason for the disconnection.</param>
+    protected override void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
+    {
+        // Close the session for the disconnected peer.
+        this.SessionManager.Close(peer);
+
+        // Call the base method to handle the disconnection.
+        base.OnPeerDisconnected(peer, disconnectInfo);
     }
 }
