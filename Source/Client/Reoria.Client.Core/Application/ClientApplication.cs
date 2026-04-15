@@ -128,7 +128,7 @@ public class ClientApplication : Game, IApplication, IDisposable
         this.ContainerBuilder = this.GetServices();
 
         // Initialize the graphics device manager.
-        this.GraphicsDeviceManager = new GraphicsDeviceManager(this);
+        this.GraphicsDeviceManager = new(this);
 
         // Configure the content manager.
         this.Content.RootDirectory = "Content";
@@ -139,51 +139,43 @@ public class ClientApplication : Game, IApplication, IDisposable
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
     /// <inheritdoc />
-    protected override void Initialize()
-    {
-        // Register the graphics device manager with proper lifetime (not singleton to prevent memory leaks)
-        _ = this.ContainerBuilder.RegisterInstance<GraphicsDeviceManager>(this.GraphicsDeviceManager)
-            .Keyed<GraphicsDeviceManager>("GraphicsDeviceManager")
-            .As<GraphicsDeviceManager>()
-            .SingleInstance();
-
-        // Register the graphics device with proper lifetime
-        _ = this.ContainerBuilder.RegisterInstance<GraphicsDevice>(this.GraphicsDevice)
-            .Keyed<GraphicsDevice>("GraphicsDevice")
-            .As<GraphicsDevice>()
-            .SingleInstance();
-
-        // Register the content manager with proper lifetime
-        _ = this.ContainerBuilder.RegisterInstance<ContentManager>(this.Content)
-            .Keyed<ContentManager>("ContentManager")
-            .As<ContentManager>()
-            .SingleInstance();
-
-        // Call the base method.
-        base.Initialize();
-    }
-
-    /// <inheritdoc />
     protected override void LoadContent()
     {
         // Create the sprite batch.
         this.SpriteBatch = new SpriteBatch(this.GraphicsDevice);
 
-        // Register the sprite batch with proper lifetime
-        _ = this.ContainerBuilder.RegisterInstance<SpriteBatch>(this.SpriteBatch)
-            .Keyed<SpriteBatch>("SpriteBatch")
-            .As<SpriteBatch>()
-            .SingleInstance();
-
         // Call the base method.
         base.LoadContent();
+
+        // Check to see if the platform is Android or iOS.
+        if (this.Platform is Platform.Android or Platform.iOS)
+        {
+            // Finalize the initialization.
+            this.FinalizeInitialization();
+        }
     }
 
     /// <inheritdoc />
     protected override void BeginRun()
     {
-        // Get the service provider.
-        this.Provider = this.GetServiceProvider();
+        // Check to see if the platform is Windows or Desktop.
+        if(this.Platform is Platform.Windows or Platform.Desktop)
+        {
+            // Finalize the initialization.
+            this.FinalizeInitialization();
+        }
+
+        // Call the base method.
+        base.BeginRun();
+    }
+
+    /// <summary>
+    /// Finalizes the initialization of the application and acquires service instances.
+    /// </summary>
+    protected virtual void FinalizeInitialization()
+    {
+        // Initialize the dependency injection provider.
+        this.InitializeProvider();
 
         // Get the server network socket.
         this.Socket = this.Provider.GetRequiredService<ClientSocket>();
@@ -207,9 +199,39 @@ public class ClientApplication : Game, IApplication, IDisposable
                 this.Logger.LogError(ex, "Application lifecycle injector {InjectorType} failed during application start", injector.GetType().Name);
             }
         }
+    }
 
-        // Call the base method.
-        base.BeginRun();
+    /// <summary>
+    /// Initializes the dependcy injection provider and initializes the game loop.
+    /// </summary>
+    protected virtual void InitializeProvider()
+    {
+        // Register the graphics device manager with proper lifetime (not singleton to prevent memory leaks)
+        _ = this.ContainerBuilder.RegisterInstance<GraphicsDeviceManager>(this.GraphicsDeviceManager)
+            .Keyed<GraphicsDeviceManager>("GraphicsDeviceManager")
+            .As<GraphicsDeviceManager>()
+            .SingleInstance();
+
+        // Register the graphics device with proper lifetime
+        _ = this.ContainerBuilder.RegisterInstance<GraphicsDevice>(this.GraphicsDevice)
+            .Keyed<GraphicsDevice>("GraphicsDevice")
+            .As<GraphicsDevice>()
+            .SingleInstance();
+
+        // Register the content manager with proper lifetime
+        _ = this.ContainerBuilder.RegisterInstance<ContentManager>(this.Content)
+            .Keyed<ContentManager>("ContentManager")
+            .As<ContentManager>()
+            .SingleInstance();
+
+        // Register the sprite batch with proper lifetime
+        _ = this.ContainerBuilder.RegisterInstance<SpriteBatch>(this.SpriteBatch ?? throw new ArgumentNullException("SpriteBatch is null."))
+            .Keyed<SpriteBatch>("SpriteBatch")
+            .As<SpriteBatch>()
+            .SingleInstance();
+
+        // Get the service provider.
+        this.Provider = this.GetServiceProvider();
     }
 
     /// <summary>
@@ -221,7 +243,7 @@ public class ClientApplication : Game, IApplication, IDisposable
         this.Logger.LogDebug("Initializing client game loop using DI factory...");
 
         // Get the game loop factory from DI container
-        var gameLoopFactory = this.Provider.GetRequiredService<IGameLoopFactory>();
+        IGameLoopFactory gameLoopFactory = this.Provider.GetRequiredService<IGameLoopFactory>();
 
         // Get any custom phases from injectors that implement IGameLoopPhase
         List<IGameLoopPhase> injectorPhases = [.. this.Injectors.OfType<IGameLoopPhase>()];
@@ -366,12 +388,10 @@ public class ClientApplication : Game, IApplication, IDisposable
     }
 
     /// <inheritdoc />
-    protected override void Draw(GameTime gameTime)
-    {
+    protected override void Draw(GameTime gameTime) =>
         // All drawing is handled by PreDrawPhase, DrawingPhase, and PostDrawPhase
         // through their respective injector interfaces
         base.Draw(gameTime);
-    }
 
     /// <summary>
     /// Releases all resources used by ClientApplication.

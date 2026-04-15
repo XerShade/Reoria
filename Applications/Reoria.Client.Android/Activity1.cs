@@ -20,16 +20,49 @@ namespace Reoria.Client.Android;
 )]
 public class Activity1 : AndroidGameActivity
 {
+    private ClientApplication? application;
+
     protected override void OnCreate(Bundle bundle)
     {
         base.OnCreate(bundle);
 
         IFileProviderService.SetFileProvider(new AndroidAssetFileProvider(this.Assets!));
 
-        using ClientApplication application = new AppBootStrapper(Platform.Android, []).CreateApplication<ClientApplication>();
-        View? view = application.Services.GetService(typeof(View)) as View;
+        this.application = new AppBootStrapper(Platform.Android, []).CreateApplication<ClientApplication>();
+        View? view = this.application.Services.GetService(typeof(View)) as View;
 
         this.SetContentView(view ?? throw new InvalidOperationException("Unable to resolve view."));
-        application.Run();
+        this.application.Run();
+    }
+
+    protected override void OnResume()
+    {
+        try
+        {
+            base.OnResume();
+        }
+        catch (NullReferenceException ex)
+        {
+            // Handle the case where GraphicsDeviceManager is not yet initialized
+            // This is a known issue in MonoGame Android when ForceSetFullScreen is called too early
+            System.Diagnostics.Debug.WriteLine($"NullReferenceException in OnResume: {ex.Message}");
+        }
+    }
+
+    protected override void OnDestroy()
+    {
+        try
+        {
+            this.application?.Dispose();
+            this.application = null;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error during disposal: {ex.Message}");
+        }
+        finally
+        {
+            base.OnDestroy();
+        }
     }
 }
