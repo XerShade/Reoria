@@ -39,4 +39,6 @@
 
   <Import Project="..\..\Source\Server\Reoria.Server.Core\Reoria.Server.Core.projitems" Label="Shared" />
 
+  <Import Project="..\..\Source\Server\Reoria.Server.Network\Reoria.Server.Network.projitems" Label="Shared" />
+
 </Project>

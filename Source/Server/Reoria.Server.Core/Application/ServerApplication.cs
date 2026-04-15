@@ -12,7 +12,7 @@ using Reoria.Engine.Application.GameLoop.Interfaces;
 using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
-using Reoria.Engine.Network.Sockets;
+using Reoria.Server.Network.Sockets;
 using System.Diagnostics;
 
 namespace Reoria.Server.Core.Application;

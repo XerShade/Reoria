@@ -1,9 +1,10 @@
 ﻿using Autofac;
-using Microsoft.Xna.Framework;
+using Reoria.Client.Network.Sockets;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Injectors;
+using Reoria.Engine.Network.Sockets;
 
-namespace Reoria.Engine.Network.Sockets;
+namespace Reoria.Client.Network.Injectors;
 
 /// <summary>
 /// Defines an injector for registering the ClientSocket service in the application.

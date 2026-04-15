@@ -1,9 +1,10 @@
 ﻿using Autofac;
-using Microsoft.Xna.Framework;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Injectors;
+using Reoria.Engine.Network.Sockets;
+using Reoria.Server.Network.Sockets;
 
-namespace Reoria.Engine.Network.Sockets;
+namespace Reoria.Server.Network.Injectors;
 
 public class ServerSocketInjector : IApplicationServicesInjector
 {

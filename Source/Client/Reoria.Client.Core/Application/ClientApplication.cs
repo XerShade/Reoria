@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Reoria.Client.Network.Sockets;
 using Reoria.Engine.Application;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Extensions;
@@ -15,7 +16,6 @@ using Reoria.Engine.Application.GameLoop.Interfaces;
 using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
-using Reoria.Engine.Network.Sockets;
 using ButtonState = Microsoft.Xna.Framework.Input.ButtonState;
 using Keys = Microsoft.Xna.Framework.Input.Keys;
 

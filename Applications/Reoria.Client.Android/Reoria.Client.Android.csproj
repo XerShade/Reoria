@@ -36,6 +36,7 @@
   <Import Project="..\..\Source\Engine\Reoria.Engine.Application\Reoria.Engine.Application.projitems" Label="Shared" />
   <Import Project="..\..\Source\Engine\Reoria.Engine.Network\Reoria.Engine.Network.projitems" Label="Shared" />
   <Import Project="..\..\Source\Client\Reoria.Client.Assets\Reoria.Client.Assets.projitems" Label="Shared" />
+  <Import Project="..\..\Source\Client\Reoria.Client.Network\Reoria.Client.Network.projitems" Label="Shared" />
   <ItemGroup>
     <AndroidAsset Include="$(SolutionDir)\**\appsettings*.json" Exclude="$(SolutionDir)\**\Bin\**;$(SolutionDir)\**\obj\**;$(SolutionDir)\**\.git\**">
         <Link>Assets\%(Filename)%(Extension)</Link>

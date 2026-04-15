@@ -1,8 +1,9 @@
 ﻿using LiteNetLib;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Reoria.Engine.Network.Sockets;
 
-namespace Reoria.Engine.Network.Sockets;
+namespace Reoria.Client.Network.Sockets;
 
 /// <summary>
 /// Represents a client-side network socket for connecting to remote servers.
