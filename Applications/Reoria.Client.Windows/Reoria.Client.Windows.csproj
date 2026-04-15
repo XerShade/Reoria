@@ -1,44 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <RollForward>Major</RollForward>
-    <Nullable>enable</Nullable>
-    <PublishReadyToRun>false</PublishReadyToRun>
-    <TieredCompilation>false</TieredCompilation>
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>Icon.ico</ApplicationIcon>
-  </PropertyGroup>
+
+  <Import Project="../../Build/Reoria.Common.props" />
+  <Import Project="../../Build/Reoria.Engine.DependencyInjection.props" />
+  <Import Project="../../Build/MonoGame.props" />
+  <Import Project="../../Build/LiteNetLib.props" />
+
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="9.1.0" />
-    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="11.0.0" />
-    <PackageReference Include="LiteNetLib" Version="2.1.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.5" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="10.0.5" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.5" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="10.0.5" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.5" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.5" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.5" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.5" />
     <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.*" />
-    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.*" />
-    <PackageReference Include="Serilog" Version="4.3.1" />
-    <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
-    <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
-    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
-    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
   </ItemGroup>
+
+  <Import Project="..\..\Source\Client\Reoria.Client.Assets\Reoria.Client.Assets.projitems" Label="Shared" />
   <Import Project="..\..\Source\Client\Reoria.Client.Core\Reoria.Client.Core.projitems" Label="Shared" />
+  <Import Project="..\..\Source\Client\Reoria.Client.Network\Reoria.Client.Network.projitems" Label="Shared" />
   <Import Project="..\..\Source\Engine\Reoria.Engine.Application\Reoria.Engine.Application.projitems" Label="Shared" />
   <Import Project="..\..\Source\Engine\Reoria.Engine.Network\Reoria.Engine.Network.projitems" Label="Shared" />
-  <Import Project="..\..\Source\Client\Reoria.Client.Assets\Reoria.Client.Assets.projitems" Label="Shared" />
-  <Import Project="..\..\Source\Client\Reoria.Client.Network\Reoria.Client.Network.projitems" Label="Shared" />
 </Project>
