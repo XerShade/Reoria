@@ -16,7 +16,4 @@
     <Compile Include="$(MSBuildThisFileDirectory)Sessions\SessionManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sockets\ServerSocket.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)Sessions\Factories\Interfaces\" />
-  </ItemGroup>
 </Project>
