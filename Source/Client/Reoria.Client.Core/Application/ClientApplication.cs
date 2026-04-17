@@ -17,6 +17,7 @@ using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
 using ButtonState = Microsoft.Xna.Framework.Input.ButtonState;
+using GameBase = Microsoft.Xna.Framework.Game;
 using Keys = Microsoft.Xna.Framework.Input.Keys;
 
 namespace Reoria.Client.Core.Application;
@@ -24,7 +25,7 @@ namespace Reoria.Client.Core.Application;
 /// <summary>
 /// Defines the client application and its functionality.
 /// </summary>
-public class ClientApplication : Game, IApplication, IDisposable
+public class ClientApplication : GameBase, IApplication, IDisposable
 {
     /// <inheritdoc />
     public virtual Platform Platform { get; init; }

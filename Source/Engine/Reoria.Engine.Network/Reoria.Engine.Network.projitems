@@ -17,4 +17,5 @@
     <Compile Include="$(MSBuildThisFileDirectory)Packets\PacketManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sockets\Socket.cs" />
   </ItemGroup>
+  <Import Project="$(MSBuildThisFileDirectory)..\Reoria.Engine.Core\Reoria.Engine.Core.projitems" />
 </Project>

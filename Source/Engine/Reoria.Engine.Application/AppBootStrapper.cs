@@ -7,10 +7,10 @@ using Reoria.Engine.Application.Configuration;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Core.Reflection;
 using Serilog;
 using Serilog.Extensions.Logging;
 using System.Diagnostics;
-using System.Reflection;
 
 namespace Reoria.Engine.Application;
 
@@ -92,10 +92,7 @@ public partial class AppBootStrapper
         List<IBootStrapInjector> injectors = [];
 
         // Discover the bootstrapping injectors.
-        Assembly[] assemblies = [.. AppDomain.CurrentDomain.GetAssemblies()];
-        Type[] types = [.. assemblies
-                .SelectMany(a =>{ try { return a.GetTypes(); } catch { return []; }})
-                .Where(t => typeof(IBootStrapInjector).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)];
+        Type[] types = TypeDiscoveryHelper.GetConcreteTypesImplementingInterface<IBootStrapInjector>();
 
         // Iterate over the types found.
         foreach (Type type in types)

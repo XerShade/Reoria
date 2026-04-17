@@ -1,7 +1,7 @@
 ﻿using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
-using System.Reflection;
+using Reoria.Engine.Core.Reflection;
 
 namespace Reoria.Engine.Application.Extensions;
 
@@ -20,10 +20,7 @@ public static class ApplicationInjectorExtensions
         List<IApplicationInjector> injectors = [..application.Injectors];
 
         // Discover the application injectors.
-        Assembly[] assemblies = [.. AppDomain.CurrentDomain.GetAssemblies()];
-        Type[] types = [.. assemblies
-                .SelectMany(a =>{ try { return a.GetTypes(); } catch { return []; }})
-                .Where(t => typeof(IApplicationInjector).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)];
+        Type[] types = TypeDiscoveryHelper.GetConcreteTypesImplementingInterface<IApplicationInjector>();
 
         // Iterate over the types found.
         foreach (Type type in types)

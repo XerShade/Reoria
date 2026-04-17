@@ -19,4 +19,7 @@
   <Import Project="..\..\Source\Engine\Reoria.Engine.Network\Reoria.Engine.Network.projitems" Label="Shared" />
   <Import Project="..\..\Source\Server\Reoria.Server.Core\Reoria.Server.Core.projitems" Label="Shared" />
   <Import Project="..\..\Source\Server\Reoria.Server.Network\Reoria.Server.Network.projitems" Label="Shared" />
+  <Import Project="..\..\Source\Game\Reoria.Game.Entities\Reoria.Game.Entities.projitems" Label="Shared" />
+  <Import Project="..\..\Source\Server\Reoria.Server.Entities\Reoria.Server.Entities.projitems" Label="Shared" />
+  <Import Project="..\..\Source\Engine\Reoria.Engine.Core\Reoria.Engine.Core.projitems" Label="Shared" />
 </Project>

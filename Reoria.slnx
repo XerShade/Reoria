@@ -21,14 +21,20 @@
   <Folder Name="/Source/Client/">
     <Project Path="Source/Client/Reoria.Client.Assets/Reoria.Client.Assets.shproj" Id="c7a644e4-fedf-42da-a30e-4795c9fb82d5" />
     <Project Path="Source/Client/Reoria.Client.Core/Reoria.Client.Core.shproj" Id="7bf2e3ca-9319-4859-ae28-d5ace9aec580" />
+    <Project Path="Source/Client/Reoria.Client.Entities/Reoria.Client.Entities.shproj" Id="d2c928e3-e643-4257-883c-0ab6b436d498" />
     <Project Path="Source/Client/Reoria.Client.Network/Reoria.Client.Network.shproj" Id="a77c6ebf-28a6-4be5-afb2-1b48c55f1425" />
   </Folder>
   <Folder Name="/Source/Engine/">
     <Project Path="Source/Engine/Reoria.Engine.Application/Reoria.Engine.Application.shproj" Id="76cf7146-64a3-4d1a-b60e-3cbe3c1e4cb5" />
+    <Project Path="Source/Engine/Reoria.Engine.Core/Reoria.Engine.Core.shproj" Id="b4a02e1b-ee92-47d9-af17-ab8fbf368be9" />
     <Project Path="Source/Engine/Reoria.Engine.Network/Reoria.Engine.Network.shproj" Id="cc001347-be8e-4d85-822e-2b55ef8339a8" />
+  </Folder>
+  <Folder Name="/Source/Game/">
+    <Project Path="Source/Game/Reoria.Game.Entities/Reoria.Game.Entities.shproj" Id="a767b7fa-aa9b-4f29-a90c-f185c55dee34" />
   </Folder>
   <Folder Name="/Source/Server/">
     <Project Path="Source/Server/Reoria.Server.Core/Reoria.Server.Core.shproj" Id="2f1b3a35-c202-48ab-b4b5-5aada2d770cd" />
+    <Project Path="Source/Server/Reoria.Server.Entities/Reoria.Server.Entities.shproj" Id="3cf762f0-d2f3-41ca-a422-098ad5d39827" />
     <Project Path="Source/Server/Reoria.Server.Network/Reoria.Server.Network.shproj" Id="d1926d8a-14e3-47d8-bbb2-5a4a3bb05645" />
   </Folder>
 </Solution>

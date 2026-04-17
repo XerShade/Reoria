@@ -1,9 +1,9 @@
 ﻿using Autofac;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Injectors;
+using Reoria.Engine.Core.Reflection;
 using Reoria.Engine.Network.Packets;
 using Reoria.Engine.Network.Packets.Interfaces;
-using System.Reflection;
 
 namespace Reoria.Engine.Network.Injectors;
 
@@ -64,13 +64,8 @@ public class PacketInjector : IApplicationServicesInjector
     /// <param name="services">The container builder used to register the discovered packet handlers.</param>
     protected virtual void DiscoverIncomingPackets(ContainerBuilder services)
     {
-        // Get all currently loaded assemblies for scanning.
-        Assembly[] assemblies = [.. AppDomain.CurrentDomain.GetAssemblies()];
-        
         // Find all concrete types that implement IIncomingPacket (excluding interfaces and abstract classes).
-        Type[] types = [.. assemblies
-                .SelectMany(a => { try { return a.GetTypes(); } catch { return []; } })
-                .Where(t => typeof(IIncomingPacket).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)];
+        Type[] types = TypeDiscoveryHelper.GetConcreteTypesImplementingInterface<IIncomingPacket>();
 
         // Register each discovered packet handler with the dependency injection container.
         foreach (Type type in types)
@@ -88,13 +83,8 @@ public class PacketInjector : IApplicationServicesInjector
     /// <param name="services">The container builder used to register the discovered packet composers.</param>
     protected virtual void DiscoverOutgoingPackets(ContainerBuilder services)
     {
-        // Get all currently loaded assemblies for scanning.
-        Assembly[] assemblies = [.. AppDomain.CurrentDomain.GetAssemblies()];
-        
         // Find all concrete types that implement IOutgoingPacket (excluding interfaces and abstract classes).
-        Type[] types = [.. assemblies
-                .SelectMany(a => { try { return a.GetTypes(); } catch { return []; } })
-                .Where(t => typeof(IOutgoingPacket).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)];
+        Type[] types = TypeDiscoveryHelper.GetConcreteTypesImplementingInterface<IOutgoingPacket>();
 
         // Register each discovered packet composer with the dependency injection container.
         foreach (Type type in types)
