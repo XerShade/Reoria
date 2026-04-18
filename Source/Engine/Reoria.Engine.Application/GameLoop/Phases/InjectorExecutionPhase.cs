@@ -8,21 +8,18 @@ namespace Reoria.Engine.Application.GameLoop.Phases;
 /// <summary>
 /// A game loop phase that executes application injectors.
 /// </summary>
-public class InjectorExecutionPhase : IGameLoopPhase
+/// <remarks>
+/// Initializes a new instance of the <see cref="InjectorExecutionPhase"/> class.
+/// </remarks>
+/// <param name="logger">The logger instance.</param>
+/// <param name="variableUpdateInjectors">The variable update injectors to execute.</param>
+/// <param name="fixedUpdateInjectors">The fixed update injectors to execute.</param>
+public class InjectorExecutionPhase(ILogger<InjectorExecutionPhase> logger, 
+    IEnumerable<IVariableUpdateInjector> variableUpdateInjectors, IEnumerable<IFixedUpdateInjector> fixedUpdateInjectors) : IGameLoopPhase
 {
-    private readonly ILogger<InjectorExecutionPhase> logger;
-    private readonly IEnumerable<IApplicationInjector> injectors;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="InjectorExecutionPhase"/> class.
-    /// </summary>
-    /// <param name="logger">The logger instance.</param>
-    /// <param name="injectors">The collection of application injectors to execute.</param>
-    public InjectorExecutionPhase(ILogger<InjectorExecutionPhase> logger, IEnumerable<IApplicationInjector> injectors)
-    {
-        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        this.injectors = injectors ?? throw new ArgumentNullException(nameof(injectors));
-    }
+    private readonly ILogger<InjectorExecutionPhase> logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IEnumerable<IVariableUpdateInjector> variableUpdateInjectors = variableUpdateInjectors ?? throw new ArgumentNullException(nameof(variableUpdateInjectors));
+    private readonly IEnumerable<IFixedUpdateInjector> fixedUpdateInjectors = fixedUpdateInjectors ?? throw new ArgumentNullException(nameof(fixedUpdateInjectors));
 
     /// <inheritdoc />
     public string Name => "Injector Execution";
@@ -38,29 +35,25 @@ public class InjectorExecutionPhase : IGameLoopPhase
 
     /// <inheritdoc />
     public async Task ExecuteAsync(IGameLoopContext context, CancellationToken cancellationToken = default)
-    {
-        var injectorsList = this.injectors.ToList();
-        
-        if (injectorsList.Count == 0)
+    {        
+        if (!this.variableUpdateInjectors.Any() && !this.fixedUpdateInjectors.Any())
         {
             this.logger.LogTrace("No injectors to execute for tick {TickNumber}", context.TickNumber);
             return;
         }
 
-        this.logger.LogTrace("Executing {InjectorCount} injectors for tick {TickNumber}", 
-            injectorsList.Count, context.TickNumber);
+        this.logger.LogTrace("Executing {InjectorCount} injectors for tick {TickNumber}",
+            this.variableUpdateInjectors.Count() + this.fixedUpdateInjectors.Count(), context.TickNumber);
 
         // Execute variable update injectors
         if (!context.IsFixedUpdate)
-        {
-            var variableUpdateInjectors = injectorsList.OfType<IVariableUpdateInjector>().ToList();
-            
-            if (variableUpdateInjectors.Count > 0)
+        {            
+            if (this.variableUpdateInjectors.Any())
             {
-                this.logger.LogTrace("Executing {InjectorCount} variable update injectors for tick {TickNumber}", 
-                    variableUpdateInjectors.Count, context.TickNumber);
+                this.logger.LogTrace("Executing {InjectorCount} variable update injectors for tick {TickNumber}",
+                    this.variableUpdateInjectors.Count(), context.TickNumber);
 
-                foreach (var injector in variableUpdateInjectors)
+                foreach (IVariableUpdateInjector injector in this.variableUpdateInjectors)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -84,16 +77,13 @@ public class InjectorExecutionPhase : IGameLoopPhase
             }
         }
         else
-        {
-            // Execute fixed update injectors
-            var fixedUpdateInjectors = injectorsList.OfType<IFixedUpdateInjector>().ToList();
-            
-            if (fixedUpdateInjectors.Count > 0)
+        {            
+            if (this.fixedUpdateInjectors.Any())
             {
-                this.logger.LogTrace("Executing {InjectorCount} fixed update injectors for tick {TickNumber}", 
-                    fixedUpdateInjectors.Count, context.TickNumber);
+                this.logger.LogTrace("Executing {InjectorCount} fixed update injectors for tick {TickNumber}",
+                    this.fixedUpdateInjectors.Count(), context.TickNumber);
 
-                foreach (var injector in fixedUpdateInjectors)
+                foreach (IFixedUpdateInjector injector in this.fixedUpdateInjectors)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -123,40 +113,36 @@ public class InjectorExecutionPhase : IGameLoopPhase
     /// <inheritdoc />
     public Task Execute(IGameLoopContext context, CancellationToken cancellationToken = default)
     {
-        var injectorsList = this.injectors.ToList();
-        
-        if (injectorsList.Count == 0)
+        if (!this.variableUpdateInjectors.Any() && !this.fixedUpdateInjectors.Any())
         {
             this.logger.LogTrace("No injectors to execute for tick {TickNumber}", context.TickNumber);
             return Task.CompletedTask;
         }
 
-        this.logger.LogTrace("Executing {InjectorCount} injectors for tick {TickNumber}", 
-            injectorsList.Count, context.TickNumber);
+        this.logger.LogTrace("Executing {InjectorCount} injectors for tick {TickNumber}",
+            this.variableUpdateInjectors.Count() + this.fixedUpdateInjectors.Count(), context.TickNumber);
 
         // Execute variable update injectors
         if (!context.IsFixedUpdate)
         {
-            var variableUpdateInjectors = injectorsList.OfType<IVariableUpdateInjector>().ToList();
-            
-            if (variableUpdateInjectors.Count > 0)
+            if (this.variableUpdateInjectors.Any())
             {
-                this.logger.LogTrace("Executing {InjectorCount} variable update injectors for tick {TickNumber}", 
-                    variableUpdateInjectors.Count, context.TickNumber);
+                this.logger.LogTrace("Executing {InjectorCount} variable update injectors for tick {TickNumber}",
+                    this.variableUpdateInjectors.Count(), context.TickNumber);
 
-                foreach (var injector in variableUpdateInjectors)
+                foreach (IVariableUpdateInjector injector in this.variableUpdateInjectors)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
                     try
                     {
                         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-                        
+
                         injector.OnVariableUpdate(context.GameTime);
-                        
+
                         stopwatch.Stop();
 
-                        this.logger.LogTrace("Variable update injector {InjectorType} executed in {ElapsedMilliseconds}ms", 
+                        this.logger.LogTrace("Variable update injector {InjectorType} executed in {ElapsedMilliseconds}ms",
                             injector.GetType().Name, stopwatch.ElapsedMilliseconds);
                     }
                     catch (Exception ex)
@@ -169,27 +155,24 @@ public class InjectorExecutionPhase : IGameLoopPhase
         }
         else
         {
-            // Execute fixed update injectors
-            var fixedUpdateInjectors = injectorsList.OfType<IFixedUpdateInjector>().ToList();
-            
-            if (fixedUpdateInjectors.Count > 0)
+            if (this.fixedUpdateInjectors.Any())
             {
-                this.logger.LogTrace("Executing {InjectorCount} fixed update injectors for tick {TickNumber}", 
-                    fixedUpdateInjectors.Count, context.TickNumber);
+                this.logger.LogTrace("Executing {InjectorCount} fixed update injectors for tick {TickNumber}",
+                    this.fixedUpdateInjectors.Count(), context.TickNumber);
 
-                foreach (var injector in fixedUpdateInjectors)
+                foreach (IFixedUpdateInjector injector in this.fixedUpdateInjectors)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
                     try
                     {
                         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-                        
+
                         injector.OnFixedUpdate(context.GameTime);
-                        
+
                         stopwatch.Stop();
 
-                        this.logger.LogTrace("Fixed update injector {InjectorType} executed in {ElapsedMilliseconds}ms", 
+                        this.logger.LogTrace("Fixed update injector {InjectorType} executed in {ElapsedMilliseconds}ms",
                             injector.GetType().Name, stopwatch.ElapsedMilliseconds);
                     }
                     catch (Exception ex)
