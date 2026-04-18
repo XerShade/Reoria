@@ -30,9 +30,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Interfaces\IGameLoopPhaseRegistry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\InjectorExecutionPhase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\NetworkUpdatePhase.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\PreDrawPhase.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\DrawingPhase.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)GameLoop\Phases\PostDrawPhase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IApplication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\GameLoopServicesInjector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\IGameLoopInjectors.cs" />
