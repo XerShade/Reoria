@@ -78,9 +78,6 @@ public class DrawingPhase : IGameLoopPhase
             }
         }
 
-        // End the sprite batch to submit all drawing operations
-        this.spriteBatch.End();
-
         return Task.CompletedTask;
     }
 }
