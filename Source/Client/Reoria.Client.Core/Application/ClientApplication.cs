@@ -132,7 +132,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         this.GraphicsDeviceManager = new(this);
 
         // Configure the content manager.
-        this.Content.RootDirectory = "Content";
+        this.Content.RootDirectory = "Assets";
 
         // Configure the game window.
         this.IsMouseVisible = true;
