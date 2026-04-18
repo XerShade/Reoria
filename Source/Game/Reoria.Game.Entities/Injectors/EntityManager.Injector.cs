@@ -26,7 +26,7 @@ public class EntityManagerInjector : IApplicationServicesInjector
     public void OnBuildServices(ContainerBuilder services)
     {
         _ = services.RegisterType<EntityManager>()
-            .As<IEntityManager>()
+            .As<IEntityManager>().AsImplementedInterfaces()
             .SingleInstance();
 
         this.DiscoverSystems(services);
