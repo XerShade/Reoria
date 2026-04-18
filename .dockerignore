@@ -1,30 +1,52 @@
-**/.classpath
+# Docker build ignore file for Reoria project
+# This file specifies files and directories that should be excluded from Docker build context
+# Excluding unnecessary files reduces build context size and improves build performance
+
+# IDE and editor files
+**/.classpath          # Eclipse project files
 **/.dockerignore
 **/.env
-**/.git
-**/.gitignore
-**/.project
-**/.settings
-**/.toolstarget
-**/.vs
-**/.vscode
-**/*.*proj.user
-**/*.dbmdl
-**/*.jfm
-**/azds.yaml
-**/bin
+**/.project           # Eclipse project files
+**/.settings          # Eclipse settings
+**/.toolstarget       # .NET tooling targets
+**/.vs               # Visual Studio files
+**/.vscode            # Visual Studio Code files
+
+# Version control
+**/.git              # Git repository metadata
+**/.gitignore         # Git ignore file itself
+**/.gitmodules        # Git submodules configuration
+
+# Build artifacts and outputs
+**/bin               # Compiled binaries
 **/charts
-**/docker-compose*
-**/Dockerfile*
-**/node_modules
-**/npm-debug.log
-**/obj
-**/secrets.dev.yaml
-**/values.dev.yaml
-LICENSE
-README.md
-!**/.gitignore
-!.git/HEAD
-!.git/config
-!.git/packed-refs
+**/obj               # Build intermediate files
+**/*.dbmdl            # Database model files
+**/*.jfm              # Java form files
+
+# Dependency management
+**/node_modules       # Node.js dependencies
+**/npm-debug.log      # NPM debug logs
+
+# Configuration and secrets
+**/secrets.dev.yaml  # Development secrets
+**/values.dev.yaml    # Development values
+
+# Docker files (to avoid recursive copying)
+**/docker-compose*    # Docker Compose files
+**/Dockerfile*        # Dockerfiles (use specific one in build context)
+
+# Deployment and charts
+**/azds.yaml         # Azure Dev Spaces configuration
+
+# Project files that shouldn't be in container
+**/*.*proj.user      # User-specific project settings
+LICENSE               # License file (included in build if needed)
+README.md             # Documentation (not needed in container)
+
+# Git metadata exceptions (include only essential git files)
+!**/.gitignore        # Keep .gitignore for repository state
+!.git/HEAD           # Keep HEAD pointer for git operations
+!.git/config          # Keep git configuration
+!.git/packed-refs     # Keep packed references
 !.git/refs/heads/**

@@ -1,14 +1,28 @@
+# Docker Compose configuration for Reoria multiplayer game server
+# This file defines the service configuration for running Reoria server in containers
+# It supports deployment alongside nginx reverse proxy for production environments
+
 services:
+   # Reoria Server Service
    reoria.services.server:
      build: 
-       context: .
-       dockerfile: applications/Reoria.Server/Dockerfile
-     restart: no # Temporary, until the server is ready to run as a service. Will be changed to "unless-stopped" in the future.
+       context: .  # Build context is the project root directory
+       dockerfile: applications/Reoria.Server/Dockerfile  # Path to server Dockerfile
+     restart: no # Temporary setting - will change to "unless-stopped" when server is production-ready
      env_file:
-        - .env
-     container_name: reoria.applications.server
+        - .env  # Environment variables file for configuration (database URLs, ports, etc.)
+     container_name: reoria.applications.server  # Human-readable container name
+     # TODO: Add port mapping and health checks when server is ready for production
+     # ports:
+     #   - "8080:8080"  # Map host port 8080 to container port 8080
+     # healthcheck:
+     #   test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+     #   interval: 30s
+     #   timeout: 10s
+     #   retries: 3
 
+# Network configuration
 networks:
   default:
-    external: true
-    name: system.nginx.proxy
+    external: true  # Use external network instead of creating a new one
+    name: system.nginx.proxy  # Connect to existing nginx proxy network for reverse proxy setup
