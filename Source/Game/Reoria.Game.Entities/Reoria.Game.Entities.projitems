@@ -9,8 +9,12 @@
     <Import_RootNamespace>Reoria.Game.Entities</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Components\Interfaces\IComponent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Components\NetworkInformationComponent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Components\TransformComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)EntityManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Factories\Interfaces\IEntityFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Factories\PlayerEntityFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\EntityManager.Injector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IEntityManager.cs" />
   </ItemGroup>

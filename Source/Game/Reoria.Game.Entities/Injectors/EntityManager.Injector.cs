@@ -2,7 +2,9 @@
 using MonoGame.Extended.ECS.Systems;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Injectors;
+using Reoria.Engine.Core.Components.Interfaces;
 using Reoria.Engine.Core.Reflection;
+using Reoria.Game.Entities.Factories.Interfaces;
 using Reoria.Game.Entities.Interfaces;
 
 namespace Reoria.Game.Entities.Injectors;
@@ -28,6 +30,8 @@ public class EntityManagerInjector : IApplicationServicesInjector
             .SingleInstance();
 
         this.DiscoverSystems(services);
+        this.DiscoverFactories(services);
+        this.DiscoverComponents(services);
     }
 
     protected virtual void DiscoverSystems(ContainerBuilder services)
@@ -38,6 +42,29 @@ public class EntityManagerInjector : IApplicationServicesInjector
         {
             _ = services.RegisterType(type)
                 .As(type).As<ISystem>().AsImplementedInterfaces()
+                .InstancePerDependency();
+        }
+    }
+
+    protected virtual void DiscoverFactories(ContainerBuilder services)
+    {
+        Type[] types = TypeDiscoveryHelper.GetConcreteTypesImplementingInterface<IEntityFactory>();
+
+        foreach (Type type in types)
+        {
+            _ = services.RegisterType(type)
+                .As(type).As<IEntityFactory>().AsImplementedInterfaces()
+                .InstancePerDependency();
+        }
+    }
+    protected virtual void DiscoverComponents(ContainerBuilder services)
+    {
+        Type[] types = TypeDiscoveryHelper.GetConcreteTypesImplementingInterface<IComponent>();
+
+        foreach (Type type in types)
+        {
+            _ = services.RegisterType(type)
+                .As(type).As<IComponent>().AsImplementedInterfaces()
                 .InstancePerDependency();
         }
     }
