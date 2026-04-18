@@ -9,5 +9,6 @@
     <Import_RootNamespace>Reoria.Client.Entities</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Systems\EntityRenderSystem.cs" />
   </ItemGroup>
 </Project>

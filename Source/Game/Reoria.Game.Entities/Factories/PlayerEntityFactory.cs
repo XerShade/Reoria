@@ -17,7 +17,7 @@ public class PlayerEntityFactory(IEntityManager manager) : IEntityFactory
 
         entity.Attach(new TransformComponent()
         {
-            Position = new Vector2(this.Random.Next(0, 100), this.Random.Next(0, 100))
+            Position = new Vector2(this.Random.Next(100, 1080 - 100), this.Random.Next(100, 1920 - 100))
         });
 
         entity.Attach(new NetworkInformationComponent()
