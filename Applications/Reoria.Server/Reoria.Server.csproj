@@ -3,17 +3,23 @@
     <TargetFramework>net10.0</TargetFramework>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>../..</DockerfileContext>
+    <StartupObject>Reoria.Server.Program</StartupObject>
   </PropertyGroup>
   
   <Import Project="../../Build/Reoria.Common.props" />
   <Import Project="../../Build/Reoria.Engine.DependencyInjection.props" />
-  <Import Project="../../Build/MonoGame.props" />
+  <Import Project="../../Build/MonoGame.Server.props" />
   <Import Project="../../Build/LiteNetLib.props" />
 
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.*" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <MonoGameContentBuilderTaskEnabled>false</MonoGameContentBuilderTaskEnabled>
+    <NoWarn>CS0618</NoWarn>
+  </PropertyGroup>
 
   <Import Project="..\..\Source\Engine\Reoria.Engine.Application\Reoria.Engine.Application.projitems" Label="Shared" />
   <Import Project="..\..\Source\Engine\Reoria.Engine.Network\Reoria.Engine.Network.projitems" Label="Shared" />

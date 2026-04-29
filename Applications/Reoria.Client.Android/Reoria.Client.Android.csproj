@@ -5,6 +5,8 @@
     <ApplicationId>com.xershade.reoria.client.android</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+    <NoWarn>XA0101;CS0618</NoWarn>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <Import Project="../../Build/Reoria.Common.props" />
@@ -14,6 +16,14 @@
 
   <ItemGroup>
     <PackageReference Include="MonoGame.Framework.Android" Version="3.8.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="**\testhost.exe" />
+    <None Remove="**\testhost.dll" />
+    <None Remove="**\appsettings.json" />
+    <None Remove="**\libCoverageInstrumentationMethod.so" />
+    <None Remove="**\libInstrumentationEngine.so" />
   </ItemGroup>
 
   <Import Project="..\..\Source\Client\Reoria.Client.Assets\Reoria.Client.Assets.projitems" Label="Shared" />

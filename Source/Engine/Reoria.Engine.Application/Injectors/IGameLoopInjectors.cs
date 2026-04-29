@@ -59,25 +59,28 @@ public interface IFixedUpdateInjector : IGameLoopInjector
 }
 
 /// <summary>
-/// Defines an abstraction contract for an injector that can participate in drawing operations.
+/// Defines an abstraction contract for an injector that can participate in rendering operations.
 /// </summary>
 /// <remarks>
-/// Drawing injectors are called during the render phase and should be used for
+/// Render injectors are called during the render phase and should be used for
 /// all rendering operations including sprites, text, UI elements, and graphics effects.
+/// This interface combines pre-draw, draw, and post-draw operations into a single
+/// simplified interface that follows MonoGame's standard rendering pattern.
 /// </remarks>
 public interface IDrawingInjector : IGameLoopInjector
 {
     /// <summary>
-    /// Called during the draw phase of the game loop.
+    /// Called during the render phase of the game loop.
     /// </summary>
     /// <param name="gameTime">The game time information.</param>
-    /// <param name="spriteBatch">The sprite batch for drawing operations.</param>
+    /// <param name="graphicsDevice">The graphics device for rendering operations.</param>
+    /// <param name="spriteBatch">The sprite batch for drawing operations (may be null).</param>
     /// <remarks>
     /// This method is called after update phases and should contain all rendering code.
-    /// The SpriteBatch is already begun by PreDrawPhase, so you can start drawing immediately.
+    /// The graphics device is properly configured and the sprite batch is managed by the caller.
     /// Use gameTime.TotalGameTime for time-based animations and effects.
     /// </remarks>
-    void OnDraw(GameTime gameTime, SpriteBatch spriteBatch);
+    void OnDraw(GameTime gameTime, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch);
 }
 
 /// <summary>
@@ -100,48 +103,6 @@ public interface IInputInjector : IGameLoopInjector
     void OnInput(GameTime gameTime);
 }
 
-/// <summary>
-/// Defines an abstraction contract for an injector that can participate in pre-draw operations.
-/// </summary>
-/// <remarks>
-/// Pre-draw injectors are called before the main drawing phase and should be used for
-/// setup operations like clearing the screen, setting render states, or preparing
-/// the graphics pipeline for drawing operations.
-/// </remarks>
-public interface IPreDrawInjector : IGameLoopInjector
-{
-    /// <summary>
-    /// Called during the pre-draw phase of the game loop.
-    /// </summary>
-    /// <param name="gameTime">The game time information.</param>
-    /// <param name="graphicsDevice">The graphics device for rendering operations.</param>
-    /// <remarks>
-    /// This method is called before drawing injectors and should contain setup code.
-    /// Use this for clearing the screen, setting render targets, or configuring graphics states.
-    /// </remarks>
-    void OnPreDraw(GameTime gameTime, GraphicsDevice graphicsDevice);
-}
-
-/// <summary>
-/// Defines an abstraction contract for an injector that can participate in post-draw operations.
-/// </summary>
-/// <remarks>
-/// Post-draw injectors are called after the main drawing phase and should be used for
-/// cleanup operations, finalizing render targets, or performing post-processing effects.
-/// </remarks>
-public interface IPostDrawInjector : IGameLoopInjector
-{
-    /// <summary>
-    /// Called during the post-draw phase of the game loop.
-    /// </summary>
-    /// <param name="gameTime">The game time information.</param>
-    /// <param name="graphicsDevice">The graphics device for rendering operations.</param>
-    /// <remarks>
-    /// This method is called after drawing injectors and should contain cleanup code.
-    /// Use this for resolving render targets, presenting the back buffer, or post-processing.
-    /// </remarks>
-    void OnPostDraw(GameTime gameTime, GraphicsDevice graphicsDevice);
-}
 
 /// <summary>
 /// Combined interface for injectors that participate in all game loop events.
@@ -151,7 +112,7 @@ public interface IPostDrawInjector : IGameLoopInjector
 /// This is useful for comprehensive game systems that need to handle input,
 /// update logic, and rendering all in one class.
 /// </remarks>
-public interface ICompleteGameLoopInjector : IVariableUpdateInjector, IFixedUpdateInjector, IDrawingInjector, IInputInjector, IPreDrawInjector, IPostDrawInjector
+public interface ICompleteGameLoopInjector : IVariableUpdateInjector, IFixedUpdateInjector, IDrawingInjector, IInputInjector
 {
     // This interface combines all the game loop related interfaces
     // No additional methods needed as they're inherited from the base interfaces

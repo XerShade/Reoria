@@ -2,6 +2,8 @@
 using Reoria.Engine.Application;
 using Reoria.Engine.Application.Enumerations;
 
+namespace Reoria.Client.Desktop;
+
 /// <summary>
 /// Entry point for the Reoria Desktop Client application.
 /// </summary>
@@ -25,14 +27,14 @@ public static class Program
             // Initialize application bootstrapper for desktop platform
             // This sets up dependency injection, logging, configuration, and services
             AppBootStrapper bootstrapper = new(Platform.Desktop, args);
-            
+
             // Create and configure the client application instance
             using ClientApplication application = bootstrapper.CreateApplication<ClientApplication>();
-            
+
             // Start the main application loop
             // This will initialize graphics, networking, and begin the game loop
             application.Run();
-            
+
             return 0; // Successful exit
         }
         catch (Exception ex)

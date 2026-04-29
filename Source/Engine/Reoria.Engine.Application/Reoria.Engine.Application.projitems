@@ -50,5 +50,4 @@
     <Folder Include="$(MSBuildThisFileDirectory)GameLoop\Extensions\" />
     <Folder Include="$(MSBuildThisFileDirectory)GameLoop\Phases\Interfaces\" />
   </ItemGroup>
-  <Import Project="$(MSBuildThisFileDirectory)..\Reoria.Engine.Core\Reoria.Engine.Core.projitems" />
 </Project>

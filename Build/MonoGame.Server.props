@@ -1,0 +1,6 @@
+<Project>
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Extended" Version="5.3.0" />
+    <PackageReference Include="MonoGame.Extended.Content.Pipeline" Version="5.3.0" />
+  </ItemGroup>
+</Project>

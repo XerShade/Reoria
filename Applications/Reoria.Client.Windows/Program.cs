@@ -2,6 +2,8 @@
 using Reoria.Engine.Application;
 using Reoria.Engine.Application.Enumerations;
 
+namespace Reoria.Client.Windows;
+
 /// <summary>
 /// Entry point for the Reoria Windows Client application.
 /// </summary>

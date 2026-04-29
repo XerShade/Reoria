@@ -1,7 +1,8 @@
 ﻿using Reoria.Engine.Application;
 using Reoria.Engine.Application.Enumerations;
-using Reoria.Engine.Application.Interfaces;
 using Reoria.Server.Core.Application;
+
+namespace Reoria.Server;
 
 /// <summary>
 /// Entry point for the Reoria Server application.
@@ -26,15 +27,15 @@ public static class Program
             // Initialize application bootstrapper for server platform
             // This sets up dependency injection, logging, configuration, and networking services
             AppBootStrapper bootstrapper = new(Platform.Server, args);
-            
+
             // Create and configure the server application instance
-            using IApplication application = bootstrapper.CreateApplication<ServerApplication>();
-            
+            using ServerApplication application = bootstrapper.CreateApplication<ServerApplication>();
+
             // Start the main server application loop
             // This will initialize networking, start listening for client connections,
             // and begin processing game logic updates
             application.Run();
-            
+
             return 0; // Successful exit
         }
         catch (Exception ex)

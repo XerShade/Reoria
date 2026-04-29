@@ -389,10 +389,75 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     }
 
     /// <inheritdoc />
-    protected override void Draw(GameTime gameTime) =>
-        // All drawing is handled by PreDrawPhase, DrawingPhase, and PostDrawPhase
-        // through their respective injector interfaces
+    protected override void Draw(GameTime gameTime)
+    {
+        // Handle rendering of all drawing injectors.
+        this.HandleRendering(gameTime);
+
+        // Call the base method
         base.Draw(gameTime);
+    }
+
+    /// <summary>
+    /// Handles all rendering operations for the client.
+    /// </summary>
+    /// <param name="gameTime">The current game time.</param>
+    protected virtual void HandleRendering(GameTime gameTime)
+    {
+        if (this.Provider == null || this.SpriteBatch == null)
+        {
+            return; // Not initialized yet
+        }
+
+        try
+        {
+            // Get drawing injectors from DI container
+            IEnumerable<IDrawingInjector> drawingInjectors = this.Provider.GetServices<IDrawingInjector>();
+
+            if (!drawingInjectors.Any())
+            {
+                this.Logger.LogTrace("No drawing injectors to execute for draw");
+                return;
+            }
+
+            if(this.Logger.IsEnabled(LogLevel.Trace))
+            {
+                this.Logger.LogTrace("Executing {InjectorCount} drawing injectors for draw", drawingInjectors.Count());
+            }
+
+            // Set up the graphics device for drawing
+            this.GraphicsDevice.BlendState = BlendState.AlphaBlend;
+            this.GraphicsDevice.SamplerStates[0] = SamplerState.LinearClamp;
+            this.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+            this.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+
+            // Clear the screen
+            this.GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.CornflowerBlue);
+
+            // Begin sprite batch for 2D rendering
+            this.SpriteBatch.Begin();
+
+            // Execute all drawing injectors
+            foreach (var injector in drawingInjectors)
+            {
+                try
+                {
+                    injector.OnDraw(gameTime, this.GraphicsDevice, this.SpriteBatch);
+                }
+                catch (Exception ex)
+                {
+                    this.Logger.LogError(ex, "Error executing drawing injector {InjectorType}", injector.GetType().Name);
+                }
+            }
+
+            // End sprite batch to submit all drawing operations
+            this.SpriteBatch.End();
+        }
+        catch (Exception ex)
+        {
+            this.Logger.LogError(ex, "Error during rendering");
+        }
+    }
 
     /// <summary>
     /// Releases all resources used by ClientApplication.

@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <StartupObject>Reoria.Client.Desktop.Program</StartupObject>
   </PropertyGroup>
 
   <Import Project="../../Build/Reoria.Common.props" />

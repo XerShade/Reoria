@@ -18,5 +18,4 @@
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\EntityManager.Injector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IEntityManager.cs" />
   </ItemGroup>
-  <Import Project="$(MSBuildThisFileDirectory)..\..\Engine\Reoria.Engine.Core\Reoria.Engine.Core.projitems" />
 </Project>
