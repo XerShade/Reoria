@@ -35,7 +35,7 @@ public class ClientSessionData
     /// Gets the collection of entity IDs owned by the local player.
     /// This will be used for future ECS integration to track owned entities.
     /// </summary>
-    public IReadOnlyCollection<Guid> OwnedEntities => ownedEntities.AsReadOnly();
+    public IReadOnlyCollection<Guid> OwnedEntities => this.ownedEntities.AsReadOnly();
 
     private readonly HashSet<Guid> ownedEntities = new();
 
@@ -60,13 +60,13 @@ public class ClientSessionData
     /// <param name="sessionId">The unique identifier for this session.</param>
     public ClientSessionData(Guid sessionId)
     {
-        SessionId = sessionId;
-        CreatedAt = DateTime.UtcNow;
-        LastActivityAt = DateTime.UtcNow;
-        IsAuthenticated = false;
-        Username = string.Empty;
-        Roles = Array.Empty<string>();
-        Permissions = Array.Empty<string>();
+        this.SessionId = sessionId;
+        this.CreatedAt = DateTime.UtcNow;
+        this.LastActivityAt = DateTime.UtcNow;
+        this.IsAuthenticated = false;
+        this.Username = string.Empty;
+        this.Roles = Array.Empty<string>();
+        this.Permissions = Array.Empty<string>();
     }
 
     /// <summary>
@@ -78,21 +78,18 @@ public class ClientSessionData
     /// <param name="permissions">The permissions granted to the player.</param>
     public void InitializePlayer(Guid playerId, string username, IEnumerable<string> roles, IEnumerable<string> permissions)
     {
-        PlayerId = playerId;
-        Username = username ?? throw new ArgumentNullException(nameof(username));
-        Roles = roles?.ToList().AsReadOnly() ?? throw new ArgumentNullException(nameof(roles));
-        Permissions = permissions?.ToList().AsReadOnly() ?? throw new ArgumentNullException(nameof(permissions));
-        IsAuthenticated = true;
-        UpdateLastActivity();
+        this.PlayerId = playerId;
+        this.Username = username ?? throw new ArgumentNullException(nameof(username));
+        this.Roles = roles?.ToList().AsReadOnly() ?? throw new ArgumentNullException(nameof(roles));
+        this.Permissions = permissions?.ToList().AsReadOnly() ?? throw new ArgumentNullException(nameof(permissions));
+        this.IsAuthenticated = true;
+        this.UpdateLastActivity();
     }
 
     /// <summary>
     /// Updates the last activity timestamp to the current UTC time.
     /// </summary>
-    public void UpdateLastActivity()
-    {
-        LastActivityAt = DateTime.UtcNow;
-    }
+    public void UpdateLastActivity() => this.LastActivityAt = DateTime.UtcNow;
 
     /// <summary>
     /// Adds an entity to the collection of owned entities.
@@ -102,12 +99,14 @@ public class ClientSessionData
     public bool AddOwnedEntity(Guid entityId)
     {
         if (entityId == Guid.Empty)
+        {
             return false;
+        }
 
-        var added = ownedEntities.Add(entityId);
+        bool added = this.ownedEntities.Add(entityId);
         if (added)
         {
-            UpdateLastActivity();
+            this.UpdateLastActivity();
         }
         return added;
     }
@@ -120,12 +119,14 @@ public class ClientSessionData
     public bool RemoveOwnedEntity(Guid entityId)
     {
         if (entityId == Guid.Empty)
+        {
             return false;
+        }
 
-        var removed = ownedEntities.Remove(entityId);
+        bool removed = this.ownedEntities.Remove(entityId);
         if (removed)
         {
-            UpdateLastActivity();
+            this.UpdateLastActivity();
         }
         return removed;
     }
@@ -135,18 +136,15 @@ public class ClientSessionData
     /// </summary>
     /// <param name="entityId">The unique identifier of the entity to check.</param>
     /// <returns>True if the entity is owned by the local player; otherwise, false.</returns>
-    public bool OwnsEntity(Guid entityId)
-    {
-        return entityId != Guid.Empty && ownedEntities.Contains(entityId);
-    }
+    public bool OwnsEntity(Guid entityId) => entityId != Guid.Empty && this.ownedEntities.Contains(entityId);
 
     /// <summary>
     /// Clears all owned entities (typically called when reconnecting or logging out).
     /// </summary>
     public void ClearOwnedEntities()
     {
-        ownedEntities.Clear();
-        UpdateLastActivity();
+        this.ownedEntities.Clear();
+        this.UpdateLastActivity();
     }
 
     /// <summary>
@@ -154,52 +152,40 @@ public class ClientSessionData
     /// </summary>
     /// <param name="role">The role to check for.</param>
     /// <returns>True if the player has the role; otherwise, false.</returns>
-    public bool HasRole(string role)
-    {
-        return Roles.Contains(role);
-    }
+    public bool HasRole(string role) => this.Roles.Contains(role);
 
     /// <summary>
     /// Checks if the local player has the specified permission.
     /// </summary>
     /// <param name="permission">The permission to check for.</param>
     /// <returns>True if the player has the permission; otherwise, false.</returns>
-    public bool HasPermission(string permission)
-    {
-        return Permissions.Contains(permission);
-    }
+    public bool HasPermission(string permission) => this.Permissions.Contains(permission);
 
     /// <summary>
     /// Checks if the local player is in any of the specified roles.
     /// </summary>
     /// <param name="roles">The roles to check for.</param>
     /// <returns>True if the player is in any of the roles; otherwise, false.</returns>
-    public bool IsInAnyRole(params string[] roles)
-    {
-        return Roles.Any(role => roles.Contains(role));
-    }
+    public bool IsInAnyRole(params string[] roles) => this.Roles.Any(role => roles.Contains(role));
 
     /// <summary>
     /// Checks if the local player has any of the specified permissions.
     /// </summary>
     /// <param name="permissions">The permissions to check for.</param>
     /// <returns>True if the player has any of the permissions; otherwise, false.</returns>
-    public bool HasAnyPermission(params string[] permissions)
-    {
-        return Permissions.Any(permission => permissions.Contains(permission));
-    }
+    public bool HasAnyPermission(params string[] permissions) => this.Permissions.Any(permission => permissions.Contains(permission));
 
     /// <summary>
     /// Logs out the current session, clearing authentication and owned entities.
     /// </summary>
     public void Logout()
     {
-        IsAuthenticated = false;
-        PlayerId = Guid.Empty;
-        Username = string.Empty;
-        Roles = Array.Empty<string>();
-        Permissions = Array.Empty<string>();
-        ClearOwnedEntities();
-        UpdateLastActivity();
+        this.IsAuthenticated = false;
+        this.PlayerId = Guid.Empty;
+        this.Username = string.Empty;
+        this.Roles = Array.Empty<string>();
+        this.Permissions = Array.Empty<string>();
+        this.ClearOwnedEntities();
+        this.UpdateLastActivity();
     }
 }

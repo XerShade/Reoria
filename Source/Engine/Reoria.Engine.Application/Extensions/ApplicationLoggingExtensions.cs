@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
-using Reoria.Engine.Application.Interfaces;
 using Reoria.Engine.Application.Injectors;
+using Reoria.Engine.Application.Interfaces;
 using Serilog;
 using Serilog.Extensions.Logging;
 

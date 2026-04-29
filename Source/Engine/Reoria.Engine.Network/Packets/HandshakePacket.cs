@@ -23,14 +23,14 @@ public class HandshakePacket(ILogger<HandshakePacket> logger) : IOutgoingPacket,
     /// Gets the human-readable name of this packet type.
     /// Used for logging, debugging, and UI display purposes.
     /// </summary>
-    public string PacketName 
+    public string PacketName
         => "Handshake";
 
     /// <summary>
     /// Gets a detailed description of what this packet does and when it's used.
     /// This packet is used to confirm network connectivity and establish session context.
     /// </summary>
-    public string PacketDescription 
+    public string PacketDescription
         => "Sends a handshake packet to confirm the connection and establish session context.";
 
     /// <summary>
@@ -68,7 +68,7 @@ public class HandshakePacket(ILogger<HandshakePacket> logger) : IOutgoingPacket,
         // Log the handshake receipt for debugging and connection tracking.
         if (this.Logger.IsEnabled(LogLevel.Information))
         {
-            this.Logger.LogInformation("Received a handshake packet from {Sender}, the session identifier was: {Message}", 
+            this.Logger.LogInformation("Received a handshake packet from {Sender}, the session identifier was: {Message}",
                 sender.Address.ToString(), sessionMessage);
         }
     }

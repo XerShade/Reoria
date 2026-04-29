@@ -22,11 +22,9 @@ public class GameLoopServicesInjector : IApplicationServicesInjector
     public Platform Platform => Platform.All;
 
     /// <inheritdoc />
-    public void OnBuildServices(ContainerBuilder services)
-    {
+    public void OnBuildServices(ContainerBuilder services) =>
         // Register all game loop services and built-in phases
         services.AddGameLoop();
-    }
 
     /// <inheritdoc />
     public void OnConfigureServices(IServiceProvider provider)

@@ -42,6 +42,6 @@ public interface IGameLoopPhase
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <remarks>Default implementation throws NotImplementedException. Override only if needed.</remarks>
-    virtual Task ExecuteAsync(IGameLoopContext context, CancellationToken cancellationToken = default) => 
-        throw new NotImplementedException($"{GetType().Name} does not support async execution");
+    virtual Task ExecuteAsync(IGameLoopContext context, CancellationToken cancellationToken = default) =>
+        throw new NotImplementedException($"{this.GetType().Name} does not support async execution");
 }

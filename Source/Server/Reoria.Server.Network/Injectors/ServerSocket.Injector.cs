@@ -16,13 +16,13 @@ public class ServerSocketInjector : IApplicationServicesInjector
     /// <summary>
     /// Gets the name of this injector.
     /// </summary>
-    public string Name 
+    public string Name
         => "Server Socket Service Injector";
 
     /// <summary>
     /// Gets a description of what this injector does.
     /// </summary>
-    public string Description 
+    public string Description
         => "Registers ServerSocket for handling client connections and server-side network communication.";
 
     /// <summary>
@@ -54,7 +54,7 @@ public class ServerSocketInjector : IApplicationServicesInjector
     /// </summary>
     /// <param name="provider">The service provider containing the registered services.</param>
     public void OnConfigureServices(IServiceProvider provider)
-    { 
+    {
         // No additional configuration required for ServerSocket
     }
 }

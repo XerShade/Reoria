@@ -11,10 +11,10 @@ namespace Reoria.Game.Entities.Injectors;
 
 public class EntityManagerInjector : IApplicationServicesInjector
 {
-    public string Name 
+    public string Name
         => "Entity Manager Injector";
 
-    public string Description 
+    public string Description
         => "Injects entity component systems functionality into the application.";
 
     public Type[] Dependencies

@@ -32,7 +32,7 @@ public class GameLoopFactory : IGameLoopFactory
     {
         this.logger.LogDebug("Creating game loop with auto-discovered phases...");
 
-        var phases = this.phaseRegistry.GetPhasesByPriority().ToList();
+        List<IGameLoopPhase> phases = this.phaseRegistry.GetPhasesByPriority().ToList();
 
         if (phases.Count == 0)
         {
@@ -44,7 +44,7 @@ public class GameLoopFactory : IGameLoopFactory
 
             if (this.logger.IsEnabled(LogLevel.Debug))
             {
-                foreach (var phase in phases)
+                foreach (IGameLoopPhase? phase in phases)
                 {
                     this.logger.LogDebug("  - {PhaseName} (Priority: {Priority})", phase.Name, phase.Priority);
                 }
@@ -61,8 +61,8 @@ public class GameLoopFactory : IGameLoopFactory
     {
         this.logger.LogDebug("Creating game loop with auto-discovered and additional phases...");
 
-        var discoveredPhases = this.phaseRegistry.GetPhasesByPriority().ToList();
-        var allPhases = discoveredPhases.Concat(additionalPhases ?? Enumerable.Empty<IGameLoopPhase>())
+        List<IGameLoopPhase> discoveredPhases = this.phaseRegistry.GetPhasesByPriority().ToList();
+        List<IGameLoopPhase> allPhases = discoveredPhases.Concat(additionalPhases ?? Enumerable.Empty<IGameLoopPhase>())
                                        .OrderByDescending(p => p.Priority)
                                        .ToList();
 
@@ -75,8 +75,5 @@ public class GameLoopFactory : IGameLoopFactory
     }
 
     /// <inheritdoc />
-    public IGameLoop CreateGameLoop(params IGameLoopPhase[] additionalPhases)
-    {
-        return this.CreateGameLoop((IEnumerable<IGameLoopPhase>)additionalPhases);
-    }
+    public IGameLoop CreateGameLoop(params IGameLoopPhase[] additionalPhases) => this.CreateGameLoop((IEnumerable<IGameLoopPhase>)additionalPhases);
 }

@@ -102,14 +102,14 @@ public partial interface IFileProviderService
         /// <summary>
         /// Checks to see if the collection contains any <see cref="IFileInfo"/> instances.
         /// </summary>
-        public bool Exists 
+        public bool Exists
             => this.Entries.Any();
 
         /// <summary>
         /// Returns an enumerator that iterates through the collection.
         /// </summary>
         /// <returns>An enumerator that can be used to iterate through the collection.</returns>
-        public IEnumerator<IFileInfo> GetEnumerator() 
+        public IEnumerator<IFileInfo> GetEnumerator()
             => this.Entries.GetEnumerator();
 
         /// <summary>

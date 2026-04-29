@@ -4,8 +4,8 @@ using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.ECS;
 using MonoGame.Extended.ECS.Systems;
 using Reoria.Engine.Core.Components;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
 using Color = Microsoft.Xna.Framework.Color;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Reoria.Client.Entities.Systems;
 
@@ -31,7 +31,7 @@ public class EntityRenderSystem(ContentManager content, SpriteBatch spriteBatch)
     /// to load the character sprite texture for rendering entities.
     /// </remarks>
     protected virtual ContentManager Content { get; init; } = content;
-    
+
     /// <summary>
     /// Gets the sprite batch for rendering operations.
     /// </summary>
@@ -41,7 +41,7 @@ public class EntityRenderSystem(ContentManager content, SpriteBatch spriteBatch)
     /// for all drawing operations in the Draw method.
     /// </remarks>
     protected virtual SpriteBatch SpriteBatch { get; init; } = spriteBatch;
-    
+
     /// <summary>
     /// Gets the component mapper for TransformComponent instances.
     /// </summary>
@@ -51,7 +51,7 @@ public class EntityRenderSystem(ContentManager content, SpriteBatch spriteBatch)
     /// This property is initialized during system initialization.
     /// </remarks>
     protected virtual ComponentMapper<TransformComponent>? TransformComponentMapper { get; set; }
-    
+
     /// <summary>
     /// Gets or sets the texture used for rendering entities.
     /// </summary>
@@ -93,7 +93,7 @@ public class EntityRenderSystem(ContentManager content, SpriteBatch spriteBatch)
     public override void Draw(GameTime gameTime)
     {
         // Early return if texture is not loaded
-        if(this.Texture is null)
+        if (this.Texture is null)
         {
             return;
         }
@@ -108,7 +108,7 @@ public class EntityRenderSystem(ContentManager content, SpriteBatch spriteBatch)
         Rectangle sourceRectangle = new(0, 0, this.Texture.Width / 4 / 3, this.Texture.Height / 2 / 4);
 
         // Render each entity with TransformComponent
-        foreach(int entity in this.ActiveEntities)
+        foreach (int entity in this.ActiveEntities)
         {
             TransformComponent transformComponent = this.TransformComponentMapper.Get(entity);
             Rectangle destinationRectangle = new((int)transformComponent.Position.X, (int)transformComponent.Position.Y, sourceRectangle.Width, sourceRectangle.Height);

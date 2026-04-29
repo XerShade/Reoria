@@ -23,11 +23,9 @@ public class ClientGameLoopInjector : IApplicationServicesInjector
     public Platform Platform => Platform.Desktop | Platform.Windows | Platform.iOS | Platform.Android;
 
     /// <inheritdoc />
-    public void OnBuildServices(ContainerBuilder services)
-    {
+    public void OnBuildServices(ContainerBuilder services) =>
         // Register game loop services only (phases are registered elsewhere)
         services.AddGameLoopServices();
-    }
 
     /// <inheritdoc />
     public void OnConfigureServices(IServiceProvider provider)

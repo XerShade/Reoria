@@ -22,9 +22,9 @@ public class PlayerManager : IPlayerManager
     /// <returns>The player if found; otherwise, null.</returns>
     public Player? GetPlayer(Guid playerId)
     {
-        lock (lockObject)
+        lock (this.lockObject)
         {
-            return playersById.TryGetValue(playerId, out var player) ? player : null;
+            return this.playersById.TryGetValue(playerId, out Player? player) ? player : null;
         }
     }
 
@@ -35,9 +35,9 @@ public class PlayerManager : IPlayerManager
     /// <returns>The player if found; otherwise, null.</returns>
     public Player? GetPlayerBySession(Session session)
     {
-        lock (lockObject)
+        lock (this.lockObject)
         {
-            return playersBySession.TryGetValue(session, out var player) ? player : null;
+            return this.playersBySession.TryGetValue(session, out Player? player) ? player : null;
         }
     }
 
@@ -48,9 +48,9 @@ public class PlayerManager : IPlayerManager
     /// <returns>The player if found; otherwise, null.</returns>
     public Player? GetPlayerByPeer(NetPeer peer)
     {
-        lock (lockObject)
+        lock (this.lockObject)
         {
-            return playersByPeer.TryGetValue(peer, out var player) ? player : null;
+            return this.playersByPeer.TryGetValue(peer, out Player? player) ? player : null;
         }
     }
 
@@ -66,25 +66,35 @@ public class PlayerManager : IPlayerManager
     public Player CreatePlayer(string username, IEnumerable<string> roles, IEnumerable<string> permissions, Session session)
     {
         if (string.IsNullOrWhiteSpace(username))
+        {
             throw new ArgumentException("Username cannot be null or whitespace.", nameof(username));
+        }
 
         if (roles == null)
+        {
             throw new ArgumentNullException(nameof(roles));
+        }
 
         if (permissions == null)
+        {
             throw new ArgumentNullException(nameof(permissions));
+        }
 
-        lock (lockObject)
+        lock (this.lockObject)
         {
             // Check if player already exists for this session or peer
-            if (playersBySession.ContainsKey(session))
+            if (this.playersBySession.ContainsKey(session))
+            {
                 throw new ArgumentException("A player already exists for the specified session.", nameof(session));
+            }
 
-            if (playersByPeer.ContainsKey(session.Peer))
+            if (this.playersByPeer.ContainsKey(session.Peer))
+            {
                 throw new ArgumentException("A player already exists for the specified peer.", nameof(session));
+            }
 
             // Create new player
-            var player = new Player(
+            Player player = new(
                 Guid.NewGuid(),
                 username,
                 roles,
@@ -92,9 +102,9 @@ public class PlayerManager : IPlayerManager
                 session);
 
             // Add to all lookup dictionaries
-            playersById[player.PlayerId] = player;
-            playersByPeer[session.Peer] = player;
-            playersBySession[session] = player;
+            this.playersById[player.PlayerId] = player;
+            this.playersByPeer[session.Peer] = player;
+            this.playersBySession[session] = player;
 
             return player;
         }
@@ -107,15 +117,17 @@ public class PlayerManager : IPlayerManager
     /// <returns>True if the player was removed; otherwise, false.</returns>
     public bool RemovePlayer(Guid playerId)
     {
-        lock (lockObject)
+        lock (this.lockObject)
         {
-            if (!playersById.TryGetValue(playerId, out var player))
+            if (!this.playersById.TryGetValue(playerId, out Player? player))
+            {
                 return false;
+            }
 
             // Remove from all lookup dictionaries
-            playersById.Remove(playerId);
-            playersByPeer.Remove(player.Session.Peer);
-            playersBySession.Remove(player.Session);
+            _ = this.playersById.Remove(playerId);
+            _ = this.playersByPeer.Remove(player.Session.Peer);
+            _ = this.playersBySession.Remove(player.Session);
 
             return true;
         }
@@ -128,15 +140,17 @@ public class PlayerManager : IPlayerManager
     /// <returns>True if the player was removed; otherwise, false.</returns>
     public bool RemovePlayerByPeer(NetPeer peer)
     {
-        lock (lockObject)
+        lock (this.lockObject)
         {
-            if (!playersByPeer.TryGetValue(peer, out var player))
+            if (!this.playersByPeer.TryGetValue(peer, out Player? player))
+            {
                 return false;
+            }
 
             // Remove from all lookup dictionaries
-            playersById.Remove(player.PlayerId);
-            playersByPeer.Remove(peer);
-            playersBySession.Remove(player.Session);
+            _ = this.playersById.Remove(player.PlayerId);
+            _ = this.playersByPeer.Remove(peer);
+            _ = this.playersBySession.Remove(player.Session);
 
             return true;
         }
@@ -148,9 +162,9 @@ public class PlayerManager : IPlayerManager
     /// <returns>A read-only collection of all connected players.</returns>
     public IReadOnlyCollection<Player> GetAllPlayers()
     {
-        lock (lockObject)
+        lock (this.lockObject)
         {
-            return playersById.Values.ToList().AsReadOnly();
+            return this.playersById.Values.ToList().AsReadOnly();
         }
     }
 
@@ -161,9 +175,9 @@ public class PlayerManager : IPlayerManager
     /// <returns>True if the player exists; otherwise, false.</returns>
     public bool HasPlayer(Guid playerId)
     {
-        lock (lockObject)
+        lock (this.lockObject)
         {
-            return playersById.ContainsKey(playerId);
+            return this.playersById.ContainsKey(playerId);
         }
     }
 
@@ -174,9 +188,9 @@ public class PlayerManager : IPlayerManager
     /// <returns>True if a player exists for the peer; otherwise, false.</returns>
     public bool HasPlayerForPeer(NetPeer peer)
     {
-        lock (lockObject)
+        lock (this.lockObject)
         {
-            return playersByPeer.ContainsKey(peer);
+            return this.playersByPeer.ContainsKey(peer);
         }
     }
 }

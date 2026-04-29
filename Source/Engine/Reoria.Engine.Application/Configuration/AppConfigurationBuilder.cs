@@ -50,7 +50,7 @@ public class AppConfigurationBuilder : IAppConfigurationBuilder
         this.Logger = logger;
 
         // Check to see if debug logging is enabled.
-        if(this.Logger?.IsEnabled(LogLevel.Debug) ?? false)
+        if (this.Logger?.IsEnabled(LogLevel.Debug) ?? false)
         {
             // Log a debug message that the logger was attached to the configuration builder.
             this.Logger?.LogDebug("Attached logger to configuration builder.");
@@ -64,7 +64,7 @@ public class AppConfigurationBuilder : IAppConfigurationBuilder
     public virtual IAppConfigurationBuilder AddConfigurationSource(AppConfigurationSource source)
     {
         // Lock the configuration builder for thread safety.
-        lock(this.Lock)
+        lock (this.Lock)
         {
             // Throw an exception if the source is null.
             ArgumentNullException.ThrowIfNull(source);
@@ -84,7 +84,7 @@ public class AppConfigurationBuilder : IAppConfigurationBuilder
             }
 
             // Check if the source file exists.
-            if(!this.FileProvider.GetFileInfo(source.Path).Exists)
+            if (!this.FileProvider.GetFileInfo(source.Path).Exists)
             {
                 // Return the configuration builder if the source file does not exist.
                 return this;

@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Reoria.Engine.Application.GameLoop.Interfaces;
 using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
 using Reoria.Engine.Application.Injectors;
+using System.Diagnostics;
 
 namespace Reoria.Engine.Application.GameLoop.Phases;
 
@@ -14,7 +15,7 @@ namespace Reoria.Engine.Application.GameLoop.Phases;
 /// <param name="logger">The logger instance.</param>
 /// <param name="variableUpdateInjectors">The variable update injectors to execute.</param>
 /// <param name="fixedUpdateInjectors">The fixed update injectors to execute.</param>
-public class InjectorExecutionPhase(ILogger<InjectorExecutionPhase> logger, 
+public class InjectorExecutionPhase(ILogger<InjectorExecutionPhase> logger,
     IEnumerable<IVariableUpdateInjector> variableUpdateInjectors, IEnumerable<IFixedUpdateInjector> fixedUpdateInjectors) : IGameLoopPhase
 {
     private readonly ILogger<InjectorExecutionPhase> logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -35,7 +36,7 @@ public class InjectorExecutionPhase(ILogger<InjectorExecutionPhase> logger,
 
     /// <inheritdoc />
     public async Task ExecuteAsync(IGameLoopContext context, CancellationToken cancellationToken = default)
-    {        
+    {
         if (!this.variableUpdateInjectors.Any() && !this.fixedUpdateInjectors.Any())
         {
             this.logger.LogTrace("No injectors to execute for tick {TickNumber}", context.TickNumber);
@@ -47,7 +48,7 @@ public class InjectorExecutionPhase(ILogger<InjectorExecutionPhase> logger,
 
         // Execute variable update injectors
         if (!context.IsFixedUpdate)
-        {            
+        {
             if (this.variableUpdateInjectors.Any())
             {
                 this.logger.LogTrace("Executing {InjectorCount} variable update injectors for tick {TickNumber}",
@@ -59,13 +60,13 @@ public class InjectorExecutionPhase(ILogger<InjectorExecutionPhase> logger,
 
                     try
                     {
-                        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-                        
+                        Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
                         injector.OnVariableUpdate(context.GameTime);
-                        
+
                         stopwatch.Stop();
 
-                        this.logger.LogTrace("Variable update injector {InjectorType} executed in {ElapsedMilliseconds}ms", 
+                        this.logger.LogTrace("Variable update injector {InjectorType} executed in {ElapsedMilliseconds}ms",
                             injector.GetType().Name, stopwatch.ElapsedMilliseconds);
                     }
                     catch (Exception ex)
@@ -77,7 +78,7 @@ public class InjectorExecutionPhase(ILogger<InjectorExecutionPhase> logger,
             }
         }
         else
-        {            
+        {
             if (this.fixedUpdateInjectors.Any())
             {
                 this.logger.LogTrace("Executing {InjectorCount} fixed update injectors for tick {TickNumber}",
@@ -89,13 +90,13 @@ public class InjectorExecutionPhase(ILogger<InjectorExecutionPhase> logger,
 
                     try
                     {
-                        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-                        
+                        Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
                         injector.OnFixedUpdate(context.GameTime);
-                        
+
                         stopwatch.Stop();
 
-                        this.logger.LogTrace("Fixed update injector {InjectorType} executed in {ElapsedMilliseconds}ms", 
+                        this.logger.LogTrace("Fixed update injector {InjectorType} executed in {ElapsedMilliseconds}ms",
                             injector.GetType().Name, stopwatch.ElapsedMilliseconds);
                     }
                     catch (Exception ex)
@@ -136,7 +137,7 @@ public class InjectorExecutionPhase(ILogger<InjectorExecutionPhase> logger,
 
                     try
                     {
-                        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                        Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
                         injector.OnVariableUpdate(context.GameTime);
 
@@ -166,7 +167,7 @@ public class InjectorExecutionPhase(ILogger<InjectorExecutionPhase> logger,
 
                     try
                     {
-                        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                        Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
                         injector.OnFixedUpdate(context.GameTime);
 

@@ -16,7 +16,7 @@ public class ClientApplicationInjector : IBootStrapApplicationInjector
         => "Client Application Injector";
 
     /// <inheritdoc />
-    public string Description 
+    public string Description
         => "Injects the client application into the bootstrap container.";
 
     /// <inheritdoc />
@@ -24,11 +24,11 @@ public class ClientApplicationInjector : IBootStrapApplicationInjector
         => [];
 
     /// <inheritdoc />
-    public Platform Platform 
+    public Platform Platform
         => Platform.All & ~Platform.Server;
 
     /// <inheritdoc />
-    public void OnBuildServices(ContainerBuilder services) 
+    public void OnBuildServices(ContainerBuilder services)
         => services.RegisterType<ClientApplication>()
         .Keyed<IApplication>("ClientApplication")
         .As<ClientApplication>()
@@ -36,6 +36,6 @@ public class ClientApplicationInjector : IBootStrapApplicationInjector
         .SingleInstance();
 
     /// <inheritdoc />
-    public void OnConfigureServices(IServiceProvider provider) 
+    public void OnConfigureServices(IServiceProvider provider)
     { }
 }

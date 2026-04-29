@@ -160,7 +160,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     protected override void BeginRun()
     {
         // Check to see if the platform is Windows or Desktop.
-        if(this.Platform is Platform.Windows or Platform.Desktop)
+        if (this.Platform is Platform.Windows or Platform.Desktop)
         {
             // Finalize the initialization.
             this.FinalizeInitialization();
@@ -250,7 +250,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         List<IGameLoopPhase> injectorPhases = [.. this.Injectors.OfType<IGameLoopPhase>()];
 
         // Create the game loop with auto-discovered phases plus any injector phases
-        IGameLoop gameLoop = injectorPhases.Count > 0 
+        IGameLoop gameLoop = injectorPhases.Count > 0
             ? gameLoopFactory.CreateGameLoop(injectorPhases)
             : gameLoopFactory.CreateGameLoop();
 
@@ -330,7 +330,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     {
         // Calculate the time since the last frame
         TimeSpan currentFrameTime = gameTime.TotalGameTime - this.PreviousTotalGameTime;
-        
+
         // If the frame was too fast, wait to maintain the target frame rate
         if (currentFrameTime < this.MinFrameTime)
         {
@@ -356,9 +356,9 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         TimeSpan currentDeltaTime = gameTime.ElapsedGameTime;
 
         // Apply exponential moving average smoothing
-        double smoothedTicks = (this.DeltaTimeSmoothingFactor * this.SmoothedDeltaTime.Ticks) + 
+        double smoothedTicks = (this.DeltaTimeSmoothingFactor * this.SmoothedDeltaTime.Ticks) +
                               ((1.0 - this.DeltaTimeSmoothingFactor) * currentDeltaTime.Ticks);
-        
+
         this.SmoothedDeltaTime = TimeSpan.FromTicks((long)smoothedTicks);
     }
 
@@ -370,9 +370,9 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         try
         {
             this.Logger.LogInformation("Attempting to connect to server...");
-            
+
             bool connected = await this.Socket.ConnectAsync();
-            
+
             if (connected)
             {
                 this.Logger.LogInformation("Successfully connected to the server.");
@@ -420,7 +420,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
                 return;
             }
 
-            if(this.Logger.IsEnabled(LogLevel.Trace))
+            if (this.Logger.IsEnabled(LogLevel.Trace))
             {
                 this.Logger.LogTrace("Executing {InjectorCount} drawing injectors for draw", drawingInjectors.Count());
             }
@@ -438,7 +438,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
             this.SpriteBatch.Begin();
 
             // Execute all drawing injectors
-            foreach (var injector in drawingInjectors)
+            foreach (IDrawingInjector injector in drawingInjectors)
             {
                 try
                 {
@@ -504,7 +504,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
                 this.IsDisposed = true;
             }
         }
-        
+
         // Call the base dispose method
         base.Dispose(disposing);
     }

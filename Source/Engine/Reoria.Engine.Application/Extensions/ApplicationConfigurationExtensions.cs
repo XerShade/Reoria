@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Reoria.Engine.Application.Configuration;
-using Reoria.Engine.Application.Interfaces;
 using Reoria.Engine.Application.Injectors;
+using Reoria.Engine.Application.Interfaces;
 
 namespace Reoria.Engine.Application.Extensions;
 

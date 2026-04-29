@@ -117,8 +117,8 @@ public class EntityTypeInfo
     /// <param name="metadata">Additional metadata about the entity.</param>
     public EntityTypeInfo(string type, Dictionary<string, object>? metadata = null)
     {
-        Type = type ?? throw new ArgumentNullException(nameof(type));
-        Metadata = metadata ?? new Dictionary<string, object>();
-        CreatedAt = DateTime.UtcNow;
+        this.Type = type ?? throw new ArgumentNullException(nameof(type));
+        this.Metadata = metadata ?? new Dictionary<string, object>();
+        this.CreatedAt = DateTime.UtcNow;
     }
 }

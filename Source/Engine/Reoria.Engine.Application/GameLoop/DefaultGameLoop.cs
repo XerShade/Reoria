@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
 using Reoria.Engine.Application.GameLoop.Interfaces;
 using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
+using System.Diagnostics;
 
 namespace Reoria.Engine.Application.GameLoop;
 
@@ -17,8 +18,9 @@ public class DefaultGameLoop : IGameLoop
     private long tickNumber = 0;
     private TimeSpan totalElapsedTime = TimeSpan.Zero;
     private TimeSpan accumulator = TimeSpan.Zero;
-    private TimeSpan fixedStep = TimeSpan.FromSeconds(1.0 / 30.0);
-    private int maxFixedSteps = 5;
+
+    private readonly TimeSpan fixedStep = TimeSpan.FromSeconds(1.0 / 30.0);
+    private readonly int maxFixedSteps = 5;
     private TimeSpan previousTime = TimeSpan.Zero;
 
     /// <summary>
@@ -92,7 +94,7 @@ public class DefaultGameLoop : IGameLoop
             this.UpdateTiming(gameTime);
 
             // Create context for variable update
-            var variableContext = new DefaultGameLoopContext(
+            DefaultGameLoopContext variableContext = new(
                 gameTime,
                 this.tickNumber++,
                 this.totalElapsedTime,
@@ -129,7 +131,7 @@ public class DefaultGameLoop : IGameLoop
         while (this.accumulator >= this.fixedStep && fixedStepCount < this.maxFixedSteps)
         {
             // Create context for fixed update
-            var fixedContext = new DefaultGameLoopContext(
+            DefaultGameLoopContext fixedContext = new(
                 gameTime,
                 this.tickNumber++,
                 this.totalElapsedTime,
@@ -147,7 +149,7 @@ public class DefaultGameLoop : IGameLoop
 
     private async Task ExecutePhasesAsync(IGameLoopContext context, CancellationToken cancellationToken)
     {
-        var enabledPhases = this.Phases.Where(p => p.IsEnabled).ToList();
+        List<IGameLoopPhase> enabledPhases = this.Phases.Where(p => p.IsEnabled).ToList();
 
         if (enabledPhases.Count == 0)
         {
@@ -157,14 +159,14 @@ public class DefaultGameLoop : IGameLoop
 
         this.logger.LogTrace("Executing {PhaseCount} phases for tick {TickNumber}", enabledPhases.Count, context.TickNumber);
 
-        foreach (var phase in enabledPhases)
+        foreach (IGameLoopPhase? phase in enabledPhases)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             try
             {
-                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-                
+                Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
                 // Check if phase supports async execution
                 if (phase.IsAsync)
                 {
@@ -178,10 +180,10 @@ public class DefaultGameLoop : IGameLoop
                     this.logger.LogTrace("Executing phase {PhaseName} synchronously", phase.Name);
                     phase.Execute(context, cancellationToken).GetAwaiter().GetResult();
                 }
-                
+
                 stopwatch.Stop();
 
-                this.logger.LogTrace("Phase {PhaseName} executed in {ElapsedMilliseconds}ms", 
+                this.logger.LogTrace("Phase {PhaseName} executed in {ElapsedMilliseconds}ms",
                     phase.Name, stopwatch.ElapsedMilliseconds);
             }
             catch (Exception ex)

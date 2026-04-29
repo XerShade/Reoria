@@ -20,15 +20,17 @@ public static class GameLoopServiceExtensions
     public static ContainerBuilder AddGameLoopServices(this ContainerBuilder builder)
     {
         if (builder == null)
+        {
             throw new ArgumentNullException(nameof(builder));
+        }
 
         // Register the game loop phase registry
-        builder.RegisterType<GameLoopPhaseRegistry>()
+        _ = builder.RegisterType<GameLoopPhaseRegistry>()
                .As<IGameLoopPhaseRegistry>()
                .SingleInstance();
 
         // Register the game loop factory
-        builder.RegisterType<GameLoopFactory>()
+        _ = builder.RegisterType<GameLoopFactory>()
                .As<IGameLoopFactory>()
                .SingleInstance();
 
@@ -43,14 +45,16 @@ public static class GameLoopServiceExtensions
     public static ContainerBuilder AddGameLoopPhases(this ContainerBuilder builder)
     {
         if (builder == null)
+        {
             throw new ArgumentNullException(nameof(builder));
+        }
 
         // Register built-in phases as transient to allow proper DI
-        builder.RegisterType<NetworkUpdatePhase>()
+        _ = builder.RegisterType<NetworkUpdatePhase>()
                .As<IGameLoopPhase>()
                .InstancePerDependency();
 
-        builder.RegisterType<InjectorExecutionPhase>()
+        _ = builder.RegisterType<InjectorExecutionPhase>()
                .As<IGameLoopPhase>()
                .InstancePerDependency();
 
@@ -67,9 +71,11 @@ public static class GameLoopServiceExtensions
         where TPhase : class, IGameLoopPhase
     {
         if (builder == null)
+        {
             throw new ArgumentNullException(nameof(builder));
+        }
 
-        builder.RegisterType<TPhase>()
+        _ = builder.RegisterType<TPhase>()
                .As<IGameLoopPhase>()
                .InstancePerDependency();
 
@@ -85,18 +91,23 @@ public static class GameLoopServiceExtensions
     public static ContainerBuilder AddGameLoopPhases(this ContainerBuilder builder, params Type[] phaseTypes)
     {
         if (builder == null)
+        {
             throw new ArgumentNullException(nameof(builder));
-        if (phaseTypes == null)
-            throw new ArgumentNullException(nameof(phaseTypes));
+        }
 
-        foreach (var phaseType in phaseTypes)
+        if (phaseTypes == null)
+        {
+            throw new ArgumentNullException(nameof(phaseTypes));
+        }
+
+        foreach (Type phaseType in phaseTypes)
         {
             if (!typeof(IGameLoopPhase).IsAssignableFrom(phaseType))
             {
                 throw new ArgumentException($"Type {phaseType.Name} must implement IGameLoopPhase", nameof(phaseTypes));
             }
 
-            builder.RegisterType(phaseType)
+            _ = builder.RegisterType(phaseType)
                    .As<IGameLoopPhase>()
                    .InstancePerDependency();
         }
@@ -109,13 +120,9 @@ public static class GameLoopServiceExtensions
     /// </summary>
     /// <param name="builder">The container builder.</param>
     /// <returns>The container builder for chaining.</returns>
-    public static ContainerBuilder AddGameLoop(this ContainerBuilder builder)
-    {
-        if (builder == null)
-            throw new ArgumentNullException(nameof(builder));
-
-        return builder
+    public static ContainerBuilder AddGameLoop(this ContainerBuilder builder) => builder == null
+            ? throw new ArgumentNullException(nameof(builder))
+            : builder
             .AddGameLoopServices()
             .AddGameLoopPhases();
-    }
 }

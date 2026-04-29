@@ -76,7 +76,7 @@ public interface IBootStrapServicesInjector : IBootStrapInjector
     /// Core services like configuration and logger factory are already registered.
     /// </remarks>
     void OnBuildServices(ContainerBuilder services);
-    
+
     /// <summary>
     /// Invoked when the bootstrapper configures the dependency injection container.
     /// </summary>

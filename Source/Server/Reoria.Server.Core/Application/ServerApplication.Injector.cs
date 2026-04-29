@@ -15,7 +15,7 @@ public class ServerApplicationInjector : IBootStrapApplicationInjector
         => "Server Application Injector";
 
     /// <inheritdoc />
-    public string Description 
+    public string Description
         => "Injects the server application into the bootstrap container.";
 
     /// <inheritdoc />
@@ -27,7 +27,7 @@ public class ServerApplicationInjector : IBootStrapApplicationInjector
         => Platform.Server;
 
     /// <inheritdoc />
-    public void OnBuildServices(ContainerBuilder services) 
+    public void OnBuildServices(ContainerBuilder services)
         => services.RegisterType<ServerApplication>()
         .Keyed<IApplication>("ServerApplication")
         .As<ServerApplication>()
@@ -35,6 +35,6 @@ public class ServerApplicationInjector : IBootStrapApplicationInjector
         .SingleInstance();
 
     /// <inheritdoc />
-    public void OnConfigureServices(IServiceProvider provider) 
+    public void OnConfigureServices(IServiceProvider provider)
     { }
 }

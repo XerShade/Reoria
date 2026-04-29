@@ -317,7 +317,7 @@ public partial class AppBootStrapper
         }
 
         // Iterate over the application injectors.
-        foreach(IBootStrapApplicationInjector injector in this.Injectors.OfType<IBootStrapApplicationInjector>())
+        foreach (IBootStrapApplicationInjector injector in this.Injectors.OfType<IBootStrapApplicationInjector>())
         {
             // Invoke the injector's OnBuildServices method.
             injector.OnBuildServices(services);

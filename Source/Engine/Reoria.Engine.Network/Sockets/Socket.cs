@@ -22,12 +22,12 @@ public abstract class Socket : IDisposable
     /// Gets the logger instance for this socket.
     /// </summary>
     protected virtual ILogger<Socket> Logger { get; init; }
-    
+
     /// <summary>
     /// Gets the LiteNetLib event listener for this socket.
     /// </summary>
     protected virtual EventBasedNetListener Listener { get; init; }
-    
+
     /// <summary>
     /// Gets the LiteNetLib network manager for this socket.
     /// </summary>
@@ -37,7 +37,7 @@ public abstract class Socket : IDisposable
     /// Gets the packet manager for this socket.
     /// </summary>
     protected virtual IPacketManager PacketManager { get; init; }
-    
+
     /// <summary>
     /// Gets the connection key used for authentication.
     /// </summary>
@@ -46,7 +46,7 @@ public abstract class Socket : IDisposable
     /// Default value is "Reoria" but can be overridden in configuration.
     /// </remarks>
     protected virtual string ConnectionKey { get; init; }
-    
+
     /// <summary>
     /// Gets the network port this socket operates on.
     /// </summary>

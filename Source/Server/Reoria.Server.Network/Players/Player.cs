@@ -63,80 +63,65 @@ public class Player
         IEnumerable<string> permissions,
         Sessions.Session session)
     {
-        PlayerId = playerId;
-        Username = username ?? throw new ArgumentNullException(nameof(username));
-        Roles = roles?.ToList().AsReadOnly() ?? throw new ArgumentNullException(nameof(roles));
-        Permissions = permissions?.ToList().AsReadOnly() ?? throw new ArgumentNullException(nameof(permissions));
-        Session = session;
-        CreatedAt = DateTime.UtcNow;
-        LastActivityAt = DateTime.UtcNow;
+        this.PlayerId = playerId;
+        this.Username = username ?? throw new ArgumentNullException(nameof(username));
+        this.Roles = roles?.ToList().AsReadOnly() ?? throw new ArgumentNullException(nameof(roles));
+        this.Permissions = permissions?.ToList().AsReadOnly() ?? throw new ArgumentNullException(nameof(permissions));
+        this.Session = session;
+        this.CreatedAt = DateTime.UtcNow;
+        this.LastActivityAt = DateTime.UtcNow;
 
         // Create claims-based identity
-        var claims = new List<Claim>
+        List<Claim> claims = new()
         {
-            new(ClaimTypes.NameIdentifier, PlayerId.ToString()),
-            new(ClaimTypes.Name, Username),
+            new(ClaimTypes.NameIdentifier, this.PlayerId.ToString()),
+            new(ClaimTypes.Name, this.Username),
             new(ClaimTypes.Authentication, DateTime.UtcNow.ToString())
         };
 
-        foreach (var role in Roles)
+        foreach (string role in this.Roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
-        foreach (var permission in Permissions)
+        foreach (string permission in this.Permissions)
         {
             claims.Add(new Claim("permission", permission));
         }
 
-        Identity = new ClaimsPrincipal(new ClaimsIdentity(claims, "ReoriaAuth"));
+        this.Identity = new ClaimsPrincipal(new ClaimsIdentity(claims, "ReoriaAuth"));
     }
 
     /// <summary>
     /// Updates the last activity timestamp to the current UTC time.
     /// </summary>
-    public void UpdateLastActivity()
-    {
-        LastActivityAt = DateTime.UtcNow;
-    }
+    public void UpdateLastActivity() => this.LastActivityAt = DateTime.UtcNow;
 
     /// <summary>
     /// Checks if the player has the specified role.
     /// </summary>
     /// <param name="role">The role to check for.</param>
     /// <returns>True if the player has the role; otherwise, false.</returns>
-    public bool HasRole(string role)
-    {
-        return Roles.Contains(role);
-    }
+    public bool HasRole(string role) => this.Roles.Contains(role);
 
     /// <summary>
     /// Checks if the player has the specified permission.
     /// </summary>
     /// <param name="permission">The permission to check for.</param>
     /// <returns>True if the player has the permission; otherwise, false.</returns>
-    public bool HasPermission(string permission)
-    {
-        return Permissions.Contains(permission);
-    }
+    public bool HasPermission(string permission) => this.Permissions.Contains(permission);
 
     /// <summary>
     /// Checks if the player is in any of the specified roles.
     /// </summary>
     /// <param name="roles">The roles to check for.</param>
     /// <returns>True if the player is in any of the roles; otherwise, false.</returns>
-    public bool IsInAnyRole(params string[] roles)
-    {
-        return Roles.Any(role => roles.Contains(role));
-    }
+    public bool IsInAnyRole(params string[] roles) => this.Roles.Any(role => roles.Contains(role));
 
     /// <summary>
     /// Checks if the player has any of the specified permissions.
     /// </summary>
     /// <param name="permissions">The permissions to check for.</param>
     /// <returns>True if the player has any of the permissions; otherwise, false.</returns>
-    public bool HasAnyPermission(params string[] permissions)
-    {
-        return Permissions.Any(permission => permissions.Contains(permission));
-    }
+    public bool HasAnyPermission(params string[] permissions) => this.Permissions.Any(permission => permissions.Contains(permission));
 }

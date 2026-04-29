@@ -14,7 +14,7 @@ namespace Reoria.Client.Network.Sockets;
 /// configurable connection parameters, timeout handling, and comprehensive logging.
 /// It inherits from the base Socket class and implements client-specific connection logic.
 /// </remarks>
-public class ClientSocket(ILogger<ClientSocket> logger, IConfiguration configuration, IPacketManager packetManager) 
+public class ClientSocket(ILogger<ClientSocket> logger, IConfiguration configuration, IPacketManager packetManager)
     : Socket(logger, configuration, packetManager)
 {
     /// <summary>
@@ -25,7 +25,7 @@ public class ClientSocket(ILogger<ClientSocket> logger, IConfiguration configura
     /// This can be overridden in derived classes for different default behavior.
     /// </remarks>
     protected virtual string DefaultAddress { get; init; } = configuration["Networking:Address"] ?? "127.0.0.1";
-    
+
     /// <summary>
     /// Gets the default port to connect to.
     /// </summary>
@@ -34,7 +34,7 @@ public class ClientSocket(ILogger<ClientSocket> logger, IConfiguration configura
     /// This can be overridden in derived classes for different default ports.
     /// </remarks>
     protected virtual int DefaultPort { get; init; } = Convert.ToInt32(configuration["Networking:Port"] ?? "7234");
-    
+
     /// <summary>
     /// Gets the default connection timeout in seconds.
     /// </summary>
@@ -96,7 +96,7 @@ public class ClientSocket(ILogger<ClientSocket> logger, IConfiguration configura
                         this.Logger.LogInformation("Connection attempt cancelled");
                         return false;
                     }
-                    
+
                     // Brief delay to prevent CPU spinning.
                     await Task.Delay(100, cancellationToken);
                 }
@@ -108,7 +108,7 @@ public class ClientSocket(ILogger<ClientSocket> logger, IConfiguration configura
 
             // Wait for either connection completion or timeout.
             Task completedTask = await Task.WhenAny(connectionTask, timeoutTask);
-            
+
             // Handle timeout scenario.
             if (completedTask == timeoutTask)
             {
@@ -119,7 +119,7 @@ public class ClientSocket(ILogger<ClientSocket> logger, IConfiguration configura
 
             // Check final connection result.
             bool connected = await connectionTask;
-            
+
             // Log successful connection.
             if (connected)
             {

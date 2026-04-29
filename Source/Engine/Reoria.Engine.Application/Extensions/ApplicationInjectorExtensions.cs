@@ -17,7 +17,7 @@ public static class ApplicationInjectorExtensions
     public static List<IApplicationInjector> DiscoverInjectors(this IApplication application)
     {
         // Create a list to store the injectors in.
-        List<IApplicationInjector> injectors = [..application.Injectors];
+        List<IApplicationInjector> injectors = [.. application.Injectors];
 
         // Discover the application injectors.
         Type[] types = TypeDiscoveryHelper.GetConcreteTypesImplementingInterface<IApplicationInjector>();

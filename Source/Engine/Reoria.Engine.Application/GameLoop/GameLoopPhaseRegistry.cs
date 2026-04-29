@@ -27,22 +27,13 @@ public class GameLoopPhaseRegistry : IGameLoopPhaseRegistry
     }
 
     /// <inheritdoc />
-    public IEnumerable<IGameLoopPhase> GetPhases()
-    {
-        return this.lazyPhases.Value;
-    }
+    public IEnumerable<IGameLoopPhase> GetPhases() => this.lazyPhases.Value;
 
     /// <inheritdoc />
-    public IEnumerable<IGameLoopPhase> GetEnabledPhases()
-    {
-        return this.GetPhases().Where(p => p.IsEnabled);
-    }
+    public IEnumerable<IGameLoopPhase> GetEnabledPhases() => this.GetPhases().Where(p => p.IsEnabled);
 
     /// <inheritdoc />
-    public IEnumerable<IGameLoopPhase> GetPhasesByPriority()
-    {
-        return this.GetEnabledPhases().OrderByDescending(p => p.Priority);
-    }
+    public IEnumerable<IGameLoopPhase> GetPhasesByPriority() => this.GetEnabledPhases().OrderByDescending(p => p.Priority);
 
     private IEnumerable<IGameLoopPhase> DiscoverPhases()
     {
@@ -51,13 +42,13 @@ public class GameLoopPhaseRegistry : IGameLoopPhaseRegistry
             this.logger.LogDebug("Discovering game loop phases from DI container...");
 
             // Resolve all IGameLoopPhase implementations from the DI container
-            var phases = this.componentContext.Resolve<IEnumerable<IGameLoopPhase>>().ToList();
+            List<IGameLoopPhase> phases = this.componentContext.Resolve<IEnumerable<IGameLoopPhase>>().ToList();
 
             this.logger.LogInformation("Discovered {PhaseCount} game loop phases", phases.Count);
 
             if (this.logger.IsEnabled(LogLevel.Debug))
             {
-                foreach (var phase in phases)
+                foreach (IGameLoopPhase? phase in phases)
                 {
                     this.logger.LogDebug("Phase: {PhaseName} (Priority: {Priority}, Enabled: {Enabled})",
                         phase.Name, phase.Priority, phase.IsEnabled);

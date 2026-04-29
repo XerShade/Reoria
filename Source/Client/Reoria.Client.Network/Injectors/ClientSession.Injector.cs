@@ -1,8 +1,8 @@
 using Autofac;
-using Reoria.Engine.Application.Enumerations;
-using Reoria.Engine.Application.Injectors;
 using Reoria.Client.Network.Sessions;
 using Reoria.Client.Network.Sessions.Interfaces;
+using Reoria.Engine.Application.Enumerations;
+using Reoria.Engine.Application.Injectors;
 
 namespace Reoria.Client.Network.Injectors;
 
@@ -16,13 +16,13 @@ public class ClientSessionInjector : IApplicationServicesInjector
     /// <summary>
     /// Gets the name of this injector.
     /// </summary>
-    public string Name 
+    public string Name
         => "Client Session Management Injector";
 
     /// <summary>
     /// Gets a description of what this injector does.
     /// </summary>
-    public string Description 
+    public string Description
         => "Adds functionality for managing client-side session data and entity ownership.";
 
     /// <summary>
@@ -43,11 +43,9 @@ public class ClientSessionInjector : IApplicationServicesInjector
     /// Registers the client session management services with the dependency injection container.
     /// </summary>
     /// <param name="services">The container builder to register services with.</param>
-    public void OnBuildServices(ContainerBuilder services)
-    {
+    public void OnBuildServices(ContainerBuilder services) =>
         // Register client session management services
         services.RegisterType<ClientSessionManager>().As<IClientSessionManager>().SingleInstance();
-    }
 
     /// <summary>
     /// Configures the registered services after the container is built.
@@ -55,7 +53,7 @@ public class ClientSessionInjector : IApplicationServicesInjector
     /// </summary>
     /// <param name="provider">The service provider containing the registered services.</param>
     public void OnConfigureServices(IServiceProvider provider)
-    { 
+    {
         // Does not require any configuration.
     }
 }

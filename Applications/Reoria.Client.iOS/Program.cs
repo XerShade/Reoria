@@ -25,10 +25,7 @@ internal class Program : UIApplicationDelegate
     /// This method is called when the application starts and initializes the UIKit application.
     /// It sets up the main application delegate and starts the iOS event loop.
     /// </remarks>
-    static void Main(string[] args)
-    {
-        UIApplication.Main(args, null, typeof(Program));
-    }
+    static void Main(string[] args) => UIApplication.Main(args, null, typeof(Program));
 
     /// <summary>
     /// Called after the iOS application has finished launching.
@@ -48,10 +45,10 @@ internal class Program : UIApplicationDelegate
             // This sets up dependency injection, logging, configuration, and services
             // Note: iOS apps typically don't use command line arguments
             AppBootStrapper bootstrapper = new(Platform.iOS, []);
-            
+
             // Create and configure the client application instance
             using ClientApplication application = bootstrapper.CreateApplication<ClientApplication>();
-            
+
             // Start the main application loop
             // This will initialize graphics, networking, and begin the game loop
             // On iOS, this integrates with the UIKit event loop
@@ -62,7 +59,7 @@ internal class Program : UIApplicationDelegate
             // Log the error for debugging purposes
             // In production, this should use iOS-specific logging or crash reporting
             Console.Error.WriteLine($"Fatal error starting iOS client: {ex.Message}");
-            
+
             // On iOS, we might want to show an alert dialog to the user
             // This would require additional UIKit integration
         }

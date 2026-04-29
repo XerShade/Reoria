@@ -1,12 +1,12 @@
 ﻿using LiteNetLib;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Reoria.Engine.Network.Packets.Interfaces;
 using Reoria.Engine.Network.Sockets;
-using Reoria.Server.Network.Sessions;
-using Reoria.Server.Network.Sessions.Interfaces;
 using Reoria.Server.Network.Players;
 using Reoria.Server.Network.Players.Interfaces;
-using Reoria.Engine.Network.Packets.Interfaces;
+using Reoria.Server.Network.Sessions;
+using Reoria.Server.Network.Sessions.Interfaces;
 
 namespace Reoria.Server.Network.Sockets;
 
@@ -34,12 +34,12 @@ public class ServerSocket(ILogger<ServerSocket> logger, IConfiguration configura
     /// <summary>
     /// Gets the session manager associated with the server socket.
     /// </summary>
-    protected virtual ISessionManager SessionManager { get;init; } = sessionManager;
+    protected virtual ISessionManager SessionManager { get; init; } = sessionManager;
 
     /// <summary>
     /// Gets the player manager associated with the server socket.
     /// </summary>
-    protected virtual IPlayerManager PlayerManager { get;init; } = playerManager;
+    protected virtual IPlayerManager PlayerManager { get; init; } = playerManager;
 
     /// <summary>
     /// Starts the server and begins listening for client connections.
@@ -80,7 +80,7 @@ public class ServerSocket(ILogger<ServerSocket> logger, IConfiguration configura
 
                 // Create a basic player with default permissions for the new connection.
                 // Note: Full authentication and role assignment should happen in a separate authentication flow.
-                var player = this.PlayerManager.CreatePlayer(
+                Player player = this.PlayerManager.CreatePlayer(
                     username: $"Player_{peer.Id}", // Temporary username, should be replaced by authentication
                     roles: new[] { "player" }, // Default role
                     permissions: new[] { "action:connect", "command:help" }, // Basic permissions
@@ -90,7 +90,7 @@ public class ServerSocket(ILogger<ServerSocket> logger, IConfiguration configura
                 // Log successful connection acceptance.
                 if (this.Logger.IsEnabled(LogLevel.Information))
                 {
-                    this.Logger.LogInformation("Connection request from {Address} was accepted, session {SessionId} opened, player {PlayerId} created.", 
+                    this.Logger.LogInformation("Connection request from {Address} was accepted, session {SessionId} opened, player {PlayerId} created.",
                         request.RemoteEndPoint.Address.ToString(), session.Guid, player.PlayerId);
                 }
             }
@@ -116,7 +116,7 @@ public class ServerSocket(ILogger<ServerSocket> logger, IConfiguration configura
     protected override void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
     {
         // Remove the player associated with the disconnected peer.
-        var playerRemoved = this.PlayerManager.RemovePlayerByPeer(peer);
+        bool playerRemoved = this.PlayerManager.RemovePlayerByPeer(peer);
 
         // Close the session for the disconnected peer.
         this.SessionManager.Close(peer);
@@ -124,7 +124,7 @@ public class ServerSocket(ILogger<ServerSocket> logger, IConfiguration configura
         // Log the disconnection and player cleanup.
         if (this.Logger.IsEnabled(LogLevel.Information))
         {
-            this.Logger.LogInformation("Peer {Address} disconnected. Player removed: {PlayerRemoved}. Reason: {Reason}", 
+            this.Logger.LogInformation("Peer {Address} disconnected. Player removed: {PlayerRemoved}. Reason: {Reason}",
                 peer.Address.ToString(), playerRemoved, disconnectInfo.Reason);
         }
 

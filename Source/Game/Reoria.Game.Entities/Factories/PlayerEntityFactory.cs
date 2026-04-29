@@ -27,7 +27,7 @@ public class PlayerEntityFactory(IEntityManager manager) : IEntityFactory
     /// entity creation behavior while maintaining access to the manager.
     /// </remarks>
     protected virtual IEntityManager Manager { get; set; } = manager;
-    
+
     /// <summary>
     /// Gets the random number generator used by this factory.
     /// </summary>

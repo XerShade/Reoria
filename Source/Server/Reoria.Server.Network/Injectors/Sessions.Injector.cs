@@ -16,13 +16,13 @@ public class SessionsInjector : IApplicationServicesInjector
     /// <summary>
     /// Gets the name of this injector.
     /// </summary>
-    public string Name 
+    public string Name
         => "Network Session Functionality Injector";
 
     /// <summary>
     /// Gets a description of what this injector does.
     /// </summary>
-    public string Description 
+    public string Description
         => "Adds functionality for creating and managing network sessions.";
 
     /// <summary>
@@ -53,7 +53,7 @@ public class SessionsInjector : IApplicationServicesInjector
     /// </summary>
     /// <param name="provider">The service provider containing the registered services.</param>
     public void OnConfigureServices(IServiceProvider provider)
-    { 
+    {
         // Does not require any configuration.
     }
 }

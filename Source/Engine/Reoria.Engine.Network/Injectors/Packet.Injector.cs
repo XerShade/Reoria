@@ -17,13 +17,13 @@ public class PacketInjector : IApplicationServicesInjector
     /// <summary>
     /// Gets the name of this injector for identification purposes.
     /// </summary>
-    public string Name 
+    public string Name
         => "Packet System";
 
     /// <summary>
     /// Gets a description of what this injector does and its purpose in the application.
     /// </summary>
-    public string Description 
+    public string Description
         => "Adds packet functionality to the game by automatically discovering and registering packet handlers and composers.";
 
     /// <summary>

@@ -20,7 +20,7 @@ public class SessionManager : ISessionManager
     /// </summary>
     /// <param name="peer">The network peer to check for an existing session.</param>
     /// <returns>True if a session exists for the peer; otherwise, false.</returns>
-    public virtual bool HasSession(NetPeer peer) 
+    public virtual bool HasSession(NetPeer peer)
         => this.Sessions.Any(s => s.Peer == peer);
 
     /// <summary>
@@ -53,6 +53,6 @@ public class SessionManager : ISessionManager
     /// This method removes all matching sessions from the internal collection.
     /// </summary>
     /// <param name="peer">The network peer whose sessions should be closed.</param>
-    public virtual void Close(NetPeer peer) 
+    public virtual void Close(NetPeer peer)
         => this.Sessions.RemoveAll(s => s.Peer == peer);
 }

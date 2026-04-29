@@ -174,13 +174,13 @@ public class ServerApplication : IApplication
         this.Logger.LogDebug("Initializing server game loop using DI factory...");
 
         // Get the game loop factory from DI container
-        var gameLoopFactory = this.Provider.GetRequiredService<IGameLoopFactory>();
+        IGameLoopFactory gameLoopFactory = this.Provider.GetRequiredService<IGameLoopFactory>();
 
         // Get any custom phases from injectors that implement IGameLoopPhase
         List<IGameLoopPhase> injectorPhases = [.. this.Injectors.OfType<IGameLoopPhase>()];
 
         // Create the game loop with auto-discovered phases plus any injector phases
-        IGameLoop gameLoop = injectorPhases.Count > 0 
+        IGameLoop gameLoop = injectorPhases.Count > 0
             ? gameLoopFactory.CreateGameLoop(injectorPhases)
             : gameLoopFactory.CreateGameLoop();
 

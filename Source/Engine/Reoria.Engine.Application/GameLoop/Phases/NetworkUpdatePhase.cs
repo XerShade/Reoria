@@ -44,7 +44,7 @@ public class NetworkUpdatePhase : IGameLoopPhase
         {
             // Update the network socket
             this.socket.Update();
-            
+
             this.logger.LogTrace("Network socket updated successfully for tick {TickNumber}", context.TickNumber);
         }
         catch (Exception ex)
@@ -63,7 +63,7 @@ public class NetworkUpdatePhase : IGameLoopPhase
         {
             // Update the network socket
             this.socket.Update();
-            
+
             this.logger.LogTrace("Network socket updated successfully for tick {TickNumber}", context.TickNumber);
         }
         catch (Exception ex)

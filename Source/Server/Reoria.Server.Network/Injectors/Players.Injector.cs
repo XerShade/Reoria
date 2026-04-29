@@ -18,13 +18,13 @@ public class PlayersInjector : IApplicationServicesInjector
     /// <summary>
     /// Gets the name of this injector.
     /// </summary>
-    public string Name 
+    public string Name
         => "Player Management and Security Injector";
 
     /// <summary>
     /// Gets a description of what this injector does.
     /// </summary>
-    public string Description 
+    public string Description
         => "Adds functionality for managing players, permissions, and security validation.";
 
     /// <summary>
@@ -48,11 +48,11 @@ public class PlayersInjector : IApplicationServicesInjector
     public void OnBuildServices(ContainerBuilder services)
     {
         // Register player management services
-        services.RegisterType<PlayerManager>().As<IPlayerManager>().SingleInstance();
-        
+        _ = services.RegisterType<PlayerManager>().As<IPlayerManager>().SingleInstance();
+
         // Register security services
-        services.RegisterType<SecurityValidator>().As<ISecurityValidator>().InstancePerDependency();
-        services.RegisterType<EntityOwnershipService>().As<IEntityOwnershipService>().SingleInstance();
+        _ = services.RegisterType<SecurityValidator>().As<ISecurityValidator>().InstancePerDependency();
+        _ = services.RegisterType<EntityOwnershipService>().As<IEntityOwnershipService>().SingleInstance();
     }
 
     /// <summary>
@@ -61,7 +61,7 @@ public class PlayersInjector : IApplicationServicesInjector
     /// </summary>
     /// <param name="provider">The service provider containing the registered services.</param>
     public void OnConfigureServices(IServiceProvider provider)
-    { 
+    {
         // Does not require any configuration.
     }
 }

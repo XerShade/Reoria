@@ -55,7 +55,7 @@ public class Activity1 : AndroidGameActivity
         // This sets up dependency injection, logging, configuration, and services
         // Note: Android apps typically don't use command line arguments
         this.application = new AppBootStrapper(Platform.Android, []).CreateApplication<ClientApplication>();
-        
+
         // Get the MonoGame view from the application services
         // This view contains the game rendering surface
         View? view = this.application.Services.GetService(typeof(View)) as View;
@@ -63,7 +63,7 @@ public class Activity1 : AndroidGameActivity
         // Set the activity's content view to the game view
         // This makes the game visible and interactive
         this.SetContentView(view ?? throw new InvalidOperationException("Unable to resolve view."));
-        
+
         // Start the main application loop
         // This begins game initialization and starts the update/render cycle
         this.application.Run();

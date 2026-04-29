@@ -27,7 +27,7 @@ public interface IApplication : IDisposable
     /// for handling differences in input methods, file system access, and rendering capabilities.
     /// </remarks>
     Platform Platform { get; }
-    
+
     /// <summary>
     /// Gets an instance of <see cref="ILogger"/> that can be used to log messages.
     /// </summary>
@@ -36,7 +36,7 @@ public interface IApplication : IDisposable
     /// application's context and can be used for debugging, error reporting, and audit trails.
     /// </remarks>
     ILogger<IApplication> Logger { get; }
-    
+
     /// <summary>
     /// Gets an instance of a collection of <see cref="IApplicationInjector"/> that can be used to inject functionality.
     /// </summary>
@@ -46,7 +46,7 @@ public interface IApplication : IDisposable
     /// plugged into the application without modifying core code.
     /// </remarks>
     List<IApplicationInjector> Injectors { get; }
-    
+
     /// <summary>
     /// Gets an instance of <see cref="IConfiguration"/> that can be used to access configuration settings.
     /// </summary>
@@ -56,7 +56,7 @@ public interface IApplication : IDisposable
     /// (Development, Staging, Production).
     /// </remarks>
     IConfiguration Configuration { get; }
-    
+
     /// <summary>
     /// Gets an instance of <see cref="ILoggerFactory"/> that can be used to create loggers.
     /// </summary>
@@ -65,7 +65,7 @@ public interface IApplication : IDisposable
     /// to create their own loggers with proper category names and configuration.
     /// </remarks>
     ILoggerFactory LoggerFactory { get; }
-    
+
     /// <summary>
     /// Gets an instance of <see cref="ContainerBuilder"/> that can be used to register services.
     /// </summary>
@@ -75,7 +75,7 @@ public interface IApplication : IDisposable
     /// the container is built and the application starts.
     /// </remarks>
     ContainerBuilder ContainerBuilder { get; }
-    
+
     /// <summary>
     /// Gets an instance of <see cref="IServiceProvider"/> that can be used to resolve services.
     /// </summary>
@@ -95,7 +95,7 @@ public interface IApplication : IDisposable
     /// This method should block until the application is ready to exit.
     /// </remarks>
     void Run();
-    
+
     /// <summary>
     /// Requests the application to exit gracefully.
     /// </summary>

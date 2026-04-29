@@ -105,7 +105,7 @@ public interface IApplicationServicesInjector : IApplicationInjector
     /// during the bootstrap phase but are required for the running application.
     /// </remarks>
     void OnBuildServices(ContainerBuilder services);
-    
+
     /// <summary>
     /// Invoked when the application configures the dependency injection container.
     /// </summary>

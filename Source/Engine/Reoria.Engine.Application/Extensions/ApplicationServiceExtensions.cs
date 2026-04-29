@@ -2,8 +2,8 @@
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Reoria.Engine.Application.Interfaces;
 using Reoria.Engine.Application.Injectors;
+using Reoria.Engine.Application.Interfaces;
 
 namespace Reoria.Engine.Application.Extensions;
 
@@ -79,7 +79,7 @@ public static class ApplicationServiceExtensions
         {
             injector.OnConfigureServices(provider);
         }
-        
+
         // Return the configured service provider.
         return provider;
     }

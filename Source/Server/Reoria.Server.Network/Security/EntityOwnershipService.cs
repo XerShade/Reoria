@@ -23,36 +23,40 @@ public class EntityOwnershipService : IEntityOwnershipService
     public bool SetEntityOwner(Guid entityId, Guid playerId)
     {
         if (entityId == Guid.Empty)
+        {
             return false;
+        }
 
         if (playerId == Guid.Empty)
+        {
             return false;
+        }
 
-        lock (lockObject)
+        lock (this.lockObject)
         {
             // Remove entity from previous owner if it exists
-            if (entityOwners.TryGetValue(entityId, out var previousOwnerId))
+            if (this.entityOwners.TryGetValue(entityId, out Guid previousOwnerId))
             {
-                if (playerEntities.TryGetValue(previousOwnerId, out var previousEntities))
+                if (this.playerEntities.TryGetValue(previousOwnerId, out HashSet<Guid>? previousEntities))
                 {
-                    previousEntities.Remove(entityId);
+                    _ = previousEntities.Remove(entityId);
                     if (previousEntities.Count == 0)
                     {
-                        playerEntities.Remove(previousOwnerId);
+                        _ = this.playerEntities.Remove(previousOwnerId);
                     }
                 }
             }
 
             // Set new owner
-            entityOwners[entityId] = playerId;
+            this.entityOwners[entityId] = playerId;
 
-            if (!playerEntities.TryGetValue(playerId, out var currentEntities))
+            if (!this.playerEntities.TryGetValue(playerId, out HashSet<Guid>? currentEntities))
             {
                 currentEntities = new HashSet<Guid>();
-                playerEntities[playerId] = currentEntities;
+                this.playerEntities[playerId] = currentEntities;
             }
 
-            currentEntities.Add(entityId);
+            _ = currentEntities.Add(entityId);
 
             return true;
         }
@@ -66,11 +70,13 @@ public class EntityOwnershipService : IEntityOwnershipService
     public Guid? GetEntityOwner(Guid entityId)
     {
         if (entityId == Guid.Empty)
-            return null;
-
-        lock (lockObject)
         {
-            return entityOwners.TryGetValue(entityId, out var ownerId) ? ownerId : null;
+            return null;
+        }
+
+        lock (this.lockObject)
+        {
+            return this.entityOwners.TryGetValue(entityId, out Guid ownerId) ? ownerId : null;
         }
     }
 
@@ -83,11 +89,13 @@ public class EntityOwnershipService : IEntityOwnershipService
     public bool IsEntityOwnedBy(Guid entityId, Guid playerId)
     {
         if (entityId == Guid.Empty || playerId == Guid.Empty)
-            return false;
-
-        lock (lockObject)
         {
-            return entityOwners.TryGetValue(entityId, out var ownerId) && ownerId == playerId;
+            return false;
+        }
+
+        lock (this.lockObject)
+        {
+            return this.entityOwners.TryGetValue(entityId, out Guid ownerId) && ownerId == playerId;
         }
     }
 
@@ -99,12 +107,14 @@ public class EntityOwnershipService : IEntityOwnershipService
     public IReadOnlyCollection<Guid> GetEntitiesOwnedBy(Guid playerId)
     {
         if (playerId == Guid.Empty)
-            return Array.Empty<Guid>();
-
-        lock (lockObject)
         {
-            return playerEntities.TryGetValue(playerId, out var entities) 
-                ? entities.ToList().AsReadOnly() 
+            return Array.Empty<Guid>();
+        }
+
+        lock (this.lockObject)
+        {
+            return this.playerEntities.TryGetValue(playerId, out HashSet<Guid>? entities)
+                ? entities.ToList().AsReadOnly()
                 : Array.Empty<Guid>();
         }
     }
@@ -117,31 +127,35 @@ public class EntityOwnershipService : IEntityOwnershipService
     public bool RemoveEntityOwnership(Guid entityId)
     {
         if (entityId == Guid.Empty)
-            return false;
-
-        lock (lockObject)
         {
-            if (!entityOwners.TryGetValue(entityId, out var ownerId))
+            return false;
+        }
+
+        lock (this.lockObject)
+        {
+            if (!this.entityOwners.TryGetValue(entityId, out Guid ownerId))
+            {
                 return false;
+            }
 
             // Remove from owner mapping
-            entityOwners.Remove(entityId);
+            _ = this.entityOwners.Remove(entityId);
 
             // Remove from player's entity collection
-            if (playerEntities.TryGetValue(ownerId, out var entities))
+            if (this.playerEntities.TryGetValue(ownerId, out HashSet<Guid>? entities))
             {
-                entities.Remove(entityId);
+                _ = entities.Remove(entityId);
                 if (entities.Count == 0)
                 {
-                    playerEntities.Remove(ownerId);
+                    _ = this.playerEntities.Remove(ownerId);
                 }
             }
 
             // Remove from public entities
-            publicEntities.Remove(entityId);
+            _ = this.publicEntities.Remove(entityId);
 
             // Remove from entity types
-            entityTypes.Remove(entityId);
+            _ = this.entityTypes.Remove(entityId);
 
             return true;
         }
@@ -157,34 +171,38 @@ public class EntityOwnershipService : IEntityOwnershipService
     public bool TransferEntityOwnership(Guid entityId, Guid fromPlayerId, Guid toPlayerId)
     {
         if (entityId == Guid.Empty || fromPlayerId == Guid.Empty || toPlayerId == Guid.Empty)
+        {
             return false;
+        }
 
-        lock (lockObject)
+        lock (this.lockObject)
         {
             // Verify current ownership
-            if (!entityOwners.TryGetValue(entityId, out var currentOwnerId) || currentOwnerId != fromPlayerId)
+            if (!this.entityOwners.TryGetValue(entityId, out Guid currentOwnerId) || currentOwnerId != fromPlayerId)
+            {
                 return false;
+            }
 
             // Remove from current owner
-            if (playerEntities.TryGetValue(fromPlayerId, out var fromEntities))
+            if (this.playerEntities.TryGetValue(fromPlayerId, out HashSet<Guid>? fromEntities))
             {
-                fromEntities.Remove(entityId);
+                _ = fromEntities.Remove(entityId);
                 if (fromEntities.Count == 0)
                 {
-                    playerEntities.Remove(fromPlayerId);
+                    _ = this.playerEntities.Remove(fromPlayerId);
                 }
             }
 
             // Add to new owner
-            entityOwners[entityId] = toPlayerId;
+            this.entityOwners[entityId] = toPlayerId;
 
-            if (!playerEntities.TryGetValue(toPlayerId, out var toEntities))
+            if (!this.playerEntities.TryGetValue(toPlayerId, out HashSet<Guid>? toEntities))
             {
                 toEntities = new HashSet<Guid>();
-                playerEntities[toPlayerId] = toEntities;
+                this.playerEntities[toPlayerId] = toEntities;
             }
 
-            toEntities.Add(entityId);
+            _ = toEntities.Add(entityId);
 
             return true;
         }
@@ -199,17 +217,19 @@ public class EntityOwnershipService : IEntityOwnershipService
     public bool SetEntityPublic(Guid entityId, bool isPublic)
     {
         if (entityId == Guid.Empty)
+        {
             return false;
+        }
 
-        lock (lockObject)
+        lock (this.lockObject)
         {
             if (isPublic)
             {
-                publicEntities[entityId] = true;
+                this.publicEntities[entityId] = true;
             }
             else
             {
-                publicEntities.Remove(entityId);
+                _ = this.publicEntities.Remove(entityId);
             }
 
             return true;
@@ -224,11 +244,13 @@ public class EntityOwnershipService : IEntityOwnershipService
     public bool IsEntityPublic(Guid entityId)
     {
         if (entityId == Guid.Empty)
-            return false;
-
-        lock (lockObject)
         {
-            return publicEntities.ContainsKey(entityId);
+            return false;
+        }
+
+        lock (this.lockObject)
+        {
+            return this.publicEntities.ContainsKey(entityId);
         }
     }
 
@@ -242,11 +264,13 @@ public class EntityOwnershipService : IEntityOwnershipService
     public bool SetEntityTypeInfo(Guid entityId, string entityType, Dictionary<string, object>? metadata = null)
     {
         if (entityId == Guid.Empty || string.IsNullOrWhiteSpace(entityType))
-            return false;
-
-        lock (lockObject)
         {
-            entityTypes[entityId] = new EntityTypeInfo(entityType, metadata);
+            return false;
+        }
+
+        lock (this.lockObject)
+        {
+            this.entityTypes[entityId] = new EntityTypeInfo(entityType, metadata);
             return true;
         }
     }
@@ -259,11 +283,13 @@ public class EntityOwnershipService : IEntityOwnershipService
     public EntityTypeInfo? GetEntityTypeInfo(Guid entityId)
     {
         if (entityId == Guid.Empty)
-            return null;
-
-        lock (lockObject)
         {
-            return entityTypes.TryGetValue(entityId, out var typeInfo) ? typeInfo : null;
+            return null;
+        }
+
+        lock (this.lockObject)
+        {
+            return this.entityTypes.TryGetValue(entityId, out EntityTypeInfo? typeInfo) ? typeInfo : null;
         }
     }
 
@@ -275,19 +301,23 @@ public class EntityOwnershipService : IEntityOwnershipService
     public int RemoveEntitiesOwnedBy(Guid playerId)
     {
         if (playerId == Guid.Empty)
-            return 0;
-
-        lock (lockObject)
         {
-            if (!playerEntities.TryGetValue(playerId, out var entities))
-                return 0;
+            return 0;
+        }
 
-            var entityIds = entities.ToList();
-            var removedCount = 0;
-
-            foreach (var entityId in entityIds)
+        lock (this.lockObject)
+        {
+            if (!this.playerEntities.TryGetValue(playerId, out HashSet<Guid>? entities))
             {
-                if (RemoveEntityOwnership(entityId))
+                return 0;
+            }
+
+            List<Guid> entityIds = entities.ToList();
+            int removedCount = 0;
+
+            foreach (Guid entityId in entityIds)
+            {
+                if (this.RemoveEntityOwnership(entityId))
                 {
                     removedCount++;
                 }

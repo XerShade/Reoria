@@ -24,7 +24,7 @@ public class EntityManager : IEntityManager, IDisposable, IDrawingInjector, IVar
     /// <summary>
     /// Gets the name of this entity manager.
     /// </summary>
-    public string Name 
+    public string Name
         => "Entity Manager";
 
     /// <summary>
@@ -58,7 +58,7 @@ public class EntityManager : IEntityManager, IDisposable, IDrawingInjector, IVar
     /// Gets the logger instance for this entity manager.
     /// </summary>
     protected ILogger<IEntityManager> Logger { get; init; }
-    
+
     /// <summary>
     /// Gets the ECS world that manages entities and systems.
     /// </summary>
@@ -178,7 +178,7 @@ public class EntityManager : IEntityManager, IDisposable, IDrawingInjector, IVar
     /// This method removes the entity and all its components from the ECS world.
     /// The entity ID will become invalid after this operation.
     /// </remarks>
-    public void DestroyEntity(int id) 
+    public void DestroyEntity(int id)
         => this.World.DestroyEntity(id);
 
     /// <summary>
@@ -189,7 +189,7 @@ public class EntityManager : IEntityManager, IDisposable, IDrawingInjector, IVar
     /// This method removes the entity and all its components from the ECS world.
     /// This is the preferred method when you have a direct reference to the entity.
     /// </remarks>
-    public void DestroyEntity(Entity entity) 
+    public void DestroyEntity(Entity entity)
         => this.World.DestroyEntity(entity);
 
     /// <summary>

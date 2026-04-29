@@ -26,7 +26,7 @@ public class TransformComponent : IComponent
     /// systems, animation systems, or when entities are explicitly placed.
     /// </remarks>
     public virtual Vector2 Position { get; set; } = Vector2.Zero;
-    
+
     /// <summary>
     /// Gets or sets the 2D scale of the entity.
     /// </summary>
@@ -37,7 +37,7 @@ public class TransformComponent : IComponent
     /// collision bounds unless physics systems are updated accordingly.
     /// </remarks>
     public virtual Vector2 Scale { get; set; } = Vector2.One;
-    
+
     /// <summary>
     /// Gets or sets the rotation of the entity as a quaternion.
     /// </summary>
