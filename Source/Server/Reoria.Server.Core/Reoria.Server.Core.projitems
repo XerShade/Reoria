@@ -11,6 +11,5 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Application\ServerApplication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Application\ServerApplication.Injector.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Application\ServerGameLoopInjector.cs" />
   </ItemGroup>
 </Project>

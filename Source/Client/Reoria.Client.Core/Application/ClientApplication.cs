@@ -11,9 +11,6 @@ using Reoria.Client.Network.Sockets;
 using Reoria.Engine.Application;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Extensions;
-using Reoria.Engine.Application.GameLoop.Factories.Interfaces;
-using Reoria.Engine.Application.GameLoop.Interfaces;
-using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
 using ButtonState = Microsoft.Xna.Framework.Input.ButtonState;
@@ -94,10 +91,6 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// Gets a value indicating whether this instance has been disposed.
     /// </summary>
     protected bool IsDisposed { get; private set; }
-    /// <summary>
-    /// Gets the game loop instance that manages the update cycle.
-    /// </summary>
-    protected IGameLoop GameLoop { get; set; }
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     /// <summary>
@@ -181,12 +174,6 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         // Get the server network socket.
         this.Socket = this.Provider.GetRequiredService<ClientSocket>();
 
-        // Initialize the game loop with phases.
-        this.GameLoop = this.InitializeGameLoop();
-
-        // Start the game loop.
-        this.GameLoop.Start();
-
         // Notify application lifecycle injectors that the application is starting.
         List<IApplicationLifecycleInjector> lifecycleInjectors = [.. this.Injectors.OfType<IApplicationLifecycleInjector>()];
         foreach (IApplicationLifecycleInjector injector in lifecycleInjectors)
@@ -235,41 +222,12 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         this.Provider = this.GetServiceProvider();
     }
 
-    /// <summary>
-    /// Initializes the game loop using the DI-based factory pattern.
-    /// </summary>
-    /// <returns>A configured game loop instance.</returns>
-    protected virtual IGameLoop InitializeGameLoop()
-    {
-        this.Logger.LogDebug("Initializing client game loop using DI factory...");
-
-        // Get the game loop factory from DI container
-        IGameLoopFactory gameLoopFactory = this.Provider.GetRequiredService<IGameLoopFactory>();
-
-        // Get any custom phases from injectors that implement IGameLoopPhase
-        List<IGameLoopPhase> injectorPhases = [.. this.Injectors.OfType<IGameLoopPhase>()];
-
-        // Create the game loop with auto-discovered phases plus any injector phases
-        IGameLoop gameLoop = injectorPhases.Count > 0
-            ? gameLoopFactory.CreateGameLoop(injectorPhases)
-            : gameLoopFactory.CreateGameLoop();
-
-        if (injectorPhases.Count > 0 && this.Logger.IsEnabled(LogLevel.Debug))
-        {
-            this.Logger.LogDebug("Added {Count} injector phases to client game loop", injectorPhases.Count);
-        }
-
-        if (this.Logger.IsEnabled(LogLevel.Information))
-        {
-            this.Logger.LogInformation("Client game loop initialized with {PhaseCount} phases", gameLoop.Phases.Count);
-        }
-
-        return gameLoop;
-    }
-
     /// <inheritdoc />
     protected override void Update(GameTime gameTime)
     {
+        // Update the network socket first, as it may have data to process that affects the game state.
+        this.Socket.Update();
+
         // Apply frame rate limiting
         this.ApplyFrameRateLimiting(gameTime);
 
@@ -312,7 +270,9 @@ public class ClientApplication : GameBase, IApplication, IDisposable
 
         // Process a single tick through the game loop with smoothed delta time.
         GameTime smoothedGameTime = new(gameTime.TotalGameTime, this.SmoothedDeltaTime);
-        this.GameLoop?.Tick(smoothedGameTime);
+
+        // Process the game loop.
+        this.HandleVariableUpdate(smoothedGameTime);
 
         // Update the previous game time for next frame.
         this.PreviousTotalGameTime = gameTime.TotalGameTime;
@@ -321,6 +281,73 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         base.Update(gameTime);
     }
 
+    /// <summary>
+    /// Handles variable updates for the game loop.
+    /// </summary>
+    /// <param name="gameTime">The current game time.</param>
+    protected virtual void HandleVariableUpdate(GameTime gameTime)
+    {
+        // Get update injectors from DI container
+        IEnumerable<IVariableUpdateInjector> updateInjectors = this.Provider.GetServices<IVariableUpdateInjector>();
+
+        if (!updateInjectors.Any())
+        {
+            this.Logger.LogTrace("No update injectors to execute for draw");
+            return;
+        }
+
+        if (this.Logger.IsEnabled(LogLevel.Trace))
+        {
+            this.Logger.LogTrace("Executing {InjectorCount} update injectors for draw", updateInjectors.Count());
+        }
+
+        // Execute all update injectors
+        foreach (IVariableUpdateInjector injector in updateInjectors)
+        {
+            try
+            {
+                injector.OnVariableUpdate(gameTime);
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogError(ex, "Error executing update injector {InjectorType}", injector.GetType().Name);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handles fixed updates for the game loop.
+    /// </summary>
+    /// <param name="gameTime">The current game time.</param>
+    protected virtual void HandleFixedUpdate(GameTime gameTime)
+    {
+        // Get update injectors from DI container
+        IEnumerable<IFixedUpdateInjector> updateInjectors = this.Provider.GetServices<IFixedUpdateInjector>();
+
+        if (!updateInjectors.Any())
+        {
+            this.Logger.LogTrace("No update injectors to execute for draw");
+            return;
+        }
+
+        if (this.Logger.IsEnabled(LogLevel.Trace))
+        {
+            this.Logger.LogTrace("Executing {InjectorCount} update injectors for draw", updateInjectors.Count());
+        }
+
+        // Execute all update injectors
+        foreach (IFixedUpdateInjector injector in updateInjectors)
+        {
+            try
+            {
+                injector.OnFixedUpdate(gameTime);
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogError(ex, "Error executing update injector {InjectorType}", injector.GetType().Name);
+            }
+        }
+    }
 
     /// <summary>
     /// Applies frame rate limiting to prevent excessive CPU usage.
@@ -468,10 +495,6 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         {
             try
             {
-                // Stop the game loop if it exists
-                this.GameLoop?.Stop();
-                this.GameLoop?.Dispose();
-
                 // Notify application lifecycle injectors that the application is stopping
                 List<IApplicationLifecycleInjector> lifecycleInjectors = [.. this.Injectors.OfType<IApplicationLifecycleInjector>()];
                 foreach (IApplicationLifecycleInjector injector in lifecycleInjectors)

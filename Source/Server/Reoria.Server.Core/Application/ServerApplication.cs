@@ -7,9 +7,6 @@ using Microsoft.Xna.Framework;
 using Reoria.Engine.Application;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Extensions;
-using Reoria.Engine.Application.GameLoop.Factories.Interfaces;
-using Reoria.Engine.Application.GameLoop.Interfaces;
-using Reoria.Engine.Application.GameLoop.Phases.Interfaces;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
 using Reoria.Server.Network.Sockets;
@@ -72,9 +69,6 @@ public class ServerApplication : IApplication
         // Get the server network socket.
         this.Socket = this.Provider.GetRequiredService<ServerSocket>();
 
-        // Initialize the game loop with phases.
-        this.GameLoop = this.InitializeGameLoop();
-
         // Stop the stopwatch to measure the application time.
         stopwatch.Stop();
     }
@@ -111,10 +105,6 @@ public class ServerApplication : IApplication
     /// Gets an instance of <see cref="ServerSocket"/> to manage the networking functionality.
     /// </summary>
     protected ServerSocket Socket { get; set; }
-    /// <summary>
-    /// Gets the game loop instance that manages the update cycle.
-    /// </summary>
-    protected IGameLoop GameLoop { get; set; }
 
     /// <inheritdoc />
     public virtual void Run()
@@ -125,9 +115,6 @@ public class ServerApplication : IApplication
         {
             // Start the application components.
             this.StartApplication();
-
-            // Start the game loop.
-            this.GameLoop.Start();
 
             // Start the stopwatch to measure the application time.
             this.Timer.Start();
@@ -144,8 +131,8 @@ public class ServerApplication : IApplication
                 // Create game time for the current update cycle.
                 GameTime gameTime = new(now, frameTime);
 
-                // Process a single tick through the game loop.
-                this.GameLoop.Tick(gameTime);
+                // Update the game loop.
+                this.VariableUpdate(gameTime);
 
                 // Pause thread execution to reduce CPU usage.
                 Thread.Sleep(1);
@@ -163,38 +150,6 @@ public class ServerApplication : IApplication
         }
 
         this.Logger.LogInformation("Server application main loop ended");
-    }
-
-    /// <summary>
-    /// Initializes the game loop using the DI-based factory pattern.
-    /// </summary>
-    /// <returns>A configured game loop instance.</returns>
-    protected virtual IGameLoop InitializeGameLoop()
-    {
-        this.Logger.LogDebug("Initializing server game loop using DI factory...");
-
-        // Get the game loop factory from DI container
-        IGameLoopFactory gameLoopFactory = this.Provider.GetRequiredService<IGameLoopFactory>();
-
-        // Get any custom phases from injectors that implement IGameLoopPhase
-        List<IGameLoopPhase> injectorPhases = [.. this.Injectors.OfType<IGameLoopPhase>()];
-
-        // Create the game loop with auto-discovered phases plus any injector phases
-        IGameLoop gameLoop = injectorPhases.Count > 0
-            ? gameLoopFactory.CreateGameLoop(injectorPhases)
-            : gameLoopFactory.CreateGameLoop();
-
-        if (injectorPhases.Count > 0 && this.Logger.IsEnabled(LogLevel.Debug))
-        {
-            this.Logger.LogDebug("Added {Count} injector phases to server game loop", injectorPhases.Count);
-        }
-
-        if (this.Logger.IsEnabled(LogLevel.Information))
-        {
-            this.Logger.LogInformation("Server game loop initialized with {PhaseCount} phases", gameLoop.Phases.Count);
-        }
-
-        return gameLoop;
     }
 
     /// <summary>
@@ -233,9 +188,6 @@ public class ServerApplication : IApplication
 
         try
         {
-            // Stop the game loop.
-            this.GameLoop?.Stop();
-
             // Stop the network socket.
             this.Socket?.Stop();
 
@@ -268,8 +220,35 @@ public class ServerApplication : IApplication
     /// <param name="gameTime">The elapsed time since the last call to <see cref="FixedUpdate(GameTime)"/>.</param>
     protected virtual void VariableUpdate(GameTime gameTime)
     {
-        // Custom variable update logic can be added here
-        // Consider creating a custom IGameLoopPhase instead for better modularity
+        // Update the network socket first, as it may have data to process that affects the game state.
+        this.Socket.Update();
+
+        // Get update injectors from DI container
+        IEnumerable<IVariableUpdateInjector> updateInjectors = this.Provider.GetServices<IVariableUpdateInjector>();
+
+        if (!updateInjectors.Any())
+        {
+            this.Logger.LogTrace("No update injectors to execute for draw");
+            return;
+        }
+
+        if (this.Logger.IsEnabled(LogLevel.Trace))
+        {
+            this.Logger.LogTrace("Executing {InjectorCount} update injectors for draw", updateInjectors.Count());
+        }
+
+        // Execute all update injectors
+        foreach (IVariableUpdateInjector injector in updateInjectors)
+        {
+            try
+            {
+                injector.OnVariableUpdate(gameTime);
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogError(ex, "Error executing update injector {InjectorType}", injector.GetType().Name);
+            }
+        }
     }
 
     /// <summary>
@@ -279,8 +258,32 @@ public class ServerApplication : IApplication
     /// <param name="gameTime">The elapsed time since the last call to <see cref="FixedUpdate(GameTime)"/>.</param>
     protected virtual void FixedUpdate(GameTime gameTime)
     {
-        // Custom fixed update logic can be added here
-        // Consider creating a custom IGameLoopPhase instead for better modularity
+        // Get update injectors from DI container
+        IEnumerable<IFixedUpdateInjector> updateInjectors = this.Provider.GetServices<IFixedUpdateInjector>();
+
+        if (!updateInjectors.Any())
+        {
+            this.Logger.LogTrace("No update injectors to execute for draw");
+            return;
+        }
+
+        if (this.Logger.IsEnabled(LogLevel.Trace))
+        {
+            this.Logger.LogTrace("Executing {InjectorCount} update injectors for draw", updateInjectors.Count());
+        }
+
+        // Execute all update injectors
+        foreach (IFixedUpdateInjector injector in updateInjectors)
+        {
+            try
+            {
+                injector.OnFixedUpdate(gameTime);
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogError(ex, "Error executing update injector {InjectorType}", injector.GetType().Name);
+            }
+        }
     }
 
     /// <inheritdoc />
@@ -293,7 +296,6 @@ public class ServerApplication : IApplication
         try
         {
             this.StopApplication();
-            this.GameLoop?.Dispose();
             this.Socket?.Dispose();
         }
         catch (Exception ex)
