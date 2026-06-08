@@ -50,10 +50,7 @@ public static class ApplicationLoggingExtensions
         loggerFactory.AddProvider(new SerilogLoggerProvider(Log.Logger));
 
         // Invoke application logging injectors to add custom logging providers or configuration.
-        foreach (IApplicationLoggingInjector injector in application.Injectors.OfType<IApplicationLoggingInjector>())
-        {
-            injector.OnCreateLoggerFactory(loggerFactory, application.Configuration!);
-        }
+        application.InjectorService.ExecuteInjectors<IApplicationLoggingInjector>(injector => injector.OnCreateLoggerFactory(loggerFactory, application.Configuration!));
 
         // Return the configured logger factory.
         return loggerFactory;

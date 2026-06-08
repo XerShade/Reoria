@@ -7,7 +7,8 @@ using Reoria.Engine.Application.Configuration;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
-using Reoria.Engine.Core.Reflection;
+using Reoria.Engine.Application.Services;
+using Reoria.Engine.Application.Services.Interfaces;
 using Serilog;
 using Serilog.Extensions.Logging;
 using System.Diagnostics;
@@ -25,9 +26,9 @@ public partial class AppBootStrapper
     /// </summary>
     protected Platform Platform { get; init; }
     /// <summary>
-    /// Gets a collection of injectors that will be used to bootstrap the application.
+    /// Gets an instance of <see cref="IInjectorService"/> that can be used to inject bootstrap services.
     /// </summary>
-    protected List<IBootStrapInjector> Injectors { get; init; }
+    protected IInjectorService InjectorService { get; init; }
     /// <summary>
     /// Gets an instance of <see cref="IConfiguration"/> that can be used to bootstrap the application.
     /// </summary>
@@ -61,8 +62,10 @@ public partial class AppBootStrapper
         // Check to see if only one Platform value is selected, and if it is, assign it to the Platform property.
         this.Platform = platform.HasSingleFlag() ? platform : throw new InvalidOperationException("Only one Platform value can be selected.");
 
-        // Discover the bootstrapping injectors.
-        this.Injectors = this.DiscoverInjectors();
+        // Create the injector service.
+        this.InjectorService = new InjectorService()
+            .AddAssemblies(AppDomain.CurrentDomain.GetAssemblies())
+            .SetPlatform(platform);
 
         // Get the configuration instance.
         this.Configuration = this.GetConfiguration(args);
@@ -83,129 +86,6 @@ public partial class AppBootStrapper
     }
 
     /// <summary>
-    /// Discovers bootstrapping injectors within all assemblies in the current app domain.
-    /// </summary>
-    /// <returns>A list of bootstrapping injectors.</returns>
-    protected virtual List<IBootStrapInjector> DiscoverInjectors()
-    {
-        // Create a list to store the injectors in.
-        List<IBootStrapInjector> injectors = [];
-
-        // Discover the bootstrapping injectors.
-        Type[] types = TypeDiscoveryHelper.GetConcreteTypesImplementingInterface<IBootStrapInjector>();
-
-        // Iterate over the types found.
-        foreach (Type type in types)
-        {
-            try
-            {
-                // Attempt to create the injector.
-                IBootStrapInjector injector = (IBootStrapInjector)Activator.CreateInstance(type)!;
-
-                // Check if the injector matches the application's platform.
-                if (!injector.Platform.Matches(this.Platform))
-                {
-                    // Skip the injector.
-                    continue;
-                }
-
-                // Add the injector to the list.
-                injectors.Add(injector);
-            }
-            catch (Exception ex)
-            {
-                // Log the error.
-                Console.WriteLine($"Failed to create bootstrap injector {type.Name}: {ex.Message}");
-            }
-        }
-
-        // Return and sort the injectors.
-        return SortInjectors(injectors);
-    }
-
-    /// <summary>
-    /// Sorts the provided list of bootstrapping injectors using topological sorting based on their dependencies.
-    /// </summary>
-    /// <param name="injectors">The list of bootstrapping injectors to sort.</param>
-    /// <returns>A sorted list of bootstrapping injectors.</returns>
-    protected static List<IBootStrapInjector> SortInjectors(List<IBootStrapInjector> injectors)
-    {
-        // Create a dictionary to store the injectors by type.
-        Dictionary<Type, IBootStrapInjector> injectorLookup = injectors.ToDictionary(m => m.GetType());
-
-        // Create a list to store the sorted injectors.
-        List<IBootStrapInjector> sorted = [];
-
-        // Create sets to track visited and visiting injectors.
-        HashSet<Type> visited = [];
-        HashSet<Type> visiting = [];
-
-        // Iterate over the injectors and perform topological sorting.
-        foreach (IBootStrapInjector injector in injectors)
-        {
-            // Visit the injector.
-            VisitInjector(injector, injectorLookup, visited, visiting, sorted);
-        }
-
-        // Return and initialize the sorted injectors.
-        return sorted;
-    }
-
-    /// <summary>
-    /// Visits a bootstrapping injector and its dependencies, performing topological sorting.
-    /// </summary>
-    /// <param name="injector">The injector being visited.</param>
-    /// <param name="injectorLookup">The dictionary of injectors by type.</param>
-    /// <param name="visited">The set of visited injectors.</param>
-    /// <param name="visiting">The set of injectors currently being visited.</param>
-    /// <param name="sorted">The list of sorted injectors.</param>
-    /// <exception cref="InvalidOperationException"></exception>
-    protected static void VisitInjector(IBootStrapInjector injector, Dictionary<Type, IBootStrapInjector> injectorLookup, HashSet<Type> visited, HashSet<Type> visiting, List<IBootStrapInjector> sorted)
-    {
-        // Get the injector type.
-        Type injectorType = injector.GetType();
-
-        // Check if the injector has already been visited.
-        if (visited.Contains(injectorType))
-        {
-            return;
-        }
-
-        // Check if the injector is currently being visited.
-        if (visiting.Contains(injectorType))
-        {
-            throw new InvalidOperationException($"Circular dependency detected involving {injectorType.Name}");
-        }
-
-        // Add the injector to the visiting set.
-        _ = visiting.Add(injectorType);
-
-        // Iterate over the injector's dependencies.
-        foreach (Type dependency in injector.Dependencies)
-        {
-            // Check if the dependency has not been found.
-            if (!injectorLookup.TryGetValue(dependency, out IBootStrapInjector? depInjector))
-            {
-                // Throw an exception.
-                throw new InvalidOperationException(
-                    $"Injector {injectorType.Name} depends on {dependency.Name}, but it was not found.");
-            }
-
-            // Visit the dependency injector.
-            VisitInjector(depInjector, injectorLookup, visited, visiting, sorted);
-        }
-
-        // Remove the injector from the visiting set.
-        _ = visiting.Remove(injectorType);
-
-        // Add the injector to the visited set.
-        _ = visited.Add(injectorType);
-
-        // Add the injector to the sorted list.
-        sorted.Add(injector);
-    }
-
-    /// <summary>
     /// Creates and builds the <see cref="IConfiguration"/> instance for the bootstrapper.
     /// </summary>
     /// <param name="args">The command-line arguments.</param>
@@ -221,12 +101,8 @@ public partial class AppBootStrapper
         _ = builder.AddConfigurationSource("appsettings.logging.json", true, true);
         _ = builder.AddConfigurationSource("appsettings.serilog.json", true, true);
 
-        // Iterate over the configuration injectors.
-        foreach (IBootStrapConfigurationInjector injector in this.Injectors.OfType<IBootStrapConfigurationInjector>())
-        {
-            // Invoke the injector's OnBuildConfiguration method.
-            injector.OnBuildConfiguration(builder);
-        }
+        // Execute configuration injectors.
+        this.InjectorService.ExecuteInjectors<IBootStrapConfigurationInjector>(injector => injector.OnBuildConfiguration(builder));
 
         // Add the command-line arguments.
         _ = builder.AddCommandLine(args);
@@ -259,12 +135,8 @@ public partial class AppBootStrapper
         // Add the Serilog logger to the logger factory.
         loggerFactory.AddProvider(new SerilogLoggerProvider(Log.Logger));
 
-        // Iterate over the logging injectors.
-        foreach (IBootStrapLoggingInjector injector in this.Injectors.OfType<IBootStrapLoggingInjector>())
-        {
-            // Invoke the injector's OnCreateLoggerFactory method.
-            injector.OnCreateLoggerFactory(loggerFactory, this.Configuration!);
-        }
+        // Execute logging injectors.
+        this.InjectorService.ExecuteInjectors<IBootStrapLoggingInjector>(injector => injector.OnCreateLoggerFactory(loggerFactory, this.Configuration!));
 
         // Return the logger factory.
         return loggerFactory;
@@ -309,19 +181,17 @@ public partial class AppBootStrapper
             .As<AppBootContext>()
             .SingleInstance();
 
-        // Iterate over the services injectors.
-        foreach (IBootStrapServicesInjector injector in this.Injectors.OfType<IBootStrapServicesInjector>())
-        {
-            // Invoke the injector's OnBuildServices method.
-            injector.OnBuildServices(services);
-        }
+        // Register the injector service as a singleton for use by other parts of the application.
+        _ = services.RegisterInstance(this.InjectorService)
+            .As<IInjectorService>()
+            .As<InjectorService>()
+            .SingleInstance();
 
-        // Iterate over the application injectors.
-        foreach (IBootStrapApplicationInjector injector in this.Injectors.OfType<IBootStrapApplicationInjector>())
-        {
-            // Invoke the injector's OnBuildServices method.
-            injector.OnBuildServices(services);
-        }
+        // Execute services injectors.
+        this.InjectorService.ExecuteInjectors<IBootStrapServicesInjector>(injector => injector.OnBuildServices(services));
+
+        // Execute application injectors.
+        this.InjectorService.ExecuteInjectors<IBootStrapApplicationInjector>(injector => injector.OnBuildServices(services));
 
         // Return the container builder.
         return services;
@@ -339,19 +209,11 @@ public partial class AppBootStrapper
         // Create a new autofac service provider.
         AutofacServiceProvider provider = new(container);
 
-        // Iterate over the services injectors.
-        foreach (IBootStrapServicesInjector injector in this.Injectors.OfType<IBootStrapServicesInjector>())
-        {
-            // Invoke the injector's OnGetServices method.
-            injector.OnConfigureServices(provider);
-        }
+        // Execute services injectors.
+        this.InjectorService.ExecuteInjectors<IBootStrapServicesInjector>(injector => injector.OnConfigureServices(provider));
 
-        // Iterate over the application injectors.
-        foreach (IBootStrapApplicationInjector injector in this.Injectors.OfType<IBootStrapApplicationInjector>())
-        {
-            // Invoke the injector's OnGetServices method.
-            injector.OnConfigureServices(provider);
-        }
+        // Execute application injectors.
+        this.InjectorService.ExecuteInjectors<IBootStrapApplicationInjector>(injector => injector.OnConfigureServices(provider));
 
         // Return the autofac service provider.
         return provider;
@@ -390,7 +252,7 @@ public partial class AppBootStrapper
         {
             // Report the bootstrapping completion.
             this.Logger.LogInformation("{LogoArt}", Environment.NewLine + (this.LogoArt ?? "----- Reoria Game Engine -----"));
-            this.Logger.LogInformation("Bootstrapping completed, it took {time} ms. Injectors: {injectors}", stopwatch.ElapsedMilliseconds, this.Injectors.Count);
+            this.Logger.LogInformation("Bootstrapping completed, it took {time} ms.", stopwatch.ElapsedMilliseconds);
         }
     }
 

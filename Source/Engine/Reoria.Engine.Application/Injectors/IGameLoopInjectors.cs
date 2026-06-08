@@ -102,18 +102,3 @@ public interface IInputInjector : IGameLoopInjector
     /// </remarks>
     void OnInput(GameTime gameTime);
 }
-
-
-/// <summary>
-/// Combined interface for injectors that participate in all game loop events.
-/// </summary>
-/// <remarks>
-/// Implement this interface if you need to participate in all phases of the game loop.
-/// This is useful for comprehensive game systems that need to handle input,
-/// update logic, and rendering all in one class.
-/// </remarks>
-public interface ICompleteGameLoopInjector : IVariableUpdateInjector, IFixedUpdateInjector, IDrawingInjector, IInputInjector
-{
-    // This interface combines all the game loop related interfaces
-    // No additional methods needed as they're inherited from the base interfaces
-}

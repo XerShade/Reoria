@@ -45,10 +45,7 @@ public static class ApplicationServiceExtensions
             .SingleInstance();
 
         // Invoke application service injectors to register custom services.
-        foreach (IApplicationServicesInjector injector in application.Injectors.OfType<IApplicationServicesInjector>())
-        {
-            injector.OnBuildServices(services);
-        }
+        application.InjectorService.ExecuteInjectors<IApplicationServicesInjector>(injector => injector.OnBuildServices(services));
 
         // Return the configured container builder.
         return services;
@@ -75,10 +72,7 @@ public static class ApplicationServiceExtensions
         AutofacServiceProvider provider = new(container);
 
         // Invoke application service injectors for post-configuration setup.
-        foreach (IApplicationServicesInjector injector in application.Injectors.OfType<IApplicationServicesInjector>())
-        {
-            injector.OnConfigureServices(provider);
-        }
+        application.InjectorService.ExecuteInjectors<IApplicationServicesInjector>(injector => injector.OnConfigureServices(provider));
 
         // Return the configured service provider.
         return provider;

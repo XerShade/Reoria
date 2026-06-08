@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Injectors;
+using Reoria.Engine.Application.Services.Interfaces;
 
 namespace Reoria.Engine.Application.Interfaces;
 
@@ -38,14 +39,14 @@ public interface IApplication : IDisposable
     ILogger<IApplication> Logger { get; }
 
     /// <summary>
-    /// Gets an instance of a collection of <see cref="IApplicationInjector"/> that can be used to inject functionality.
+    /// Gets an instance of <see cref="IInjectorService"/> that can be used to inject functionality.
     /// </summary>
     /// <remarks>
-    /// Contains all discovered application injectors that provide modular functionality.
-    /// Injectors allow for extensible architecture where different components can be
-    /// plugged into the application without modifying core code.
+    /// Provides a mechanism for registering and resolving services and components in the application,
+    /// allowing for loose coupling and dependency injection and allowing code injection to add
+    /// functionality to the application.
     /// </remarks>
-    List<IApplicationInjector> Injectors { get; }
+    IInjectorService InjectorService { get; }
 
     /// <summary>
     /// Gets an instance of <see cref="IConfiguration"/> that can be used to access configuration settings.

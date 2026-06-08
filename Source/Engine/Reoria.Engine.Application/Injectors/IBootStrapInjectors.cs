@@ -87,17 +87,3 @@ public interface IBootStrapServicesInjector : IBootStrapInjector
     /// </remarks>
     void OnConfigureServices(IServiceProvider provider);
 }
-
-/// <summary>
-/// Defines an abstraction contract for an injector that can add application classes to the application bootstrapper.
-/// </summary>
-/// <remarks>
-/// This is a marker interface that inherits from IBootStrapServicesInjector.
-/// Use this interface specifically for registering the main application class
-/// and core application-level services during bootstrap.
-/// </remarks>
-public interface IBootStrapApplicationInjector : IBootStrapServicesInjector
-{
-    // Marker interface for application-specific bootstrapping functionality
-    // No additional methods - inherits all functionality from IBootStrapServicesInjector
-}

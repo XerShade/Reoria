@@ -41,10 +41,7 @@ public static class ApplicationConfigurationExtensions
         _ = builder.AddConfigurationSource("appsettings.serilog.json", true, true);
 
         // Invoke application configuration injectors to add custom configuration sources.
-        foreach (IApplicationConfigurationInjector injector in application.Injectors.OfType<IApplicationConfigurationInjector>())
-        {
-            injector.OnBuildConfiguration(builder);
-        }
+        application.InjectorService.ExecuteInjectors<IApplicationConfigurationInjector>(injector => injector.OnBuildConfiguration(builder));
 
         // Add command-line arguments to override configuration values.
         _ = builder.AddCommandLine(args);

@@ -13,6 +13,7 @@ using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Extensions;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Application.Services.Interfaces;
 using ButtonState = Microsoft.Xna.Framework.Input.ButtonState;
 using GameBase = Microsoft.Xna.Framework.Game;
 using Keys = Microsoft.Xna.Framework.Input.Keys;
@@ -29,7 +30,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// <inheritdoc />
     public virtual ILogger<IApplication> Logger { get; init; }
     /// <inheritdoc />
-    public virtual List<IApplicationInjector> Injectors { get; init; } = [];
+    public virtual IInjectorService InjectorService { get; init; }
     /// <inheritdoc />
     public virtual IConfiguration Configuration { get; init; }
     /// <inheritdoc />
@@ -97,9 +98,10 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// Constructs a new instance of <see cref="ClientApplication"/>.
     /// </summary>
     /// <param name="logger">A logger instance to log messages to.</param>
+    /// <param name="injectorService">The injector service.</param>
     /// <param name="args">The command line arguments.</param>
     /// <param name="context">The application boot context.</param>
-    public ClientApplication(ILogger<IApplication> logger, [KeyFilter("CommandLineArgs")] string[] args, AppBootContext context)
+    public ClientApplication(ILogger<IApplication> logger, IInjectorService injectorService, [KeyFilter("CommandLineArgs")] string[] args, AppBootContext context)
     {
         // Store the platform.
         this.Platform = context.Platform;
@@ -108,8 +110,8 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         this.Logger = logger;
         this.Logger.LogInformation("Initializing client application...");
 
-        // Discover the application injectors.
-        this.Injectors = this.DiscoverInjectors();
+        // Store the injector service.
+        this.InjectorService = injectorService;
 
         // Get the configuration instance.
         this.Configuration = this.GetConfiguration(args);
@@ -175,18 +177,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         this.Socket = this.Provider.GetRequiredService<ClientSocket>();
 
         // Notify application lifecycle injectors that the application is starting.
-        List<IApplicationLifecycleInjector> lifecycleInjectors = [.. this.Injectors.OfType<IApplicationLifecycleInjector>()];
-        foreach (IApplicationLifecycleInjector injector in lifecycleInjectors)
-        {
-            try
-            {
-                injector.OnApplicationStart();
-            }
-            catch (Exception ex)
-            {
-                this.Logger.LogError(ex, "Application lifecycle injector {InjectorType} failed during application start", injector.GetType().Name);
-            }
-        }
+        this.InjectorService.ExecuteInjectors<IApplicationLifecycleInjector>(injector => injector.OnApplicationStart());
     }
 
     /// <summary>
@@ -220,6 +211,11 @@ public class ClientApplication : GameBase, IApplication, IDisposable
 
         // Get the service provider.
         this.Provider = this.GetServiceProvider();
+
+        // Set the service provider on the injector service so future injector resolutions use DI.
+        // This is done after the container is built so injectors that run after bootstrap
+        // (e.g., game loop injectors) can be resolved via DI with their dependencies.
+        _ = this.InjectorService.SetServiceProvider(this.Provider);
     }
 
     /// <inheritdoc />
@@ -286,68 +282,14 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// </summary>
     /// <param name="gameTime">The current game time.</param>
     protected virtual void HandleVariableUpdate(GameTime gameTime)
-    {
-        // Get update injectors from DI container
-        IEnumerable<IVariableUpdateInjector> updateInjectors = this.Provider.GetServices<IVariableUpdateInjector>();
-
-        if (!updateInjectors.Any())
-        {
-            this.Logger.LogTrace("No update injectors to execute for draw");
-            return;
-        }
-
-        if (this.Logger.IsEnabled(LogLevel.Trace))
-        {
-            this.Logger.LogTrace("Executing {InjectorCount} update injectors for draw", updateInjectors.Count());
-        }
-
-        // Execute all update injectors
-        foreach (IVariableUpdateInjector injector in updateInjectors)
-        {
-            try
-            {
-                injector.OnVariableUpdate(gameTime);
-            }
-            catch (Exception ex)
-            {
-                this.Logger.LogError(ex, "Error executing update injector {InjectorType}", injector.GetType().Name);
-            }
-        }
-    }
+        => this.InjectorService.ExecuteInjectors<IVariableUpdateInjector>(injector => injector.OnVariableUpdate(gameTime));
 
     /// <summary>
     /// Handles fixed updates for the game loop.
     /// </summary>
     /// <param name="gameTime">The current game time.</param>
     protected virtual void HandleFixedUpdate(GameTime gameTime)
-    {
-        // Get update injectors from DI container
-        IEnumerable<IFixedUpdateInjector> updateInjectors = this.Provider.GetServices<IFixedUpdateInjector>();
-
-        if (!updateInjectors.Any())
-        {
-            this.Logger.LogTrace("No update injectors to execute for draw");
-            return;
-        }
-
-        if (this.Logger.IsEnabled(LogLevel.Trace))
-        {
-            this.Logger.LogTrace("Executing {InjectorCount} update injectors for draw", updateInjectors.Count());
-        }
-
-        // Execute all update injectors
-        foreach (IFixedUpdateInjector injector in updateInjectors)
-        {
-            try
-            {
-                injector.OnFixedUpdate(gameTime);
-            }
-            catch (Exception ex)
-            {
-                this.Logger.LogError(ex, "Error executing update injector {InjectorType}", injector.GetType().Name);
-            }
-        }
-    }
+        => this.InjectorService.ExecuteInjectors<IFixedUpdateInjector>(injector => injector.OnFixedUpdate(gameTime));
 
     /// <summary>
     /// Applies frame rate limiting to prevent excessive CPU usage.
@@ -438,20 +380,6 @@ public class ClientApplication : GameBase, IApplication, IDisposable
 
         try
         {
-            // Get drawing injectors from DI container
-            IEnumerable<IDrawingInjector> drawingInjectors = this.Provider.GetServices<IDrawingInjector>();
-
-            if (!drawingInjectors.Any())
-            {
-                this.Logger.LogTrace("No drawing injectors to execute for draw");
-                return;
-            }
-
-            if (this.Logger.IsEnabled(LogLevel.Trace))
-            {
-                this.Logger.LogTrace("Executing {InjectorCount} drawing injectors for draw", drawingInjectors.Count());
-            }
-
             // Set up the graphics device for drawing
             this.GraphicsDevice.BlendState = BlendState.AlphaBlend;
             this.GraphicsDevice.SamplerStates[0] = SamplerState.LinearClamp;
@@ -465,17 +393,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
             this.SpriteBatch.Begin();
 
             // Execute all drawing injectors
-            foreach (IDrawingInjector injector in drawingInjectors)
-            {
-                try
-                {
-                    injector.OnDraw(gameTime, this.GraphicsDevice, this.SpriteBatch);
-                }
-                catch (Exception ex)
-                {
-                    this.Logger.LogError(ex, "Error executing drawing injector {InjectorType}", injector.GetType().Name);
-                }
-            }
+            this.InjectorService.ExecuteInjectors<IDrawingInjector>(injector => injector.OnDraw(gameTime, this.GraphicsDevice, this.SpriteBatch));
 
             // End sprite batch to submit all drawing operations
             this.SpriteBatch.End();
@@ -496,18 +414,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
             try
             {
                 // Notify application lifecycle injectors that the application is stopping
-                List<IApplicationLifecycleInjector> lifecycleInjectors = [.. this.Injectors.OfType<IApplicationLifecycleInjector>()];
-                foreach (IApplicationLifecycleInjector injector in lifecycleInjectors)
-                {
-                    try
-                    {
-                        injector.OnApplicationStop();
-                    }
-                    catch (Exception ex)
-                    {
-                        this.Logger.LogError(ex, "Application lifecycle injector {InjectorType} failed during application stop", injector.GetType().Name);
-                    }
-                }
+                this.InjectorService.ExecuteInjectors<IApplicationLifecycleInjector>(injector => injector.OnApplicationStop());
 
                 // Dispose the socket if it exists
                 this.Socket?.Dispose();

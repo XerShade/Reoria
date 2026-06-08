@@ -9,6 +9,7 @@ using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Extensions;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Application.Services.Interfaces;
 using Reoria.Server.Network.Sockets;
 using System.Diagnostics;
 
@@ -24,7 +25,7 @@ public class ServerApplication : IApplication
     /// <inheritdoc />
     public virtual ILogger<IApplication> Logger { get; init; }
     /// <inheritdoc />
-    public virtual List<IApplicationInjector> Injectors { get; init; } = [];
+    public virtual IInjectorService InjectorService { get; init; }
     /// <inheritdoc />
     public virtual IConfiguration Configuration { get; init; }
     /// <inheritdoc />
@@ -38,9 +39,10 @@ public class ServerApplication : IApplication
     /// Constructs a new instance of <see cref="ServerApplication"/>.
     /// </summary>
     /// <param name="logger">A logger instance to log messages to.</param>
+    /// <param name="injectorService">The injector service.</param>
     /// <param name="args">The command line arguments.</param>
     /// <param name="context">The application boot context.</param>
-    public ServerApplication(ILogger<IApplication> logger, [KeyFilter("CommandLineArgs")] string[] args, AppBootContext context)
+    public ServerApplication(ILogger<IApplication> logger, IInjectorService injectorService, [KeyFilter("CommandLineArgs")] string[] args, AppBootContext context)
     {
         // Store the platform.
         this.Platform = context.Platform;
@@ -49,11 +51,11 @@ public class ServerApplication : IApplication
         this.Logger = logger;
         this.Logger.LogInformation("Initializing server application...");
 
+        // Store the injector service.
+        this.InjectorService = injectorService;
+
         // Start a new stopwatch to measure the application time.
         Stopwatch stopwatch = Stopwatch.StartNew();
-
-        // Discover the application injectors.
-        this.Injectors = this.DiscoverInjectors();
 
         // Get the configuration instance.
         this.Configuration = this.GetConfiguration(args);
@@ -65,6 +67,11 @@ public class ServerApplication : IApplication
         // Get the service collection and service provider instances.
         this.ContainerBuilder = this.GetServices();
         this.Provider = this.GetServiceProvider();
+
+        // Set the service provider on the injector service so future injector resolutions use DI.
+        // This is done after the container is built so injectors that run after bootstrap
+        // (e.g., game loop injectors) can be resolved via DI with their dependencies.
+        _ = this.InjectorService.SetServiceProvider(this.Provider);
 
         // Get the server network socket.
         this.Socket = this.Provider.GetRequiredService<ServerSocket>();
@@ -131,8 +138,11 @@ public class ServerApplication : IApplication
                 // Create game time for the current update cycle.
                 GameTime gameTime = new(now, frameTime);
 
+                // Update the network socket first, as it may have data to process that affects the game state.
+                this.Socket.Update();
+
                 // Update the game loop.
-                this.VariableUpdate(gameTime);
+                this.HandleVariableUpdate(gameTime);
 
                 // Pause thread execution to reduce CPU usage.
                 Thread.Sleep(1);
@@ -163,18 +173,7 @@ public class ServerApplication : IApplication
         this.Socket.Start();
 
         // Notify application lifecycle injectors that the application is starting.
-        List<IApplicationLifecycleInjector> lifecycleInjectors = [.. this.Injectors.OfType<IApplicationLifecycleInjector>()];
-        foreach (IApplicationLifecycleInjector? injector in lifecycleInjectors)
-        {
-            try
-            {
-                injector.OnApplicationStart();
-            }
-            catch (Exception ex)
-            {
-                this.Logger.LogError(ex, "Application lifecycle injector {InjectorType} failed during application start", injector.GetType().Name);
-            }
-        }
+        this.InjectorService.ExecuteInjectors<IApplicationLifecycleInjector>(injector => injector.OnApplicationStart());
 
         this.Logger.LogInformation("Application components started successfully");
     }
@@ -192,18 +191,7 @@ public class ServerApplication : IApplication
             this.Socket?.Stop();
 
             // Notify application lifecycle injectors that the application is stopping.
-            List<IApplicationLifecycleInjector> lifecycleInjectors = [.. this.Injectors.OfType<IApplicationLifecycleInjector>()];
-            foreach (IApplicationLifecycleInjector? injector in lifecycleInjectors)
-            {
-                try
-                {
-                    injector.OnApplicationStop();
-                }
-                catch (Exception ex)
-                {
-                    this.Logger.LogError(ex, "Application lifecycle injector {InjectorType} failed during application stop", injector.GetType().Name);
-                }
-            }
+            this.InjectorService.ExecuteInjectors<IApplicationLifecycleInjector>(injector => injector.OnApplicationStop());
 
             this.Logger.LogInformation("Application components stopped successfully");
         }
@@ -214,77 +202,18 @@ public class ServerApplication : IApplication
     }
 
     /// <summary>
-    /// Called on a variable timescale within the update function.
-    /// Override this method to add custom variable update logic.
+    /// Handles variable updates for the game loop.
     /// </summary>
-    /// <param name="gameTime">The elapsed time since the last call to <see cref="FixedUpdate(GameTime)"/>.</param>
-    protected virtual void VariableUpdate(GameTime gameTime)
-    {
-        // Update the network socket first, as it may have data to process that affects the game state.
-        this.Socket.Update();
-
-        // Get update injectors from DI container
-        IEnumerable<IVariableUpdateInjector> updateInjectors = this.Provider.GetServices<IVariableUpdateInjector>();
-
-        if (!updateInjectors.Any())
-        {
-            this.Logger.LogTrace("No update injectors to execute for draw");
-            return;
-        }
-
-        if (this.Logger.IsEnabled(LogLevel.Trace))
-        {
-            this.Logger.LogTrace("Executing {InjectorCount} update injectors for draw", updateInjectors.Count());
-        }
-
-        // Execute all update injectors
-        foreach (IVariableUpdateInjector injector in updateInjectors)
-        {
-            try
-            {
-                injector.OnVariableUpdate(gameTime);
-            }
-            catch (Exception ex)
-            {
-                this.Logger.LogError(ex, "Error executing update injector {InjectorType}", injector.GetType().Name);
-            }
-        }
-    }
+    /// <param name="gameTime">The current game time.</param>
+    protected virtual void HandleVariableUpdate(GameTime gameTime)
+        => this.InjectorService.ExecuteInjectors<IVariableUpdateInjector>(injector => injector.OnVariableUpdate(gameTime));
 
     /// <summary>
-    /// Called on a fixed timescale within the update function.
-    /// Override this method to add custom fixed update logic.
+    /// Handles fixed updates for the game loop.
     /// </summary>
-    /// <param name="gameTime">The elapsed time since the last call to <see cref="FixedUpdate(GameTime)"/>.</param>
-    protected virtual void FixedUpdate(GameTime gameTime)
-    {
-        // Get update injectors from DI container
-        IEnumerable<IFixedUpdateInjector> updateInjectors = this.Provider.GetServices<IFixedUpdateInjector>();
-
-        if (!updateInjectors.Any())
-        {
-            this.Logger.LogTrace("No update injectors to execute for draw");
-            return;
-        }
-
-        if (this.Logger.IsEnabled(LogLevel.Trace))
-        {
-            this.Logger.LogTrace("Executing {InjectorCount} update injectors for draw", updateInjectors.Count());
-        }
-
-        // Execute all update injectors
-        foreach (IFixedUpdateInjector injector in updateInjectors)
-        {
-            try
-            {
-                injector.OnFixedUpdate(gameTime);
-            }
-            catch (Exception ex)
-            {
-                this.Logger.LogError(ex, "Error executing update injector {InjectorType}", injector.GetType().Name);
-            }
-        }
-    }
+    /// <param name="gameTime">The current game time.</param>
+    protected virtual void HandleFixedUpdate(GameTime gameTime)
+        => this.InjectorService.ExecuteInjectors<IFixedUpdateInjector>(injector => injector.OnFixedUpdate(gameTime));
 
     /// <inheritdoc />
     public virtual void Exit()
