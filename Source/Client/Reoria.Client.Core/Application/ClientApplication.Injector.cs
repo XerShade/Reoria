@@ -9,7 +9,7 @@ namespace Reoria.Client.Application;
 /// <summary>
 /// Defines an inejector for injecting the client application.
 /// </summary>
-public class ClientApplicationInjector : IBootStrapApplicationInjector
+public class ClientApplicationInjector : IBootStrapServicesInjector
 {
     /// <inheritdoc />
     public string Name

@@ -9,11 +9,7 @@
     <Import_RootNamespace>Reoria.Client.Network</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Injectors\ClientSession.Injector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\ClientSocket.Injector.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Sessions\ClientSessionData.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Sessions\ClientSessionManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Sessions\Interfaces\IClientSessionManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sockets\ClientSocket.cs" />
   </ItemGroup>
 </Project>

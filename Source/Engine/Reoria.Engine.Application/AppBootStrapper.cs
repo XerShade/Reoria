@@ -190,9 +190,6 @@ public partial class AppBootStrapper
         // Execute services injectors.
         this.InjectorService.ExecuteInjectors<IBootStrapServicesInjector>(injector => injector.OnBuildServices(services));
 
-        // Execute application injectors.
-        this.InjectorService.ExecuteInjectors<IBootStrapApplicationInjector>(injector => injector.OnBuildServices(services));
-
         // Return the container builder.
         return services;
     }
@@ -211,9 +208,6 @@ public partial class AppBootStrapper
 
         // Execute services injectors.
         this.InjectorService.ExecuteInjectors<IBootStrapServicesInjector>(injector => injector.OnConfigureServices(provider));
-
-        // Execute application injectors.
-        this.InjectorService.ExecuteInjectors<IBootStrapApplicationInjector>(injector => injector.OnConfigureServices(provider));
 
         // Return the autofac service provider.
         return provider;

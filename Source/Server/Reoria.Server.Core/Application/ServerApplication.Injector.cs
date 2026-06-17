@@ -8,7 +8,7 @@ namespace Reoria.Server.Core.Application;
 /// <summary>
 /// Defines an inejector for injecting the server application.
 /// </summary>
-public class ServerApplicationInjector : IBootStrapApplicationInjector
+public class ServerApplicationInjector : IBootStrapServicesInjector
 {
     /// <inheritdoc />
     public string Name
