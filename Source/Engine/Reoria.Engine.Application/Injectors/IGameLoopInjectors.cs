@@ -1,5 +1,4 @@
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace Reoria.Engine.Application.Injectors;
 
@@ -56,49 +55,4 @@ public interface IFixedUpdateInjector : IGameLoopInjector
     /// Use gameTime.ElapsedGameTime which will be consistent for fixed update calculations.
     /// </remarks>
     void OnFixedUpdate(GameTime gameTime);
-}
-
-/// <summary>
-/// Defines an abstraction contract for an injector that can participate in rendering operations.
-/// </summary>
-/// <remarks>
-/// Render injectors are called during the render phase and should be used for
-/// all rendering operations including sprites, text, UI elements, and graphics effects.
-/// This interface combines pre-draw, draw, and post-draw operations into a single
-/// simplified interface that follows MonoGame's standard rendering pattern.
-/// </remarks>
-public interface IDrawingInjector : IGameLoopInjector
-{
-    /// <summary>
-    /// Called during the render phase of the game loop.
-    /// </summary>
-    /// <param name="gameTime">The game time information.</param>
-    /// <param name="graphicsDevice">The graphics device for rendering operations.</param>
-    /// <param name="spriteBatch">The sprite batch for drawing operations (may be null).</param>
-    /// <remarks>
-    /// This method is called after update phases and should contain all rendering code.
-    /// The graphics device is properly configured and the sprite batch is managed by the caller.
-    /// Use gameTime.TotalGameTime for time-based animations and effects.
-    /// </remarks>
-    void OnDraw(GameTime gameTime, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch);
-}
-
-/// <summary>
-/// Defines an abstraction contract for an injector that can participate in input handling.
-/// </summary>
-/// <remarks>
-/// Input injectors are called during the input phase and should be used for processing
-/// user input from keyboard, mouse, gamepad, or other input devices.
-/// </remarks>
-public interface IInputInjector : IGameLoopInjector
-{
-    /// <summary>
-    /// Called during the input handling phase of the game loop.
-    /// </summary>
-    /// <param name="gameTime">The game time information.</param>
-    /// <remarks>
-    /// This method is called before update phases and should handle input processing
-    /// such as checking key states, mouse movements, and gamepad input.
-    /// </remarks>
-    void OnInput(GameTime gameTime);
 }

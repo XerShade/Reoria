@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Reoria.Client.Core.Injectors;
 using Reoria.Client.Network.Sockets;
 using Reoria.Engine.Application;
 using Reoria.Engine.Application.Enumerations;
@@ -224,6 +225,9 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         // Update the network socket first, as it may have data to process that affects the game state.
         this.Socket.Update();
 
+        // Update user input second, as lagging input may affect the game state and player happiness.
+        this.InjectorService.ExecuteInjectors<IInputInjector>(injector => injector.OnInput(gameTime, Keyboard.GetState(), Mouse.GetState()));
+
         // Apply frame rate limiting
         this.ApplyFrameRateLimiting(gameTime);
 
@@ -393,7 +397,9 @@ public class ClientApplication : GameBase, IApplication, IDisposable
             this.SpriteBatch.Begin();
 
             // Execute all drawing injectors
+            this.InjectorService.ExecuteInjectors<IPreDrawingInjector>(injector => injector.OnPreDraw(gameTime, this.GraphicsDevice, this.SpriteBatch));
             this.InjectorService.ExecuteInjectors<IDrawingInjector>(injector => injector.OnDraw(gameTime, this.GraphicsDevice, this.SpriteBatch));
+            this.InjectorService.ExecuteInjectors<IPostDrawingInjector>(injector => injector.OnPostDraw(gameTime, this.GraphicsDevice, this.SpriteBatch));
 
             // End sprite batch to submit all drawing operations
             this.SpriteBatch.End();
