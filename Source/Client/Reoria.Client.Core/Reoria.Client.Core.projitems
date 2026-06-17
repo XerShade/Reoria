@@ -13,5 +13,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)Application\ClientApplication.Injector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\IDrawingInjectors.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\IInputInjectors.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Injectors\ILifeCycleInjectors.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ContentManagerService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\GraphicsDeviceService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IContentManagerService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IGraphicsDeviceService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\ISpriteBatchService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\SpriteBatchService.cs" />
   </ItemGroup>
 </Project>

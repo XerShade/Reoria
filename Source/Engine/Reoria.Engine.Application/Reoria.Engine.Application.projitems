@@ -18,7 +18,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\ApplicationLoggingExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\ApplicationServiceExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IApplication.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Injectors\IGameLoopInjectors.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Injectors\IUpdateInjectors.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\IApplicationInjectors.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\IBootStrapInjectors.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\IInjector.cs" />

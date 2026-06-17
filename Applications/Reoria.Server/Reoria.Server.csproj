@@ -4,6 +4,7 @@
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>../..</DockerfileContext>
     <StartupObject>Reoria.Server.Program</StartupObject>
+    <DefineConstants>$(DefineConstants);SERVER;</DefineConstants>
   </PropertyGroup>
   
   <Import Project="../../Build/Reoria.Common.props" />

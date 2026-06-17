@@ -7,6 +7,10 @@ using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Game.Entities.Interfaces;
 
+#if !SERVER
+using Reoria.Client.Core.Injectors;
+#endif
+
 namespace Reoria.Game.Entities;
 
 /// <summary>
@@ -19,7 +23,10 @@ namespace Reoria.Game.Entities;
 /// proper update and drawing cycles. All entity operations should go through this
 /// manager to ensure proper ECS synchronization and component tracking.
 /// </remarks>
-public class EntityManager : IEntityManager, IDisposable, IDrawingInjector, IVariableUpdateInjector
+public class EntityManager : IEntityManager, IDisposable, IVariableUpdateInjector
+#if !SERVER
+    , IDrawingInjector
+#endif
 {
     /// <summary>
     /// Gets the name of this entity manager.

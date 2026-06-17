@@ -3,19 +3,6 @@ using Microsoft.Xna.Framework;
 namespace Reoria.Engine.Application.Injectors;
 
 /// <summary>
-/// Base interface for all game loop injectors providing common metadata.
-/// </summary>
-/// <remarks>
-/// Game loop injectors are used to hook into the game loop phases such as update,
-/// draw, and input handling. They are completely decoupled from application-level
-/// injectors and focus solely on game loop functionality.
-/// </remarks>
-public interface IGameLoopInjector : IInjector
-{
-    // All base properties are inherited from IInjector
-}
-
-/// <summary>
 /// Defines an abstraction contract for an injector that can participate in variable update game loop events.
 /// </summary>
 /// <remarks>
@@ -23,7 +10,7 @@ public interface IGameLoopInjector : IInjector
 /// needs to run continuously but doesn't require fixed timing. This includes things
 /// like animation, AI behavior, and user interface updates.
 /// </remarks>
-public interface IVariableUpdateInjector : IGameLoopInjector
+public interface IVariableUpdateInjector : IInjector
 {
     /// <summary>
     /// Called on a variable timescale during the game loop.
@@ -44,7 +31,7 @@ public interface IVariableUpdateInjector : IGameLoopInjector
 /// be used for physics calculations, network synchronization, and other time-sensitive
 /// operations that require predictable timing.
 /// </remarks>
-public interface IFixedUpdateInjector : IGameLoopInjector
+public interface IFixedUpdateInjector : IInjector
 {
     /// <summary>
     /// Called on a fixed timescale during the game loop.

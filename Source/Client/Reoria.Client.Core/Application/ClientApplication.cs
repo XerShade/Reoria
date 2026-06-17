@@ -4,10 +4,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Reoria.Client.Core.Injectors;
+using Reoria.Client.Core.Services;
+using Reoria.Client.Core.Services.Interfaces;
 using Reoria.Client.Network.Sockets;
 using Reoria.Engine.Application;
 using Reoria.Engine.Application.Enumerations;
@@ -45,10 +46,6 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// Gets an instance of <see cref="GraphicsDeviceManager"/> to manage the graphics device.
     /// </summary>
     private GraphicsDeviceManager GraphicsDeviceManager { get; set; }
-    /// <summary>
-    /// Gets an instance of <see cref="SpriteBatch"/> to batch draw calls.
-    /// </summary>
-    private SpriteBatch? SpriteBatch { get; set; }
     /// <summary>
     /// Gets the accumulator for the fixed update loop.
     /// </summary>
@@ -136,10 +133,22 @@ public class ClientApplication : GameBase, IApplication, IDisposable
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
     /// <inheritdoc />
+    protected override void Initialize()
+    {
+        // Execute the injectors.
+        this.InjectorService.ExecuteInjectors<ILifeCycleInitializeGraphicsInjector>(
+            injector => injector.OnInitializeGraphics(this.ContainerBuilder, this.GraphicsDeviceManager, this.GraphicsDevice));
+
+        // Call the base method.
+        base.Initialize();
+    }
+
+    /// <inheritdoc />
     protected override void LoadContent()
     {
-        // Create the sprite batch.
-        this.SpriteBatch = new SpriteBatch(this.GraphicsDevice);
+        // Execute the injectors.
+        this.InjectorService.ExecuteInjectors<ILifeCycleLoadContentInjector>( 
+            injector => injector.OnLoadContent(this.ContainerBuilder, this.Content));
 
         // Call the base method.
         base.LoadContent();
@@ -171,6 +180,11 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// </summary>
     protected virtual void FinalizeInitialization()
     {
+        // Temporary: Add services to the container.
+        _ = this.ContainerBuilder.RegisterType<GraphicsDeviceService>().AsImplementedInterfaces().SingleInstance();
+        _ = this.ContainerBuilder.RegisterType<ContentManagerService>().AsImplementedInterfaces().SingleInstance();
+        _ = this.ContainerBuilder.RegisterType<SpriteBatchService>().AsImplementedInterfaces().SingleInstance();
+
         // Initialize the dependency injection provider.
         this.InitializeProvider();
 
@@ -185,31 +199,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// Initializes the dependcy injection provider and initializes the game loop.
     /// </summary>
     protected virtual void InitializeProvider()
-    {
-        // Register the graphics device manager with proper lifetime (not singleton to prevent memory leaks)
-        _ = this.ContainerBuilder.RegisterInstance<GraphicsDeviceManager>(this.GraphicsDeviceManager)
-            .Keyed<GraphicsDeviceManager>("GraphicsDeviceManager")
-            .As<GraphicsDeviceManager>()
-            .SingleInstance();
-
-        // Register the graphics device with proper lifetime
-        _ = this.ContainerBuilder.RegisterInstance<GraphicsDevice>(this.GraphicsDevice)
-            .Keyed<GraphicsDevice>("GraphicsDevice")
-            .As<GraphicsDevice>()
-            .SingleInstance();
-
-        // Register the content manager with proper lifetime
-        _ = this.ContainerBuilder.RegisterInstance<ContentManager>(this.Content)
-            .Keyed<ContentManager>("ContentManager")
-            .As<ContentManager>()
-            .SingleInstance();
-
-        // Register the sprite batch with proper lifetime
-        _ = this.ContainerBuilder.RegisterInstance<SpriteBatch>(this.SpriteBatch ?? throw new ArgumentNullException("SpriteBatch is null."))
-            .Keyed<SpriteBatch>("SpriteBatch")
-            .As<SpriteBatch>()
-            .SingleInstance();
-
+    {        
         // Get the service provider.
         this.Provider = this.GetServiceProvider();
 
@@ -226,7 +216,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         this.Socket.Update();
 
         // Update user input second, as lagging input may affect the game state and player happiness.
-        this.InjectorService.ExecuteInjectors<IInputInjector>(injector => injector.OnInput(gameTime, Keyboard.GetState(), Mouse.GetState()));
+        this.InjectorService.ExecuteInjectors<IInputInjector>(injector => injector.OnHandleInput(gameTime, Keyboard.GetState(), Mouse.GetState()));
 
         // Apply frame rate limiting
         this.ApplyFrameRateLimiting(gameTime);
@@ -377,32 +367,20 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// <param name="gameTime">The current game time.</param>
     protected virtual void HandleRendering(GameTime gameTime)
     {
-        if (this.Provider == null || this.SpriteBatch == null)
+        if (this.Provider == null)
         {
             return; // Not initialized yet
         }
 
         try
         {
-            // Set up the graphics device for drawing
-            this.GraphicsDevice.BlendState = BlendState.AlphaBlend;
-            this.GraphicsDevice.SamplerStates[0] = SamplerState.LinearClamp;
-            this.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-            this.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
-
-            // Clear the screen
-            this.GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.CornflowerBlue);
-
-            // Begin sprite batch for 2D rendering
-            this.SpriteBatch.Begin();
+            // Access the sprite batch, throwing an exception if it is null, I will make a better function later.
+            SpriteBatch spriteBatch = this.Provider.GetRequiredService<SpriteBatch>();
 
             // Execute all drawing injectors
-            this.InjectorService.ExecuteInjectors<IPreDrawingInjector>(injector => injector.OnPreDraw(gameTime, this.GraphicsDevice, this.SpriteBatch));
-            this.InjectorService.ExecuteInjectors<IDrawingInjector>(injector => injector.OnDraw(gameTime, this.GraphicsDevice, this.SpriteBatch));
-            this.InjectorService.ExecuteInjectors<IPostDrawingInjector>(injector => injector.OnPostDraw(gameTime, this.GraphicsDevice, this.SpriteBatch));
-
-            // End sprite batch to submit all drawing operations
-            this.SpriteBatch.End();
+            this.InjectorService.ExecuteInjectors<IPreDrawingInjector>(injector => injector.OnPreDraw(gameTime, this.GraphicsDevice, spriteBatch));
+            this.InjectorService.ExecuteInjectors<IDrawingInjector>(injector => injector.OnDraw(gameTime, this.GraphicsDevice, spriteBatch));
+            this.InjectorService.ExecuteInjectors<IPostDrawingInjector>(injector => injector.OnPostDraw(gameTime, this.GraphicsDevice, spriteBatch));
         }
         catch (Exception ex)
         {
@@ -424,9 +402,6 @@ public class ClientApplication : GameBase, IApplication, IDisposable
 
                 // Dispose the socket if it exists
                 this.Socket?.Dispose();
-
-                // Dispose the sprite batch if it exists
-                this.SpriteBatch?.Dispose();
 
                 // Dispose the graphics device manager if it exists
                 this.GraphicsDeviceManager?.Dispose();

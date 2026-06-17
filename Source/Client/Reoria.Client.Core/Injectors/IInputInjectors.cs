@@ -1,12 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using Reoria.Engine.Application.Injectors;
 
 namespace Reoria.Client.Core.Injectors;
 
 /// <summary>
 /// Defines a contract for components that handle input injection into the game loop.
 /// </summary>
-public interface IInputInjector
+public interface IInputInjector : IInjector
 {
     /// <summary>
     /// Called during the input handling phase of the game loop to process keyboard and mouse input.
