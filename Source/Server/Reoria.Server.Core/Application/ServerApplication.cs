@@ -1,5 +1,4 @@
 ﻿using Autofac;
-using Autofac.Features.AttributeFilters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -9,6 +8,7 @@ using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Extensions;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Application.Services;
 using Reoria.Engine.Application.Services.Interfaces;
 using Reoria.Server.Network.Sockets;
 using System.Diagnostics;
@@ -39,10 +39,8 @@ public class ServerApplication : IApplication
     /// Constructs a new instance of <see cref="ServerApplication"/>.
     /// </summary>
     /// <param name="logger">A logger instance to log messages to.</param>
-    /// <param name="injectorService">The injector service.</param>
-    /// <param name="args">The command line arguments.</param>
     /// <param name="context">The application boot context.</param>
-    public ServerApplication(ILogger<IApplication> logger, IInjectorService injectorService, [KeyFilter("CommandLineArgs")] string[] args, AppBootContext context)
+    public ServerApplication(ILogger<IApplication> logger, AppBootContext context)
     {
         // Store the platform.
         this.Platform = context.Platform;
@@ -52,13 +50,13 @@ public class ServerApplication : IApplication
         this.Logger.LogInformation("Initializing server application...");
 
         // Store the injector service.
-        this.InjectorService = injectorService;
+        this.InjectorService = new InjectorService().AddAssemblies(AppDomain.CurrentDomain.GetAssemblies());
 
         // Start a new stopwatch to measure the application time.
         Stopwatch stopwatch = Stopwatch.StartNew();
 
         // Get the configuration instance.
-        this.Configuration = this.GetConfiguration(args);
+        this.Configuration = this.GetConfiguration(context.Args);
 
         // Get the logger factory and logger instances.
         this.LoggerFactory = this.GetLoggerFactory();

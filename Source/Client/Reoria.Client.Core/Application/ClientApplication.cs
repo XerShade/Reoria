@@ -1,5 +1,4 @@
 using Autofac;
-using Autofac.Features.AttributeFilters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -8,13 +7,13 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Reoria.Client.Core.Injectors;
 using Reoria.Client.Core.Services;
-using Reoria.Client.Core.Services.Interfaces;
 using Reoria.Client.Network.Sockets;
 using Reoria.Engine.Application;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Extensions;
 using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Application.Services;
 using Reoria.Engine.Application.Services.Interfaces;
 using ButtonState = Microsoft.Xna.Framework.Input.ButtonState;
 using GameBase = Microsoft.Xna.Framework.Game;
@@ -95,11 +94,9 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// <summary>
     /// Constructs a new instance of <see cref="ClientApplication"/>.
     /// </summary>
-    /// <param name="logger">A logger instance to log messages to.</param>
-    /// <param name="injectorService">The injector service.</param>
-    /// <param name="args">The command line arguments.</param>
+    /// <param name="logger">A logger instance to log messages to.</param
     /// <param name="context">The application boot context.</param>
-    public ClientApplication(ILogger<IApplication> logger, IInjectorService injectorService, [KeyFilter("CommandLineArgs")] string[] args, AppBootContext context)
+    public ClientApplication(ILogger<IApplication> logger, AppBootContext context)
     {
         // Store the platform.
         this.Platform = context.Platform;
@@ -109,10 +106,10 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         this.Logger.LogInformation("Initializing client application...");
 
         // Store the injector service.
-        this.InjectorService = injectorService;
+        this.InjectorService = new InjectorService().AddAssemblies(AppDomain.CurrentDomain.GetAssemblies());
 
         // Get the configuration instance.
-        this.Configuration = this.GetConfiguration(args);
+        this.Configuration = this.GetConfiguration(context.Args);
 
         // Get the logger factory and logger instances.
         this.LoggerFactory = this.GetLoggerFactory();

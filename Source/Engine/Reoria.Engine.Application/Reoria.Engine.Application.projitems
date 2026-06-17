@@ -20,7 +20,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IApplication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\IUpdateInjectors.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\IApplicationInjectors.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Injectors\IBootStrapInjectors.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\IInjector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\FileProviderService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\InjectorService.cs" />
