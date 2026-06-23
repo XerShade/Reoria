@@ -94,7 +94,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// <summary>
     /// Constructs a new instance of <see cref="ClientApplication"/>.
     /// </summary>
-    /// <param name="logger">A logger instance to log messages to.</param
+    /// <param name="logger">A logger instance to log messages to.</param>
     /// <param name="context">The application boot context.</param>
     public ClientApplication(ILogger<IApplication> logger, AppBootContext context)
     {
