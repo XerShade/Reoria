@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Reoria.Engine.Core.Reflection;
@@ -34,21 +35,51 @@ public static class TypeDiscoveryHelper
     /// </summary>
     /// <param name="interfaceType">The interface type to search for.</param>
     /// <returns>Array of concrete types implementing the interface.</returns>
-    public static Type[] GetConcreteTypesImplementingInterface(Type interfaceType) => !interfaceType.IsInterface
+    public static Type[] GetConcreteTypesImplementingInterface(Type interfaceType) 
+        => !interfaceType.IsInterface
             ? throw new ArgumentException($"Type {interfaceType.Name} must be an interface", nameof(interfaceType))
-            : _typeCache.GetOrAdd(interfaceType, type => [.. _cachedAssemblies.Value
-                .SelectMany(a =>
+            : _typeCache.GetOrAdd(interfaceType, type =>
+        {
+            List<Type> results = [];
+
+            foreach (Assembly assembly in _cachedAssemblies.Value)
+            {
+                try
                 {
+                    Type[] types;
+
                     try
                     {
-                        return a.GetTypes();
+                        types = assembly.GetTypes();
                     }
-                    catch
+                    catch (ReflectionTypeLoadException ex)
                     {
-                        return [];
+                        types = ex.Types.Where(t => t != null).ToArray()!;
                     }
-                })
-                .Where(t => type.IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)]);
+
+                    foreach (Type t in types)
+                    {
+                        if (t == null)
+                        {
+                            continue;
+                        }
+
+                        if (type.IsAssignableFrom(t) &&
+                            !t.IsInterface &&
+                            !t.IsAbstract)
+                        {
+                            results.Add(t);
+                        }
+                    }
+                }
+                catch
+                {
+                    // ignore broken assemblies safely
+                }
+            }
+
+            return [.. results];
+        });
 
     /// <summary>
     /// Clears the type cache. Useful for testing or when assemblies are dynamically loaded.
