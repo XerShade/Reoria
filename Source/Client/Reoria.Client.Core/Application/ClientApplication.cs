@@ -188,6 +188,10 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         // Get the server network socket.
         this.Socket = this.Provider.GetRequiredService<ClientSocket>();
 
+        // Execute the injectors.
+        this.InjectorService.ExecuteInjectors<ILifeCycleInitializeGameInjector>(
+            injector => injector.OnInitializeGame(this));
+
         // Notify application lifecycle injectors that the application is starting.
         this.InjectorService.ExecuteInjectors<IApplicationLifecycleInjector>(injector => injector.OnApplicationStart());
     }

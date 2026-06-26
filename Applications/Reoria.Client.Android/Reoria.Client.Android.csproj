@@ -15,6 +15,7 @@
   <Import Project="../../Build/LiteNetLib.props" />
 
   <ItemGroup>
+    <PackageReference Include="Gum.MonoGame" Version="2026.6.20.1" />
     <PackageReference Include="MonoGame.Framework.Android" Version="3.8.*" />
   </ItemGroup>
 
@@ -34,6 +35,7 @@
   <Import Project="..\..\Source\Game\Reoria.Game.Entities\Reoria.Game.Entities.projitems" Label="Shared" />
   <Import Project="..\..\Source\Client\Reoria.Client.Entities\Reoria.Client.Entities.projitems" Label="Shared" />
   <Import Project="..\..\Source\Engine\Reoria.Engine.Core\Reoria.Engine.Core.projitems" Label="Shared" />
+  <Import Project="..\..\Source\Client\Reoria.Client.Interface\Reoria.Client.Interface.projitems" Label="Shared" />
 
   <ItemGroup>
     <AndroidAsset Include="$(SolutionDir)\**\appsettings*.json" Exclude="$(SolutionDir)\**\Bin\**;$(SolutionDir)\**\obj\**;$(SolutionDir)\**\.git\**">
@@ -41,4 +43,5 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidAsset>
   </ItemGroup>
+
 </Project>
