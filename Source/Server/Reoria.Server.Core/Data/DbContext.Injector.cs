@@ -36,7 +36,6 @@ public class DbContextInjector : IApplicationConfigurationInjector, IApplication
         _ = services.Register(context =>
         {
             IConfiguration configuration = context.Resolve<IConfiguration>();
-            Console.WriteLine("Auth Connection String: " + configuration.GetConnectionString("Authentication"));
 
             DbContextOptions<AuthenticationDbContext> options = new DbContextOptionsBuilder<AuthenticationDbContext>()
                 .UseSqlite(configuration.GetConnectionString("Authentication"))
@@ -50,7 +49,6 @@ public class DbContextInjector : IApplicationConfigurationInjector, IApplication
         _ = services.Register(context =>
         {
             IConfiguration configuration = context.Resolve<IConfiguration>();
-            Console.WriteLine("Data Connection String: " + configuration.GetConnectionString("Data"));
 
             DbContextOptions<DataDbContext> options = new DbContextOptionsBuilder<DataDbContext>()
                 .UseSqlite(configuration.GetConnectionString("Data"))
