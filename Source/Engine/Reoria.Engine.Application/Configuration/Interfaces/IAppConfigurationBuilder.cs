@@ -70,9 +70,14 @@ public partial interface IAppConfigurationBuilder
     public record AppConfigurationSource(string Path, bool Optional = true, bool ReloadOnChange = true)
     {
         /// <summary>
+        /// The default folder path prefix for configuration files.
+        /// </summary>
+        public const string CONFIGURATION_PATH = "Assets/Configuration/";
+
+        /// <summary>
         /// Gets or sets the path to the configuration file.
         /// </summary>
-        public string Path { get; init; } = Path ?? string.Empty;
+        public string Path { get; init; } = (CONFIGURATION_PATH + Path) ?? string.Empty;
         /// <summary>
         /// Gets or sets a value indicating whether the configuration file is optional.
         /// </summary>
