@@ -31,6 +31,7 @@
     <Project Path="Source/Engine/Reoria.Engine.Network/Reoria.Engine.Network.shproj" Id="cc001347-be8e-4d85-822e-2b55ef8339a8" />
   </Folder>
   <Folder Name="/Source/Game/">
+    <Project Path="Source/Game/Reoria.Game.Data/Reoria.Game.Data.shproj" Id="4012bcf4-d821-4780-a982-f6342b1b16af" />
     <Project Path="Source/Game/Reoria.Game.Entities/Reoria.Game.Entities.shproj" Id="a767b7fa-aa9b-4f29-a90c-f185c55dee34" />
   </Folder>
   <Folder Name="/Source/Server/">
