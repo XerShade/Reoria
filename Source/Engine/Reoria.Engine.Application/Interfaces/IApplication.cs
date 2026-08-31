@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Reoria.Engine.Application.Enumerations;
-using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Services.Interfaces;
 
 namespace Reoria.Engine.Application.Interfaces;
