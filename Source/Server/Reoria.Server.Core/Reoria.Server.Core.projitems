@@ -10,11 +10,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Application\ServerApplication.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Data\DbContext.Injector.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Data\DbContexts\AuthenticationDbContext.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Data\DbContexts\DataDbContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Database\DbContext.Injector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Database\DbContexts\AuthenticationDbContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Database\DbContexts\DataDbContext.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)Data\appsettings.server.data.json" />
+    <Content Include="$(MSBuildThisFileDirectory)Database\appsettings.server.data.json" />
   </ItemGroup>
 </Project>

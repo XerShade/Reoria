@@ -4,9 +4,9 @@ using Microsoft.Extensions.Configuration;
 using Reoria.Engine.Application.Configuration.Interfaces;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Injectors;
-using Reoria.Server.Core.Data.DbContexts;
+using Reoria.Server.Core.Database.DbContexts;
 
-namespace Reoria.Server.Core.Data;
+namespace Reoria.Server.Core.Database;
 
 public class DbContextInjector : IApplicationConfigurationInjector, IApplicationServicesInjector
 {
