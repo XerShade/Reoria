@@ -10,7 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AppBootStrapper.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)AppBootContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AppContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Configuration\AppConfigurationBuilder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Configuration\Interfaces\IAppConfigurationBuilder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enumerations\Platform.cs" />
