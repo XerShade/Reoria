@@ -10,7 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Application\ServerApplication.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Database\DbContext.Injector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Database\DbContextBootstrap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Database\DbContexts\AuthenticationDbContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Database\DbContexts\DataDbContext.cs" />
   </ItemGroup>

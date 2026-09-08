@@ -1,13 +1,21 @@
 ﻿using Autofac;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Reoria.Client.Core.Injectors;
 using Reoria.Client.Core.Services.Interfaces;
 using Reoria.Engine.Application.Enumerations;
+using Reoria.Engine.Application.Phases;
 
 namespace Reoria.Client.Core.Services;
 
-public class SpriteBatchService : ISpriteBatchService, IPreDrawingInjector, IPostDrawingInjector, ILifeCycleInitializeGraphicsInjector
+/// <summary>
+/// Game loop phase participant that provides sprite batch management for rendering.
+/// </summary>
+/// <remarks>
+/// This phase participant handles sprite batch initialization and render lifecycle management.
+/// For graphics initialization, it uses method parameters (no DI dependencies).
+/// For rendering, it has full DI support via constructor injection.
+/// </remarks>
+public class SpriteBatchService : ISpriteBatchService, IGamePreRender, IGamePostRender, IGameInitializeGraphics
 {
     public string Name
         => "Sprite Batching Service";
@@ -35,9 +43,9 @@ public class SpriteBatchService : ISpriteBatchService, IPreDrawingInjector, IPos
             .SingleInstance();
     }
 
-    public void OnPreDraw(GameTime gameTime, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
+    public void OnPreRender(GameTime gameTime, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
         => spriteBatch.Begin();
 
-    public void OnPostDraw(GameTime gameTime, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
+    public void OnPostRender(GameTime gameTime, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
         => spriteBatch.End();
 }

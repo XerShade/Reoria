@@ -1,14 +1,22 @@
 ﻿using Autofac;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Reoria.Client.Core.Injectors;
 using Reoria.Engine.Application.Enumerations;
+using Reoria.Engine.Application.Phases;
 using Color = Microsoft.Xna.Framework.Color;
 using IGraphicsDeviceService = Reoria.Client.Core.Services.Interfaces.IGraphicsDeviceService;
 
 namespace Reoria.Client.Core.Services;
 
-public class GraphicsDeviceService : IGraphicsDeviceService, ILifeCycleInitializeGraphicsInjector, IPreDrawingInjector
+/// <summary>
+/// Game loop phase participant that provides graphics device management and rendering setup.
+/// </summary>
+/// <remarks>
+/// This phase participant handles graphics device initialization and pre-render setup.
+/// For graphics initialization, it uses method parameters (no DI dependencies).
+/// For rendering, it has full DI support via constructor injection.
+/// </remarks>
+public class GraphicsDeviceService : IGraphicsDeviceService, IGameInitializeGraphics, IGamePreRender
 {
     public string Name
         => "Graphics Device Service";
@@ -19,7 +27,7 @@ public class GraphicsDeviceService : IGraphicsDeviceService, ILifeCycleInitializ
     public Type[] Dependencies
         => [];
 
-    public Platform Platform 
+    public Platform Platform
         => Platform.All & ~Platform.Server;
 
     public GraphicsDevice? GraphicsDevice { get; private set; }
@@ -45,7 +53,7 @@ public class GraphicsDeviceService : IGraphicsDeviceService, ILifeCycleInitializ
         this.GraphicsDeviceManager = graphicsDeviceManager;
     }
 
-    public void OnPreDraw(GameTime gameTime, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
+    public void OnPreRender(GameTime gameTime, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
     {
         // Set up the graphics device for drawing
         graphicsDevice.BlendState = BlendState.AlphaBlend;

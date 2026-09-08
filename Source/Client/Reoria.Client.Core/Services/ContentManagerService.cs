@@ -1,12 +1,19 @@
 ﻿using Autofac;
 using Microsoft.Xna.Framework.Content;
-using Reoria.Client.Core.Injectors;
 using Reoria.Client.Core.Services.Interfaces;
 using Reoria.Engine.Application.Enumerations;
+using Reoria.Engine.Application.Phases;
 
 namespace Reoria.Client.Core.Services;
 
-public class ContentManagerService : IContentManagerService, ILifeCycleLoadContentInjector
+/// <summary>
+/// Game loop phase participant that provides content manager management.
+/// </summary>
+/// <remarks>
+/// This phase participant handles content manager initialization during content loading.
+/// For content loading, it uses method parameters (no DI dependencies).
+/// </remarks>
+public class ContentManagerService : IContentManagerService, IGameLoadContent
 {
     public string Name
         => "Content Manager Service";

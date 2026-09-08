@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 using Reoria.Engine.Application.Configuration;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Application.Phases;
+using Reoria.Engine.Application.Services;
+using Reoria.Engine.Application.Services.Interfaces;
 using Serilog;
 using Serilog.Extensions.Logging;
 using System.Diagnostics;
@@ -95,6 +98,10 @@ public partial class AppBootStrapper(Platform platform, string[] args)
         // Add the command-line arguments.
         _ = builder.AddCommandLine(args);
 
+        // Execute bootstrap configuration phase participants to add additional configuration sources.
+        IPhaseService phaseService = new PhaseService().AddAssemblies(AppDomain.CurrentDomain.GetAssemblies()).SetPlatform(this.Platform);
+        phaseService.ExecutePhase<IBootstrapConfiguration>(phase => phase.OnBuildConfiguration(builder));
+
         // Build the configuration and return it.
         return builder.Build() ?? throw new InvalidOperationException("Failed to build configuration.");
     }
@@ -169,6 +176,10 @@ public partial class AppBootStrapper(Platform platform, string[] args)
         _ = services.RegisterType<TApplication>()
             .As<IApplication>()
             .SingleInstance();
+
+        // Execute bootstrap services phase participants to register additional services.
+        IPhaseService phaseService = new PhaseService().AddAssemblies(AppDomain.CurrentDomain.GetAssemblies()).SetPlatform(this.Platform);
+        phaseService.ExecutePhase<IBootstrapServices>(phase => phase.OnRegisterServices(services));
 
         // Return the container builder.
         return services;

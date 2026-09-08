@@ -1,28 +1,42 @@
-﻿using Autofac;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.Graphics;
-using Reoria.Engine.Application.Injectors;
-using GameBase = Microsoft.Xna.Framework.Game;
+﻿using Reoria.Engine.Application.Phases;
 
 namespace Reoria.Client.Core.Injectors;
 
-public interface ILifeCycleInitializeGraphicsInjector : IInjector
+// These interfaces are now replaced by the new game loop phase interfaces
+// Use IGameInitializeGraphics, IGameLoadContent, IGameInitialize instead
+
+/// <summary>
+/// Legacy interface - use IGameInitializeGraphics instead.
+/// </summary>
+[Obsolete("Use IGameInitializeGraphics from Reoria.Engine.Application.Phases instead.")]
+public interface ILifeCycleInitializeGraphicsInjector : IGameInitializeGraphics
 {
-    void OnInitializeGraphics(ContainerBuilder services, GraphicsDeviceManager graphicsDeviceManager, GraphicsDevice graphicsDevice);
+    // All functionality inherited from IGameInitializeGraphics
 }
 
-public interface ILifeCycleInitializeGameInjector : IInjector
+/// <summary>
+/// Legacy interface - use IGameInitialize instead.
+/// </summary>
+[Obsolete("Use IGameInitialize from Reoria.Engine.Application.Phases instead.")]
+public interface ILifeCycleInitializeGameInjector : IGameInitialize
 {
-    void OnInitializeGame(GameBase game);
+    // All functionality inherited from IGameInitialize
 }
 
-public interface ILifeCycleLoadContentInjector : IInjector
+/// <summary>
+/// Legacy interface - use IGameLoadContent instead.
+/// </summary>
+[Obsolete("Use IGameLoadContent from Reoria.Engine.Application.Phases instead.")]
+public interface ILifeCycleLoadContentInjector : IGameLoadContent
 {
-    void OnLoadContent(ContainerBuilder services, ContentManager contentManager);
+    // All functionality inherited from IGameLoadContent
 }
 
-public interface ILifeCycleFinalizeInjector : IInjector
+/// <summary>
+/// Legacy interface - no longer needed, functionality moved to IGameInitialize.
+/// </summary>
+[Obsolete("No longer needed. Use IGameInitialize from Reoria.Engine.Application.Phases instead.")]
+public interface ILifeCycleFinalizeInjector : IGameInitialize
 {
-    void OnFinalize(ContainerBuilder services);
+    // All functionality inherited from IGameInitialize
 }

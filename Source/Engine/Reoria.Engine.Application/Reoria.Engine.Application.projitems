@@ -21,10 +21,16 @@
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\IUpdateInjectors.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\IApplicationInjectors.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Injectors\IInjector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Phases\BootstrapPhase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Phases\ApplicationPhase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Phases\GameLoopPhase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Phases\IPhaseParticipant.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\FileProviderService.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Services\InjectorService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\PhaseService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\InjectorServiceAlias.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IFileProviderService.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IInjectorService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IPhaseService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IInjectorServiceAlias.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)appsettings.json">

@@ -1,45 +1,22 @@
 using Microsoft.Xna.Framework;
+using Reoria.Engine.Application.Phases;
 
 namespace Reoria.Engine.Application.Injectors;
 
 /// <summary>
-/// Defines an abstraction contract for an injector that can participate in variable update game loop events.
+/// Legacy interface - use IGameVariableUpdate instead.
 /// </summary>
-/// <remarks>
-/// Variable update is called every frame and should be used for game logic that
-/// needs to run continuously but doesn't require fixed timing. This includes things
-/// like animation, AI behavior, and user interface updates.
-/// </remarks>
-public interface IVariableUpdateInjector : IInjector
+[Obsolete("Use IGameVariableUpdate from Reoria.Engine.Application.Phases instead.")]
+public interface IVariableUpdateInjector : IGameVariableUpdate
 {
-    /// <summary>
-    /// Called on a variable timescale during the game loop.
-    /// </summary>
-    /// <param name="gameTime">The game time information.</param>
-    /// <remarks>
-    /// This method is called every frame with the actual elapsed time since the last frame.
-    /// Use gameTime.ElapsedGameTime for frame-dependent calculations.
-    /// </remarks>
-    void OnVariableUpdate(GameTime gameTime);
+    // All functionality inherited from IGameVariableUpdate
 }
 
 /// <summary>
-/// Defines an abstraction contract for an injector that can participate in fixed update game loop events.
+/// Legacy interface - use IGameFixedUpdate instead.
 /// </summary>
-/// <remarks>
-/// Fixed update is called at a consistent rate (typically 60 times per second) and should
-/// be used for physics calculations, network synchronization, and other time-sensitive
-/// operations that require predictable timing.
-/// </remarks>
-public interface IFixedUpdateInjector : IInjector
+[Obsolete("Use IGameFixedUpdate from Reoria.Engine.Application.Phases instead.")]
+public interface IFixedUpdateInjector : IGameFixedUpdate
 {
-    /// <summary>
-    /// Called on a fixed timescale during the game loop.
-    /// </summary>
-    /// <param name="gameTime">The game time information.</param>
-    /// <remarks>
-    /// This method is called at a fixed interval regardless of frame rate.
-    /// Use gameTime.ElapsedGameTime which will be consistent for fixed update calculations.
-    /// </remarks>
-    void OnFixedUpdate(GameTime gameTime);
+    // All functionality inherited from IGameFixedUpdate
 }

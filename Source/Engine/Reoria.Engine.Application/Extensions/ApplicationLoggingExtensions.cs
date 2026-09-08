@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
-using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Application.Phases;
 using Serilog;
 using Serilog.Extensions.Logging;
 
@@ -11,7 +11,7 @@ namespace Reoria.Engine.Application.Extensions;
 /// </summary>
 /// <remarks>
 /// These extensions provide logging setup capabilities for applications,
-/// allowing injectors to participate in the logging configuration process and add
+/// allowing phase participants to participate in the logging configuration process and add
 /// custom logging providers or formatters.
 /// </remarks>
 public static class ApplicationLoggingExtensions
@@ -27,7 +27,7 @@ public static class ApplicationLoggingExtensions
     /// 2. Closing and flushing any existing Serilog logger
     /// 3. Creating a new Serilog logger based on configuration
     /// 4. Adding the Serilog provider to the logger factory
-    /// 5. Invoking application logging injectors for custom configuration
+    /// 5. Invoking bootstrap logging phase participants for custom configuration
     /// </remarks>
     public static ILoggerFactory GetLoggerFactory(this IApplication application)
     {
@@ -49,8 +49,8 @@ public static class ApplicationLoggingExtensions
         // Add the Serilog logger to the logger factory as a provider.
         loggerFactory.AddProvider(new SerilogLoggerProvider(Log.Logger));
 
-        // Invoke application logging injectors to add custom logging providers or configuration.
-        application.InjectorService.ExecuteInjectors<IApplicationLoggingInjector>(injector => injector.OnCreateLoggerFactory(loggerFactory, application.Configuration!));
+        // Invoke bootstrap logging phase participants to add custom logging providers or configuration.
+        application.PhaseService.ExecutePhase<IBootstrapLogging>(phase => phase.OnConfigureLogging(loggerFactory, application.Configuration!));
 
         // Return the configured logger factory.
         return loggerFactory;

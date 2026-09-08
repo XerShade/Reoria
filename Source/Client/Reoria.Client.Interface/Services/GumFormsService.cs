@@ -1,10 +1,8 @@
-﻿using Autofac;
-using Gum;
+﻿using Gum;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Reoria.Client.Core.Injectors;
 using Reoria.Engine.Application.Enumerations;
-using Reoria.Engine.Application.Injectors;
+using Reoria.Engine.Application.Phases;
 using Button = Gum.Forms.Controls.Button;
 using CheckBox = Gum.Forms.Controls.CheckBox;
 using GameBase = Microsoft.Xna.Framework.Game;
@@ -14,13 +12,19 @@ using TextBox = Gum.Forms.Controls.TextBox;
 
 namespace Reoria.Client.Interface.Services;
 
-public class GumFormsService : ILifeCycleInitializeGameInjector, IApplicationServicesInjector, IVariableUpdateInjector, IDrawingInjector
+/// <summary>
+/// Game loop phase participant that provides a graphical user interface using Gum.
+/// </summary>
+/// <remarks>
+/// This is a game loop phase participant with full DI support - constructor dependencies are resolved from the container.
+/// </remarks>
+public class GumFormsService : IGameInitialize, IGameVariableUpdate, IGameRender
 {
     public string Name
         => "Gum Forms Service";
 
     public string Description
-        => "Provides a graphical user interface using Gum.";
+        => "Provides a graphical user interface using Gum during game loop.";
 
     public Type[] Dependencies
         => [];
@@ -29,12 +33,6 @@ public class GumFormsService : ILifeCycleInitializeGameInjector, IApplicationSer
         => Platform.All & ~Platform.Server;
 
     protected GumService GumUI { get; init; } = GumService.Default;
-
-    public void OnBuildServices(ContainerBuilder services)
-        => services.RegisterType<GumFormsService>().AsImplementedInterfaces().SingleInstance();
-
-    public void OnConfigureServices(IServiceProvider provider)
-    { }
 
     public virtual void OnInitializeGame(GameBase game)
     {
@@ -103,6 +101,6 @@ public class GumFormsService : ILifeCycleInitializeGameInjector, IApplicationSer
     public void OnVariableUpdate(GameTime gameTime)
         => this.GumUI.Update(gameTime);
 
-    public void OnDraw(GameTime gameTime, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
+    public void OnRender(GameTime gameTime, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
         => this.GumUI.Draw();
 }

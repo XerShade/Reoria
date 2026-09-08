@@ -1,7 +1,7 @@
 ﻿using Autofac;
 using MonoGame.Extended.ECS.Systems;
 using Reoria.Engine.Application.Enumerations;
-using Reoria.Engine.Application.Injectors;
+using Reoria.Engine.Application.Phases;
 using Reoria.Engine.Core.Components.Interfaces;
 using Reoria.Engine.Core.Reflection;
 using Reoria.Game.Entities.Factories.Interfaces;
@@ -9,13 +9,20 @@ using Reoria.Game.Entities.Interfaces;
 
 namespace Reoria.Game.Entities.Injectors;
 
-public class EntityManagerInjector : IApplicationServicesInjector
+/// <summary>
+/// Bootstrap services phase participant for entity component system functionality.
+/// Discovers and registers entity systems, factories, and components during bootstrap.
+/// </summary>
+/// <remarks>
+/// Runs during bootstrap phase - no constructor dependencies allowed.
+/// </remarks>
+public class EntityManagerBootstrap : IBootstrapServices
 {
     public string Name
-        => "Entity Manager Injector";
+        => "Entity Manager Bootstrap";
 
     public string Description
-        => "Injects entity component systems functionality into the application.";
+        => "Discovers and registers entity component systems, factories, and components during bootstrap.";
 
     public Type[] Dependencies
         => [];
@@ -23,7 +30,7 @@ public class EntityManagerInjector : IApplicationServicesInjector
     public Platform Platform
         => Platform.All;
 
-    public void OnBuildServices(ContainerBuilder services)
+    public void OnRegisterServices(ContainerBuilder services)
     {
         _ = services.RegisterType<EntityManager>()
             .As<IEntityManager>().AsImplementedInterfaces()
@@ -67,10 +74,5 @@ public class EntityManagerInjector : IApplicationServicesInjector
                 .As(type).As<IComponent>().AsImplementedInterfaces()
                 .InstancePerDependency();
         }
-    }
-
-    public void OnConfigureServices(IServiceProvider provider)
-    {
-        // No additional configuration is required.
     }
 }

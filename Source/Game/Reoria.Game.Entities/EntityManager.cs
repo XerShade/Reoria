@@ -4,12 +4,8 @@ using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.ECS;
 using MonoGame.Extended.ECS.Systems;
 using Reoria.Engine.Application.Enumerations;
-using Reoria.Engine.Application.Injectors;
+using Reoria.Engine.Application.Phases;
 using Reoria.Game.Entities.Interfaces;
-
-#if !SERVER
-using Reoria.Client.Core.Injectors;
-#endif
 
 namespace Reoria.Game.Entities;
 
@@ -19,13 +15,15 @@ namespace Reoria.Game.Entities;
 /// <remarks>
 /// This class provides a high-level interface for entity management using MonoGame.Extended ECS framework.
 /// It handles entity creation, destruction, and coordination with game systems.
-/// The EntityManager integrates with the game loop through injector interfaces to provide
+/// The EntityManager integrates with the game loop through phase participant interfaces to provide
 /// proper update and drawing cycles. All entity operations should go through this
 /// manager to ensure proper ECS synchronization and component tracking.
+/// 
+/// This is a game loop phase participant with full DI support - constructor dependencies are resolved from the container.
 /// </remarks>
-public class EntityManager : IEntityManager, IDisposable, IVariableUpdateInjector
+public class EntityManager : IEntityManager, IDisposable, IGameVariableUpdate
 #if !SERVER
-    , IDrawingInjector
+    , IGameRender
 #endif
 {
     /// <summary>
@@ -54,7 +52,7 @@ public class EntityManager : IEntityManager, IDisposable, IVariableUpdateInjecto
     /// Gets the platform(s) that this entity manager is compatible with.
     /// </summary>
     /// <remarks>
-    /// This property implements IInjector.Platform requirement.
+    /// This property implements IPhaseParticipant.Platform requirement.
     /// Returns Platform.All indicating this manager works on all platforms
     /// since ECS operations are platform-agnostic.
     /// </remarks>
@@ -158,11 +156,11 @@ public class EntityManager : IEntityManager, IDisposable, IVariableUpdateInjecto
     /// <param name="graphicsDevice">The graphics device for rendering operations.</param>
     /// <param name="spriteBatch">The sprite batch for drawing operations (may be null).</param>
     /// <remarks>
-    /// This method implements the IDrawingInjector interface to integrate
+    /// This method implements the IGameRender interface to integrate
     /// with the game loop's render phase. It provides access to the
     /// graphics device and sprite batch for rendering operations.
     /// </remarks>
-    public void OnDraw(GameTime gameTime, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
+    public void OnRender(GameTime gameTime, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
         => this.Draw(gameTime);
 
     /// <summary>

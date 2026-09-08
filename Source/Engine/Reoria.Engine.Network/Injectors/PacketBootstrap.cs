@@ -1,6 +1,6 @@
 ﻿using Autofac;
 using Reoria.Engine.Application.Enumerations;
-using Reoria.Engine.Application.Injectors;
+using Reoria.Engine.Application.Phases;
 using Reoria.Engine.Core.Reflection;
 using Reoria.Engine.Network.Packets;
 using Reoria.Engine.Network.Packets.Interfaces;
@@ -8,44 +8,47 @@ using Reoria.Engine.Network.Packets.Interfaces;
 namespace Reoria.Engine.Network.Injectors;
 
 /// <summary>
-/// Application service injector that automatically discovers and registers packet handlers and composers.
-/// This injector scans all loaded assemblies for classes implementing IIncomingPacket or IOutgoingPacket
+/// Bootstrap services phase participant that automatically discovers and registers packet handlers and composers.
+/// This phase participant scans all loaded assemblies for classes implementing IIncomingPacket or IOutgoingPacket
 /// and registers them with the dependency injection container for automatic packet system functionality.
 /// </summary>
-public class PacketInjector : IApplicationServicesInjector
+/// <remarks>
+/// Runs during bootstrap phase - no constructor dependencies allowed.
+/// </remarks>
+public class PacketBootstrap : IBootstrapServices
 {
     /// <summary>
-    /// Gets the name of this injector for identification purposes.
+    /// Gets the name of this bootstrap phase participant for identification purposes.
     /// </summary>
     public string Name
-        => "Packet System";
+        => "Packet System Bootstrap";
 
     /// <summary>
-    /// Gets a description of what this injector does and its purpose in the application.
+    /// Gets a description of what this bootstrap phase participant does and its purpose in the application.
     /// </summary>
     public string Description
-        => "Adds packet functionality to the game by automatically discovering and registering packet handlers and composers.";
+        => "Adds packet functionality to the game by automatically discovering and registering packet handlers and composers during bootstrap.";
 
     /// <summary>
-    /// Gets the array of dependencies required by this injector.
-    /// This injector has no external dependencies.
+    /// Gets the array of dependencies required by this bootstrap phase participant.
+    /// This phase participant has no external dependencies.
     /// </summary>
     public Type[] Dependencies
         => [];
 
     /// <summary>
-    /// Gets the platforms on which this injector should be active.
-    /// This injector runs on all platforms (Client, Server, etc.).
+    /// Gets the platforms on which this bootstrap phase participant should be active.
+    /// This phase participant runs on all platforms (Client, Server, etc.).
     /// </summary>
     public Platform Platform
         => Platform.All;
 
     /// <summary>
-    /// Configures the dependency injection container by registering packet-related services.
+    /// Configures the dependency injection container by registering packet-related services during bootstrap.
     /// This method is called during application startup to set up the packet system.
     /// </summary>
     /// <param name="services">The container builder used to register application services.</param>
-    public void OnBuildServices(ContainerBuilder services)
+    public void OnRegisterServices(ContainerBuilder services)
     {
         // Register the main packet manager as a singleton service.
         _ = services.RegisterType<PacketManager>()
@@ -93,15 +96,5 @@ public class PacketInjector : IApplicationServicesInjector
                 .As(type).As<IOutgoingPacket>()
                 .InstancePerDependency();
         }
-    }
-
-    /// <summary>
-    /// Performs any additional configuration required after services have been built.
-    /// This injector requires no additional configuration beyond service registration.
-    /// </summary>
-    /// <param name="provider">The service provider containing all registered application services.</param>
-    public void OnConfigureServices(IServiceProvider provider)
-    {
-        // No additional configuration required for the packet system.
     }
 }

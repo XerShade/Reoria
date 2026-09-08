@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Reoria.Engine.Application.Configuration;
-using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Application.Phases;
 
 namespace Reoria.Engine.Application.Extensions;
 
@@ -10,7 +10,7 @@ namespace Reoria.Engine.Application.Extensions;
 /// </summary>
 /// <remarks>
 /// These extensions provide configuration building capabilities for applications,
-/// allowing injectors to participate in the configuration process and add custom
+/// allowing phase participants to participate in the configuration process and add custom
 /// configuration sources or transformers.
 /// </remarks>
 public static class ApplicationConfigurationExtensions
@@ -26,7 +26,7 @@ public static class ApplicationConfigurationExtensions
     /// This method builds the application configuration by:
     /// 1. Creating a new configuration builder
     /// 2. Adding default configuration sources (appsettings.json files)
-    /// 3. Invoking application configuration injectors
+    /// 3. Invoking bootstrap configuration phase participants
     /// 4. Adding command-line arguments
     /// 5. Building the final configuration
     /// </remarks>
@@ -40,8 +40,8 @@ public static class ApplicationConfigurationExtensions
         _ = builder.AddConfigurationSource("appsettings.logging.json", true, true);
         _ = builder.AddConfigurationSource("appsettings.serilog.json", true, true);
 
-        // Invoke application configuration injectors to add custom configuration sources.
-        application.InjectorService.ExecuteInjectors<IApplicationConfigurationInjector>(injector => injector.OnBuildConfiguration(builder));
+        // Invoke bootstrap configuration phase participants to add custom configuration sources.
+        application.PhaseService.ExecutePhase<IBootstrapConfiguration>(phase => phase.OnBuildConfiguration(builder));
 
         // Add command-line arguments to override configuration values.
         _ = builder.AddCommandLine(args);

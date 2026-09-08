@@ -15,7 +15,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)EntityManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Factories\Interfaces\IEntityFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Factories\PlayerEntityFactory.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Injectors\EntityManager.Injector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Injectors\EntityManagerBootstrap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IEntityManager.cs" />
   </ItemGroup>
 </Project>

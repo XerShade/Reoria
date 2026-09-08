@@ -2,8 +2,8 @@
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Application.Phases;
 
 namespace Reoria.Engine.Application.Extensions;
 
@@ -12,7 +12,7 @@ namespace Reoria.Engine.Application.Extensions;
 /// </summary>
 /// <remarks>
 /// These extensions provide dependency injection setup capabilities for applications,
-/// allowing injectors to participate in the service registration and configuration process.
+/// allowing phase participants to participate in the service registration and configuration process.
 /// </remarks>
 public static class ApplicationServiceExtensions
 {
@@ -25,7 +25,7 @@ public static class ApplicationServiceExtensions
     /// This method creates and configures the Autofac container builder by:
     /// 1. Creating a new container builder
     /// 2. Registering core services (configuration, logger factory)
-    /// 3. Invoking application service injectors to register custom services
+    /// 3. Invoking bootstrap services phase participants to register custom services
     /// 4. Returning the configured builder for further customization
     /// </remarks>
     public static ContainerBuilder GetServices(this IApplication application)
@@ -44,8 +44,8 @@ public static class ApplicationServiceExtensions
             .As(typeof(ILogger<>))
             .SingleInstance();
 
-        // Invoke application service injectors to register custom services.
-        application.InjectorService.ExecuteInjectors<IApplicationServicesInjector>(injector => injector.OnBuildServices(services));
+        // Invoke bootstrap services phase participants to register custom services.
+        application.PhaseService.ExecutePhase<IBootstrapServices>(phase => phase.OnRegisterServices(services));
 
         // Return the configured container builder.
         return services;
@@ -60,7 +60,7 @@ public static class ApplicationServiceExtensions
     /// This method builds the dependency injection container and configures it by:
     /// 1. Building the Autofac container from the container builder
     /// 2. Creating an Autofac service provider
-    /// 3. Invoking application service injectors for post-configuration
+    /// 3. Invoking bootstrap post-configure phase participants for post-configuration
     /// 4. Returning the configured service provider
     /// </remarks>
     public static IServiceProvider GetServiceProvider(this IApplication application)
@@ -71,8 +71,8 @@ public static class ApplicationServiceExtensions
         // Create an Autofac service provider from the built container.
         AutofacServiceProvider provider = new(container);
 
-        // Invoke application service injectors for post-configuration setup.
-        application.InjectorService.ExecuteInjectors<IApplicationServicesInjector>(injector => injector.OnConfigureServices(provider));
+        // Invoke bootstrap post-configure phase participants for post-configuration setup.
+        application.PhaseService.ExecutePhase<IBootstrapPostConfigure>(phase => phase.OnPostConfigure(provider));
 
         // Return the configured service provider.
         return provider;

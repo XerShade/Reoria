@@ -6,8 +6,8 @@ using Microsoft.Xna.Framework;
 using Reoria.Engine.Application;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Extensions;
-using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Application.Phases;
 using Reoria.Engine.Application.Services;
 using Reoria.Engine.Application.Services.Interfaces;
 using Reoria.Server.Network.Sockets;
@@ -25,7 +25,7 @@ public class ServerApplication : IApplication
     /// <inheritdoc />
     public virtual ILogger<IApplication> Logger { get; init; }
     /// <inheritdoc />
-    public virtual IInjectorService InjectorService { get; init; }
+    public virtual IPhaseService PhaseService { get; init; }
     /// <inheritdoc />
     public virtual IConfiguration Configuration { get; init; }
     /// <inheritdoc />
@@ -49,8 +49,8 @@ public class ServerApplication : IApplication
         this.Logger = logger;
         this.Logger.LogInformation("Initializing server application...");
 
-        // Store the injector service.
-        this.InjectorService = new InjectorService().AddAssemblies(AppDomain.CurrentDomain.GetAssemblies());
+        // Store the phase service.
+        this.PhaseService = new PhaseService().AddAssemblies(AppDomain.CurrentDomain.GetAssemblies());
 
         // Start a new stopwatch to measure the application time.
         Stopwatch stopwatch = Stopwatch.StartNew();
@@ -66,10 +66,10 @@ public class ServerApplication : IApplication
         this.ContainerBuilder = this.GetServices();
         this.Provider = this.GetServiceProvider();
 
-        // Set the service provider on the injector service so future injector resolutions use DI.
-        // This is done after the container is built so injectors that run after bootstrap
-        // (e.g., game loop injectors) can be resolved via DI with their dependencies.
-        _ = this.InjectorService.SetServiceProvider(this.Provider);
+        // Set the service provider on the phase service so future phase participant resolutions use DI.
+        // This is done after the container is built so phase participants that run after bootstrap
+        // (e.g., game loop phase participants) can be resolved via DI with their dependencies.
+        _ = this.PhaseService.SetServiceProvider(this.Provider);
 
         // Get the server network socket.
         this.Socket = this.Provider.GetRequiredService<ServerSocket>();
@@ -170,8 +170,8 @@ public class ServerApplication : IApplication
         // Start the network socket.
         this.Socket.Start();
 
-        // Notify application lifecycle injectors that the application is starting.
-        this.InjectorService.ExecuteInjectors<IApplicationLifecycleInjector>(injector => injector.OnApplicationStart());
+        // Notify application phase participants that the application is starting.
+        this.PhaseService.ExecutePhase<IApplicationStart>(phase => phase.OnApplicationStart());
 
         this.Logger.LogInformation("Application components started successfully");
     }
@@ -188,8 +188,8 @@ public class ServerApplication : IApplication
             // Stop the network socket.
             this.Socket?.Stop();
 
-            // Notify application lifecycle injectors that the application is stopping.
-            this.InjectorService.ExecuteInjectors<IApplicationLifecycleInjector>(injector => injector.OnApplicationStop());
+            // Notify application phase participants that the application is stopping.
+            this.PhaseService.ExecutePhase<IApplicationStop>(phase => phase.OnApplicationStop());
 
             this.Logger.LogInformation("Application components stopped successfully");
         }
@@ -204,14 +204,14 @@ public class ServerApplication : IApplication
     /// </summary>
     /// <param name="gameTime">The current game time.</param>
     protected virtual void HandleVariableUpdate(GameTime gameTime)
-        => this.InjectorService.ExecuteInjectors<IVariableUpdateInjector>(injector => injector.OnVariableUpdate(gameTime));
+        => this.PhaseService.ExecutePhase<IGameVariableUpdate>(phase => phase.OnVariableUpdate(gameTime));
 
     /// <summary>
     /// Handles fixed updates for the game loop.
     /// </summary>
     /// <param name="gameTime">The current game time.</param>
     protected virtual void HandleFixedUpdate(GameTime gameTime)
-        => this.InjectorService.ExecuteInjectors<IFixedUpdateInjector>(injector => injector.OnFixedUpdate(gameTime));
+        => this.PhaseService.ExecutePhase<IGameFixedUpdate>(phase => phase.OnFixedUpdate(gameTime));
 
     /// <inheritdoc />
     public virtual void Exit()

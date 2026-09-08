@@ -9,7 +9,7 @@
     <Import_RootNamespace>Reoria.Engine.Network</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Injectors\Packet.Injector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Injectors\PacketBootstrap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Packets\HandshakePacket.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Packets\Interfaces\IIncomingPacket.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Packets\Interfaces\IOutgoingPacket.cs" />

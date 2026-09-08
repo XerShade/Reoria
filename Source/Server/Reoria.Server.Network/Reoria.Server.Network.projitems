@@ -9,7 +9,7 @@
     <Import_RootNamespace>Reoria.Server.Network</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Injectors\ServerSocket.Injector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Injectors\ServerSocketBootstrap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sockets\ServerSocket.cs" />
   </ItemGroup>
 </Project>

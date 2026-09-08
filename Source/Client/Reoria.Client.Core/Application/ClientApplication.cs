@@ -11,8 +11,8 @@ using Reoria.Client.Network.Sockets;
 using Reoria.Engine.Application;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Extensions;
-using Reoria.Engine.Application.Injectors;
 using Reoria.Engine.Application.Interfaces;
+using Reoria.Engine.Application.Phases;
 using Reoria.Engine.Application.Services;
 using Reoria.Engine.Application.Services.Interfaces;
 using ButtonState = Microsoft.Xna.Framework.Input.ButtonState;
@@ -31,7 +31,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// <inheritdoc />
     public virtual ILogger<IApplication> Logger { get; init; }
     /// <inheritdoc />
-    public virtual IInjectorService InjectorService { get; init; }
+    public virtual IPhaseService PhaseService { get; init; }
     /// <inheritdoc />
     public virtual IConfiguration Configuration { get; init; }
     /// <inheritdoc />
@@ -105,8 +105,8 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         this.Logger = logger;
         this.Logger.LogInformation("Initializing client application...");
 
-        // Store the injector service.
-        this.InjectorService = new InjectorService().AddAssemblies(AppDomain.CurrentDomain.GetAssemblies());
+        // Store the phase service.
+        this.PhaseService = new PhaseService().AddAssemblies(AppDomain.CurrentDomain.GetAssemblies());
 
         // Get the configuration instance.
         this.Configuration = this.GetConfiguration(context.Args);
@@ -132,9 +132,9 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// <inheritdoc />
     protected override void Initialize()
     {
-        // Execute the injectors.
-        this.InjectorService.ExecuteInjectors<ILifeCycleInitializeGraphicsInjector>(
-            injector => injector.OnInitializeGraphics(this.ContainerBuilder, this.GraphicsDeviceManager, this.GraphicsDevice));
+        // Execute the game loop phase participants.
+        this.PhaseService.ExecutePhase<IGameInitializeGraphics>(
+            phase => phase.OnInitializeGraphics(this.ContainerBuilder, this.GraphicsDeviceManager, this.GraphicsDevice));
 
         // Call the base method.
         base.Initialize();
@@ -143,9 +143,9 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// <inheritdoc />
     protected override void LoadContent()
     {
-        // Execute the injectors.
-        this.InjectorService.ExecuteInjectors<ILifeCycleLoadContentInjector>( 
-            injector => injector.OnLoadContent(this.ContainerBuilder, this.Content));
+        // Execute the game loop phase participants.
+        this.PhaseService.ExecutePhase<IGameLoadContent>(
+            phase => phase.OnLoadContent(this.ContainerBuilder, this.Content));
 
         // Call the base method.
         base.LoadContent();
@@ -188,12 +188,12 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         // Get the server network socket.
         this.Socket = this.Provider.GetRequiredService<ClientSocket>();
 
-        // Execute the injectors.
-        this.InjectorService.ExecuteInjectors<ILifeCycleInitializeGameInjector>(
-            injector => injector.OnInitializeGame(this));
+        // Execute the game loop phase participants.
+        this.PhaseService.ExecutePhase<IGameInitialize>(
+            phase => phase.OnInitializeGame(this));
 
-        // Notify application lifecycle injectors that the application is starting.
-        this.InjectorService.ExecuteInjectors<IApplicationLifecycleInjector>(injector => injector.OnApplicationStart());
+        // Notify application phase participants that the application is starting.
+        this.PhaseService.ExecutePhase<IApplicationStart>(phase => phase.OnApplicationStart());
     }
 
     /// <summary>
@@ -204,10 +204,10 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         // Get the service provider.
         this.Provider = this.GetServiceProvider();
 
-        // Set the service provider on the injector service so future injector resolutions use DI.
-        // This is done after the container is built so injectors that run after bootstrap
-        // (e.g., game loop injectors) can be resolved via DI with their dependencies.
-        _ = this.InjectorService.SetServiceProvider(this.Provider);
+        // Set the service provider on the phase service so future phase participant resolutions use DI.
+        // This is done after the container is built so phase participants that run after bootstrap
+        // (e.g., game loop phase participants) can be resolved via DI with their dependencies.
+        _ = this.PhaseService.SetServiceProvider(this.Provider);
     }
 
     /// <inheritdoc />
@@ -217,7 +217,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         this.Socket.Update();
 
         // Update user input second, as lagging input may affect the game state and player happiness.
-        this.InjectorService.ExecuteInjectors<IInputInjector>(injector => injector.OnHandleInput(gameTime, Keyboard.GetState(), Mouse.GetState()));
+        this.PhaseService.ExecutePhase<IGameInput>(phase => phase.OnHandleInput(gameTime, Keyboard.GetState(), Mouse.GetState()));
 
         // Apply frame rate limiting
         this.ApplyFrameRateLimiting(gameTime);
@@ -277,14 +277,14 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// </summary>
     /// <param name="gameTime">The current game time.</param>
     protected virtual void HandleVariableUpdate(GameTime gameTime)
-        => this.InjectorService.ExecuteInjectors<IVariableUpdateInjector>(injector => injector.OnVariableUpdate(gameTime));
+        => this.PhaseService.ExecutePhase<IGameVariableUpdate>(phase => phase.OnVariableUpdate(gameTime));
 
     /// <summary>
     /// Handles fixed updates for the game loop.
     /// </summary>
     /// <param name="gameTime">The current game time.</param>
     protected virtual void HandleFixedUpdate(GameTime gameTime)
-        => this.InjectorService.ExecuteInjectors<IFixedUpdateInjector>(injector => injector.OnFixedUpdate(gameTime));
+        => this.PhaseService.ExecutePhase<IGameFixedUpdate>(phase => phase.OnFixedUpdate(gameTime));
 
     /// <summary>
     /// Applies frame rate limiting to prevent excessive CPU usage.
@@ -378,10 +378,10 @@ public class ClientApplication : GameBase, IApplication, IDisposable
             // Access the sprite batch, throwing an exception if it is null, I will make a better function later.
             SpriteBatch spriteBatch = this.Provider.GetRequiredService<SpriteBatch>();
 
-            // Execute all drawing injectors
-            this.InjectorService.ExecuteInjectors<IPreDrawingInjector>(injector => injector.OnPreDraw(gameTime, this.GraphicsDevice, spriteBatch));
-            this.InjectorService.ExecuteInjectors<IDrawingInjector>(injector => injector.OnDraw(gameTime, this.GraphicsDevice, spriteBatch));
-            this.InjectorService.ExecuteInjectors<IPostDrawingInjector>(injector => injector.OnPostDraw(gameTime, this.GraphicsDevice, spriteBatch));
+            // Execute all rendering phase participants
+            this.PhaseService.ExecutePhase<IGamePreRender>(phase => phase.OnPreRender(gameTime, this.GraphicsDevice, spriteBatch));
+            this.PhaseService.ExecutePhase<IGameRender>(phase => phase.OnRender(gameTime, this.GraphicsDevice, spriteBatch));
+            this.PhaseService.ExecutePhase<IGamePostRender>(phase => phase.OnPostRender(gameTime, this.GraphicsDevice, spriteBatch));
         }
         catch (Exception ex)
         {
@@ -398,8 +398,8 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         {
             try
             {
-                // Notify application lifecycle injectors that the application is stopping
-                this.InjectorService.ExecuteInjectors<IApplicationLifecycleInjector>(injector => injector.OnApplicationStop());
+                // Notify application phase participants that the application is stopping
+                this.PhaseService.ExecutePhase<IApplicationStop>(phase => phase.OnApplicationStop());
 
                 // Dispose the socket if it exists
                 this.Socket?.Dispose();

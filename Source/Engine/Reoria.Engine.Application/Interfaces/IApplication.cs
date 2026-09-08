@@ -38,14 +38,14 @@ public interface IApplication : IDisposable
     ILogger<IApplication> Logger { get; }
 
     /// <summary>
-    /// Gets an instance of <see cref="IInjectorService"/> that can be used to inject functionality.
+    /// Gets an instance of <see cref="IPhaseService"/> that can be used to manage phase participants.
     /// </summary>
     /// <remarks>
-    /// Provides a mechanism for registering and resolving services and components in the application,
-    /// allowing for loose coupling and dependency injection and allowing code injection to add
-    /// functionality to the application.
+    /// Provides a mechanism for discovering, caching, and executing phase participants across the application.
+    /// Phase participants are organized by lifecycle phases (bootstrap, application, game loop) and provide
+    /// a clear separation between infrastructure setup and runtime logic.
     /// </remarks>
-    IInjectorService InjectorService { get; }
+    IPhaseService PhaseService { get; }
 
     /// <summary>
     /// Gets an instance of <see cref="IConfiguration"/> that can be used to access configuration settings.
