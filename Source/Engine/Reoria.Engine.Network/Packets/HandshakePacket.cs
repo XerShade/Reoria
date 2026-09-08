@@ -3,7 +3,7 @@ using LiteNetLib.Utils;
 using Microsoft.Extensions.Logging;
 using Reoria.Engine.Network.Packets.Interfaces;
 
-namespace Reoria.Server.Network.Packets;
+namespace Reoria.Engine.Network.Packets;
 
 /// <summary>
 /// Implements a handshake packet used to establish and confirm network connections between clients and server.

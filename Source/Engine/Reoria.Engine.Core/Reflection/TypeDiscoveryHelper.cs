@@ -1,24 +1,41 @@
 using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Reoria.Engine.Core.Reflection;
 
 /// <summary>
-/// Provides cached assembly and type discovery functionality.
+/// Provides cached assembly and type discovery functionality with optimized assembly filtering.
 /// </summary>
 public static class TypeDiscoveryHelper
 {
-    private static readonly Lazy<Assembly[]> _cachedAssemblies = new(() =>
-        [.. AppDomain.CurrentDomain.GetAssemblies()]);
-
-    private static readonly ConcurrentDictionary<Type, Type[]> _typeCache = new();
+    /// <summary>
+    /// Cached assemblies from the current AppDomain, excluding system assemblies.
+    /// </summary>
+    private static readonly Lazy<Assembly[]> CachedAssemblies = new(() =>
+        FilterAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
 
     /// <summary>
-    /// Gets all cached assemblies from the current AppDomain.
+    /// Type cache per interface type for performance.
     /// </summary>
-    /// <returns>Array of assemblies.</returns>
-    public static Assembly[] GetCachedAssemblies() => _cachedAssemblies.Value;
+    private static readonly ConcurrentDictionary<Type, Type[]> TypeCache = new();
+
+    /// <summary>
+    /// Array of prefixes to ignore when filtering assemblies.
+    /// </summary>
+    private static readonly string[] IgnoredAssemblyPrefixes =
+    [
+        "System.",
+        "Microsoft.",
+        "netstandard",
+        "mscorlib",
+        "WindowsBase"
+    ];
+
+    /// <summary>
+    /// Gets all cached assemblies from the current AppDomain, excluding system assemblies.
+    /// </summary>
+    /// <returns>Array of filtered assemblies.</returns>
+    public static Assembly[] GetCachedAssemblies() => CachedAssemblies.Value;
 
     /// <summary>
     /// Gets all concrete types that implement the specified interface type.
@@ -35,14 +52,14 @@ public static class TypeDiscoveryHelper
     /// </summary>
     /// <param name="interfaceType">The interface type to search for.</param>
     /// <returns>Array of concrete types implementing the interface.</returns>
-    public static Type[] GetConcreteTypesImplementingInterface(Type interfaceType) 
+    public static Type[] GetConcreteTypesImplementingInterface(Type interfaceType)
         => !interfaceType.IsInterface
             ? throw new ArgumentException($"Type {interfaceType.Name} must be an interface", nameof(interfaceType))
-            : _typeCache.GetOrAdd(interfaceType, type =>
+            : TypeCache.GetOrAdd(interfaceType, type =>
         {
             List<Type> results = [];
 
-            foreach (Assembly assembly in _cachedAssemblies.Value)
+            foreach (Assembly assembly in CachedAssemblies.Value)
             {
                 try
                 {
@@ -82,7 +99,27 @@ public static class TypeDiscoveryHelper
         });
 
     /// <summary>
+    /// Filters out system assemblies to improve discovery performance.
+    /// </summary>
+    /// <param name="assemblies">All assemblies to filter.</param>
+    /// <returns>Filtered array of assemblies excluding system assemblies.</returns>
+    private static Assembly[] FilterAssemblies(Assembly[] assemblies) 
+        => [.. assemblies.Where(assembly =>
+            {
+                string? name = assembly.GetName().Name;
+
+                // Skip dynamic assemblies
+                if (assembly.IsDynamic)
+                {
+                    return false;
+                }
+
+                // Skip system assemblies for performance
+                return name == null || !IgnoredAssemblyPrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)); 
+            })];
+
+    /// <summary>
     /// Clears the type cache. Useful for testing or when assemblies are dynamically loaded.
     /// </summary>
-    public static void ClearCache() => _typeCache.Clear();
+    public static void ClearCache() => TypeCache.Clear();
 }

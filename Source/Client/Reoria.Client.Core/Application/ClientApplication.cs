@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Reoria.Client.Core.Injectors;
 using Reoria.Client.Core.Services;
 using Reoria.Client.Network.Sockets;
 using Reoria.Engine.Application;

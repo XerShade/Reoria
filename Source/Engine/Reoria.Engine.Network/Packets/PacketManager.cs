@@ -21,16 +21,16 @@ public class PacketManager(ILogger<IPacketManager> logger, IEnumerable<IIncoming
     protected virtual ILogger<IPacketManager> Logger { get; init; } = logger;
 
     /// <summary>
-    /// Gets the collection of registered incoming packet handlers.
-    /// Used for routing incoming packets to their appropriate handlers.
+    /// Gets the dictionary of registered incoming packet handlers keyed by packet key.
+    /// Used for O(1) routing of incoming packets to their appropriate handlers.
     /// </summary>
-    protected virtual List<IIncomingPacket> IncomingPackets { get; init; } = [.. incomingPackets];
+    protected virtual Dictionary<string, IIncomingPacket> IncomingPackets { get; init; } = BuildPacketDictionary(incomingPackets);
 
     /// <summary>
-    /// Gets the collection of registered outgoing packet composers.
-    /// Used for serializing outgoing packets for transmission.
+    /// Gets the dictionary of registered outgoing packet composers keyed by packet key.
+    /// Used for O(1) serialization of outgoing packets for transmission.
     /// </summary>
-    protected virtual List<IOutgoingPacket> OutgoingPackets { get; init; } = [.. outgoingPackets];
+    protected virtual Dictionary<string, IOutgoingPacket> OutgoingPackets { get; init; } = BuildPacketDictionary(outgoingPackets);
 
     /// <summary>
     /// Handles an incoming packet from a connected network peer.
@@ -45,11 +45,15 @@ public class PacketManager(ILogger<IPacketManager> logger, IEnumerable<IIncoming
         // Read packet metadata first to identify the packet type.
         string packetKey = reader.GetString();
 
-        // Attempt to find the appropriate packet handler for this packet type.
-        IIncomingPacket? incomingPacket = this.IncomingPackets.FirstOrDefault(x => x.PacketKey == packetKey);
-
-        // Process the packet with the found handler, or silently ignore if no handler exists.
-        incomingPacket?.ReadPacket(peer, reader);
+        // Attempt to find the appropriate packet handler for this packet type using O(1) dictionary lookup.
+        if (this.IncomingPackets.TryGetValue(packetKey, out IIncomingPacket? incomingPacket))
+        {
+            incomingPacket.ReadPacket(peer, reader);
+        }
+        else
+        {
+            this.Logger.LogWarning("Received packet with unknown key '{PacketKey}' from {Address}", packetKey, peer.Address.ToString());
+        }
     }
 
     /// <summary>
@@ -79,12 +83,63 @@ public class PacketManager(ILogger<IPacketManager> logger, IEnumerable<IIncoming
         // Write packet metadata (the key) first for proper routing on the receiving end.
         writer.Put(packetKey);
 
-        // Find the appropriate packet composer for this packet type.
-        IOutgoingPacket? packet = this.OutgoingPackets.FirstOrDefault(x => x.PacketKey == packetKey);
-
-        // Compose the packet using the found composer, or throw an exception if no composer exists.
-        return packet != null
+        // Find the appropriate packet composer for this packet type using O(1) dictionary lookup.
+        return this.OutgoingPackets.TryGetValue(packetKey, out IOutgoingPacket? packet)
             ? packet.ComposePacket(writer, payload)
-            : throw new InvalidOperationException("Unable to compose packet with key: " + packetKey);
+            : throw new InvalidOperationException($"Unable to compose packet with key: {packetKey}");
+    }
+
+    /// <summary>
+    /// Builds a dictionary mapping packet keys to incoming packet instances for O(1) lookup performance.
+    /// Also validates for duplicate packet keys and throws if found.
+    /// </summary>
+    /// <param name="packets">The enumerable of incoming packet instances to index.</param>
+    /// <returns>A dictionary mapping packet keys to incoming packet instances.</returns>
+    private static Dictionary<string, IIncomingPacket> BuildPacketDictionary(IEnumerable<IIncomingPacket> packets)
+    {
+        Dictionary<string, IIncomingPacket> dictionary = [];
+        HashSet<string> seenKeys = [];
+
+        foreach (IIncomingPacket packet in packets)
+        {
+            string key = packet.PacketKey;
+
+            if (seenKeys.Contains(key))
+            {
+                throw new InvalidOperationException($"Duplicate incoming packet key detected: '{key}'. Multiple packets cannot share the same key.");
+            }
+
+            _ = seenKeys.Add(key);
+            dictionary[key] = packet;
+        }
+
+        return dictionary;
+    }
+
+    /// <summary>
+    /// Builds a dictionary mapping packet keys to outgoing packet instances for O(1) lookup performance.
+    /// Also validates for duplicate packet keys and throws if found.
+    /// </summary>
+    /// <param name="packets">The enumerable of outgoing packet instances to index.</param>
+    /// <returns>A dictionary mapping packet keys to outgoing packet instances.</returns>
+    private static Dictionary<string, IOutgoingPacket> BuildPacketDictionary(IEnumerable<IOutgoingPacket> packets)
+    {
+        Dictionary<string, IOutgoingPacket> dictionary = [];
+        HashSet<string> seenKeys = [];
+
+        foreach (IOutgoingPacket packet in packets)
+        {
+            string key = packet.PacketKey;
+
+            if (seenKeys.Contains(key))
+            {
+                throw new InvalidOperationException($"Duplicate outgoing packet key detected: '{key}'. Multiple packets cannot share the same key.");
+            }
+
+            _ = seenKeys.Add(key);
+            dictionary[key] = packet;
+        }
+
+        return dictionary;
     }
 }
