@@ -18,12 +18,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\ApplicationLoggingExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\ApplicationServiceExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IApplication.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Injectors\IUpdateInjectors.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Injectors\IApplicationInjectors.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Injectors\IInjector.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Phases\BootstrapPhase.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Phases\ApplicationPhase.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Phases\GameLoopPhase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Phases\IBootstrapPhases.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Phases\IApplicationPhases.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Phases\IGameLoopPhases.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Phases\IPhaseParticipant.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\FileProviderService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\PhaseService.cs" />
