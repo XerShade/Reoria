@@ -16,7 +16,7 @@ namespace Reoria.Engine.Network.Sockets;
 /// It handles common functionality like event management, configuration, and basic
 /// networking operations. Derived classes should implement specific client or server behavior.
 /// </remarks>
-public abstract class Socket : IDisposable
+public abstract class Socket : INetworkSocket
 {
     /// <summary>
     /// Gets the logger instance for this socket.
@@ -271,5 +271,37 @@ public abstract class Socket : IDisposable
         this.Logger.LogError("Unable to connect to host {Host}:{Port}, this socket does not have outgoing connectivity support.", address, port);
 
         return false;
+    }
+
+    /// <summary>
+    /// Sends a packet of the specified type to the given network peer with the default delivery method.
+    /// Uses the packet type's PacketKey property to identify the packet type.
+    /// </summary>
+    /// <typeparam name="TPacket">The type of packet to send (must implement IOutgoingPacket).</typeparam>
+    /// <param name="peer">The network peer to send the packet to.</param>
+    /// <param name="payload">The data payload to include in the packet.</param>
+    public virtual void SendPacket<TPacket>(NetPeer peer, params object[] payload) where TPacket : Reoria.Engine.Network.Packets.Interfaces.IOutgoingPacket
+    {
+        this.SendPacket<TPacket>(peer, DeliveryMethod.ReliableOrdered, payload);
+    }
+
+    /// <summary>
+    /// Sends a packet of the specified type to the given network peer with a specific delivery method.
+    /// Uses the packet type's PacketKey property to identify the packet type.
+    /// </summary>
+    /// <typeparam name="TPacket">The type of packet to send (must implement IOutgoingPacket).</typeparam>
+    /// <param name="peer">The network peer to send the packet to.</param>
+    /// <param name="deliveryMethod">The delivery method to use for this packet.</param>
+    /// <param name="payload">The data payload to include in the packet.</param>
+    public virtual void SendPacket<TPacket>(NetPeer peer, DeliveryMethod deliveryMethod, params object[] payload) where TPacket : Reoria.Engine.Network.Packets.Interfaces.IOutgoingPacket
+    {
+        // Get the PacketKey for the packet type using the PacketManager
+        string packetKey = this.PacketManager.GetPacketKey<TPacket>();
+
+        // Compose the packet using the PacketManager
+        NetDataWriter writer = this.PacketManager.ComposeOutgoingPacket(packetKey, payload);
+
+        // Send the composed packet to the specified peer
+        peer.Send(writer, deliveryMethod);
     }
 }

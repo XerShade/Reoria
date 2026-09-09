@@ -38,4 +38,12 @@ public interface IPacketManager
     /// <param name="reader">The packet reader containing the packet data.</param>
     /// <param name="messageType">The type of unconnected message received.</param>
     void HandleIncomingPacket(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType);
+
+    /// <summary>
+    /// Gets the PacketKey for a specific packet type using the registered outgoing packet instances.
+    /// </summary>
+    /// <typeparam name="TPacket">The type of packet to get the key for (must implement IOutgoingPacket).</typeparam>
+    /// <returns>The PacketKey value for the specified packet type.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when no packet is found for the specified type.</exception>
+    string GetPacketKey<TPacket>() where TPacket : Reoria.Engine.Network.Packets.Interfaces.IOutgoingPacket;
 }

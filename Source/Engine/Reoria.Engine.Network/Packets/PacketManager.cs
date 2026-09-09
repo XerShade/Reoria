@@ -90,6 +90,26 @@ public class PacketManager(ILogger<IPacketManager> logger, IEnumerable<IIncoming
     }
 
     /// <summary>
+    /// Gets the PacketKey for a specific packet type using the registered outgoing packet instances.
+    /// </summary>
+    /// <typeparam name="TPacket">The type of packet to get the key for (must implement IOutgoingPacket).</typeparam>
+    /// <returns>The PacketKey value for the specified packet type.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when no packet is found for the specified type.</exception>
+    public virtual string GetPacketKey<TPacket>() where TPacket : IOutgoingPacket
+    {
+        // Find the registered packet instance of the specified type
+        foreach (var packet in this.OutgoingPackets.Values)
+        {
+            if (packet is TPacket typedPacket)
+            {
+                return typedPacket.PacketKey;
+            }
+        }
+
+        throw new InvalidOperationException($"No outgoing packet registered for type {typeof(TPacket).Name}");
+    }
+
+    /// <summary>
     /// Builds a dictionary mapping packet keys to incoming packet instances for O(1) lookup performance.
     /// Also validates for duplicate packet keys and throws if found.
     /// </summary>
