@@ -14,6 +14,7 @@ using Reoria.Engine.Application.Interfaces;
 using Reoria.Engine.Application.Phases;
 using Reoria.Engine.Application.Services;
 using Reoria.Engine.Application.Services.Interfaces;
+using System.Diagnostics;
 using ButtonState = Microsoft.Xna.Framework.Input.ButtonState;
 using GameBase = Microsoft.Xna.Framework.Game;
 using Keys = Microsoft.Xna.Framework.Input.Keys;
@@ -22,6 +23,7 @@ namespace Reoria.Client.Core.Application;
 
 /// <summary>
 /// Defines the client application and its functionality.
+/// Implements a game loop similar to Unity's: FixedUpdate → Update → LateUpdate → Render
 /// </summary>
 public class ClientApplication : GameBase, IApplication, IDisposable
 {
@@ -49,17 +51,17 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// </summary>
     protected TimeSpan Accumulator { get; set; }
     /// <summary>
-    /// Gets the fixed step for the fixed update loop.
+    /// Gets the fixed step for the fixed update loop (60 FPS default).
     /// </summary>
     protected TimeSpan FixedStep { get; init; } = TimeSpan.FromSeconds(1.0 / 60.0);
     /// <summary>
-    /// Gets the maximum steps for the fixed update loop allowed per update cycle.
+    /// Gets the maximum fixed steps allowed per update cycle to prevent spiral of death.
     /// </summary>
-    protected int MaxSteps { get; init; } = 5;
+    protected int MaxFixedSteps { get; init; } = 5;
     /// <summary>
-    /// Gets the current number of steps for the fixed update loop.
+    /// Gets the current number of fixed steps processed.
     /// </summary>
-    protected int Steps { get; set; } = 0;
+    protected int CurrentFixedSteps { get; set; }
     /// <summary>
     /// Gets the target frame rate for frame rate limiting.
     /// </summary>
@@ -88,6 +90,11 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// Gets a value indicating whether this instance has been disposed.
     /// </summary>
     protected bool IsDisposed { get; private set; }
+
+    /// <summary>
+    /// Tracks whether we're in the fixed update phase.
+    /// </summary>
+    protected bool IsFixedUpdate { get; set; }
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     /// <summary>
@@ -126,12 +133,12 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         // Configure the game window.
         this.IsMouseVisible = true;
     }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor.
 
     /// <inheritdoc />
     protected override void Initialize()
     {
-        // Execute the game loop phase participants.
+        // Execute the game loop phase participants for graphics initialization.
         this.PhaseService.ExecutePhase<IGameInitializeGraphics>(
             phase => phase.OnInitializeGraphics(this.ContainerBuilder, this.GraphicsDeviceManager, this.GraphicsDevice));
 
@@ -142,7 +149,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// <inheritdoc />
     protected override void LoadContent()
     {
-        // Execute the game loop phase participants.
+        // Execute the game loop phase participants for content loading.
         this.PhaseService.ExecutePhase<IGameLoadContent>(
             phase => phase.OnLoadContent(this.ContainerBuilder, this.Content));
 
@@ -187,7 +194,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         // Get the server network socket.
         this.Socket = this.Provider.GetRequiredService<ClientSocket>();
 
-        // Execute the game loop phase participants.
+        // Execute the game loop phase participants for game initialization.
         this.PhaseService.ExecutePhase<IGameInitialize>(
             phase => phase.OnInitializeGame(this));
 
@@ -195,11 +202,9 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         this.PhaseService.ExecutePhase<IApplicationStart>(phase => phase.OnApplicationStart());
     }
 
-    /// <summary>
-    /// Initializes the dependcy injection provider and initializes the game loop.
-    /// </summary>
+    /// <inheritdoc />
     protected virtual void InitializeProvider()
-    {        
+    {
         // Get the service provider.
         this.Provider = this.GetServiceProvider();
 
@@ -212,78 +217,112 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// <inheritdoc />
     protected override void Update(GameTime gameTime)
     {
-        // Update the network socket first, as it may have data to process that affects the game state.
+        // 1. Process network socket updates first (as it may have data to process)
         this.Socket.Update();
 
-        // Update user input second, as lagging input may affect the game state and player happiness.
-        this.PhaseService.ExecutePhase<IGameInput>(phase => phase.OnHandleInput(gameTime, Keyboard.GetState(), Mouse.GetState()));
+        // 2. Handle user input
+        this.PhaseService.ExecutePhase<IGameInput>(
+            phase => phase.OnHandleInput(gameTime, Keyboard.GetState(), Mouse.GetState()));
 
-        // Apply frame rate limiting
+        // 3. Apply frame rate limiting
         this.ApplyFrameRateLimiting(gameTime);
 
-        // Calculate smoothed delta time
+        // 4. Calculate smoothed delta time
         this.CalculateSmoothedDeltaTime(gameTime);
 
+        // 5. Check for exit conditions
 #if !IOS
-        // Check to see if the back button or the escape key was pressed.
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
         {
-            // Exit the application.
             this.Exit();
         }
 #endif
-
-        // Check to see if the start button or the enter key was pressed.
         if (GamePad.GetState(PlayerIndex.One).Buttons.Start == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Enter))
         {
-            // Check to see if the socket is running.
             if (!this.Socket.IsRunning)
             {
-                // Start the socket.
                 this.Socket.Start();
-
-                // Attempt to connect to the server using async method.
                 _ = this.ConnectToServerAsync();
             }
         }
 
-        // Check to see if the big button or the back key was pressed.
         if (GamePad.GetState(PlayerIndex.One).Buttons.BigButton == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Back))
         {
-            // Check to see if the socket is running.
             if (this.Socket.IsRunning)
             {
-                // Stop the socket.
                 this.Socket.Stop();
             }
         }
 
-        // Process a single tick through the game loop with smoothed delta time.
-        GameTime smoothedGameTime = new(gameTime.TotalGameTime, this.SmoothedDeltaTime);
+        // 6. Process variable update (runs once per frame)
+        this.HandleVariableUpdate(gameTime);
 
-        // Process the game loop.
-        this.HandleVariableUpdate(smoothedGameTime);
+        // 7. Process fixed updates (runs at fixed intervals)
+        this.HandleFixedUpdates(gameTime);
 
-        // Update the previous game time for next frame.
+        // 8. Late update - post-processing after all game logic
+        this.HandleLateUpdate(gameTime);
+
+        // 9. Update previous game time
         this.PreviousTotalGameTime = gameTime.TotalGameTime;
 
-        // Call the base method.
+        // Call the base method (this triggers Draw)
         base.Update(gameTime);
     }
 
     /// <summary>
-    /// Handles variable updates for the game loop.
+    /// Handles variable updates that run once per frame.
     /// </summary>
     /// <param name="gameTime">The current game time.</param>
     protected virtual void HandleVariableUpdate(GameTime gameTime)
         => this.PhaseService.ExecutePhase<IGameVariableUpdate>(phase => phase.OnVariableUpdate(gameTime));
 
     /// <summary>
-    /// Handles fixed updates for the game loop.
+    /// Handles fixed updates that run at a fixed interval (e.g., physics).
     /// </summary>
     /// <param name="gameTime">The current game time.</param>
+    protected virtual void HandleFixedUpdates(GameTime gameTime)
+    {
+        // Accumulate time since last fixed update
+        this.Accumulator += gameTime.ElapsedGameTime;
+
+        // Process fixed steps while accumulator exceeds the fixed step
+        while (this.Accumulator >= this.FixedStep && this.CurrentFixedSteps < this.MaxFixedSteps)
+        {
+            // Create a consistent game time for the fixed step
+            GameTime fixedGameTime = new(
+                this.Accumulator,
+                this.FixedStep);
+
+            // Process the fixed update
+            this.HandleFixedUpdate(fixedGameTime);
+
+            // Subtract the fixed step from the accumulator
+            this.Accumulator -= this.FixedStep;
+            this.CurrentFixedSteps++;
+        }
+
+        // Reset fixed steps counter if we've processed the maximum
+        if (this.CurrentFixedSteps >= this.MaxFixedSteps)
+        {
+            this.Accumulator = TimeSpan.Zero;
+            this.CurrentFixedSteps = 0;
+        }
+    }
+
+    /// <summary>
+    /// Handles a single fixed update step.
+    /// </summary>
+    /// <param name="gameTime">The game time for the fixed step.</param>
     protected virtual void HandleFixedUpdate(GameTime gameTime)
         => this.PhaseService.ExecutePhase<IGameFixedUpdate>(phase => phase.OnFixedUpdate(gameTime));
+
+    /// <summary>
+    /// Handles late update - runs after all Update logic, useful for camera follow, UI updates, etc.
+    /// </summary>
+    /// <param name="gameTime">The current game time.</param>
+    protected virtual void HandleLateUpdate(GameTime gameTime)
+        => this.PhaseService.ExecutePhase<IGameLateUpdate>(phase => phase.OnLateUpdate(gameTime));
 
     /// <summary>
     /// Applies frame rate limiting to prevent excessive CPU usage.
@@ -298,7 +337,17 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         if (currentFrameTime < this.MinFrameTime)
         {
             TimeSpan waitTime = this.MinFrameTime - currentFrameTime;
-            System.Threading.Thread.Sleep(waitTime);
+            // Use busy wait for shorter durations, sleep for longer
+            if (waitTime > TimeSpan.FromMilliseconds(1))
+            {
+                System.Threading.Thread.Sleep(waitTime);
+            }
+            else
+            {
+                // Brief busy spin for very short waits
+                Stopwatch stopwatch = Stopwatch.StartNew();
+                while (stopwatch.Elapsed < waitTime) { }
+            }
         }
     }
 
@@ -320,7 +369,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
 
         // Apply exponential moving average smoothing
         double smoothedTicks = (this.DeltaTimeSmoothingFactor * this.SmoothedDeltaTime.Ticks) +
-                              ((1.0 - this.DeltaTimeSmoothingFactor) * currentDeltaTime.Ticks);
+                               ((1.0 - this.DeltaTimeSmoothingFactor) * currentDeltaTime.Ticks);
 
         this.SmoothedDeltaTime = TimeSpan.FromTicks((long)smoothedTicks);
     }
@@ -363,6 +412,7 @@ public class ClientApplication : GameBase, IApplication, IDisposable
 
     /// <summary>
     /// Handles all rendering operations for the client.
+    /// Follows Unity's render pipeline: PreRender → Render → PostRender
     /// </summary>
     /// <param name="gameTime">The current game time.</param>
     protected virtual void HandleRendering(GameTime gameTime)
@@ -374,13 +424,21 @@ public class ClientApplication : GameBase, IApplication, IDisposable
 
         try
         {
-            // Access the sprite batch, throwing an exception if it is null, I will make a better function later.
+            // Access the sprite batch, throwing an exception if it is null
             SpriteBatch spriteBatch = this.Provider.GetRequiredService<SpriteBatch>();
 
-            // Execute all rendering phase participants
-            this.PhaseService.ExecutePhase<IGamePreRender>(phase => phase.OnPreRender(gameTime, this.GraphicsDevice, spriteBatch));
-            this.PhaseService.ExecutePhase<IGameRender>(phase => phase.OnRender(gameTime, this.GraphicsDevice, spriteBatch));
-            this.PhaseService.ExecutePhase<IGamePostRender>(phase => phase.OnPostRender(gameTime, this.GraphicsDevice, spriteBatch));
+            // Execute rendering phase participants in Unity's order:
+            // 1. OnPreRender - setup, culling, etc.
+            // 2. OnRender - main rendering
+            // 3. OnPostRender - effects, overlays, etc.
+            this.PhaseService.ExecutePhase<IGamePreRender>(
+                phase => phase.OnPreRender(gameTime, this.GraphicsDevice, spriteBatch));
+
+            this.PhaseService.ExecutePhase<IGameRender>(
+                phase => phase.OnRender(gameTime, this.GraphicsDevice, spriteBatch));
+
+            this.PhaseService.ExecutePhase<IGamePostRender>(
+                phase => phase.OnPostRender(gameTime, this.GraphicsDevice, spriteBatch));
         }
         catch (Exception ex)
         {

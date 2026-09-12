@@ -1,4 +1,4 @@
-﻿using Autofac;
+using Autofac;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -17,6 +17,7 @@ namespace Reoria.Server.Core.Application;
 
 /// <summary>
 /// Defines the server application and its functionality.
+/// Implements a game loop similar to Unity's: FixedUpdate → Update → LateUpdate → Render
 /// </summary>
 public class ServerApplication : IApplication
 {
@@ -36,6 +37,39 @@ public class ServerApplication : IApplication
     public virtual IServiceProvider Provider { get; init; }
 
     /// <summary>
+    /// Gets a value indicating whether the application is running.
+    /// </summary>
+    protected virtual bool Running { get; set; } = true;
+    /// <summary>
+    /// Gets the stopwatch to measure the application time.
+    /// </summary>
+    protected virtual Stopwatch Timer { get; init; } = new();
+    /// <summary>
+    /// Gets the previous time for the update loop.
+    /// </summary>
+    protected virtual TimeSpan PreviousTime { get; set; }
+    /// <summary>
+    /// Gets the accumulator for the fixed update loop.
+    /// </summary>
+    protected TimeSpan Accumulator { get; set; }
+    /// <summary>
+    /// Gets the fixed step for the fixed update loop (30 FPS default for physics).
+    /// </summary>
+    protected TimeSpan FixedStep { get; init; } = TimeSpan.FromSeconds(1.0 / 30.0);
+    /// <summary>
+    /// Gets the maximum fixed steps allowed per update cycle to prevent spiral of death.
+    /// </summary>
+    protected int MaxFixedSteps { get; init; } = 5;
+    /// <summary>
+    /// Gets the current number of fixed steps processed.
+    /// </summary>
+    protected int CurrentFixedSteps { get; set; }
+    /// <summary>
+    /// Gets an instance of <see cref="ServerSocket"/> to manage the networking functionality.
+    /// </summary>
+    protected ServerSocket Socket { get; set; }
+
+    /// <summary>
     /// Constructs a new instance of <see cref="ServerApplication"/>.
     /// </summary>
     /// <param name="logger">A logger instance to log messages to.</param>
@@ -51,9 +85,6 @@ public class ServerApplication : IApplication
 
         // Store the phase service.
         this.PhaseService = new PhaseService().AddAssemblies(AppDomain.CurrentDomain.GetAssemblies());
-
-        // Start a new stopwatch to measure the application time.
-        Stopwatch stopwatch = Stopwatch.StartNew();
 
         // Get the configuration instance.
         this.Configuration = this.GetConfiguration(context.Args);
@@ -74,42 +105,8 @@ public class ServerApplication : IApplication
         // Get the server network socket.
         this.Socket = this.Provider.GetRequiredService<ServerSocket>();
 
-        // Stop the stopwatch to measure the application time.
-        stopwatch.Stop();
+        this.Logger.LogInformation("Server application initialized successfully.");
     }
-
-    /// <summary>
-    /// Gets a value indicating whether the application is running.
-    /// </summary>
-    protected virtual bool Running { get; set; } = true;
-    /// <summary>
-    /// Gets the stopwatch to measure the application time.
-    /// </summary>
-    protected virtual Stopwatch Timer { get; init; } = new();
-    /// <summary>
-    /// Gets the previous time for the update loop.
-    /// </summary>
-    protected virtual TimeSpan PreviousTime { get; set; }
-    /// <summary>
-    /// Gets the accumulator for the fixed update loop.
-    /// </summary>
-    protected TimeSpan Accumulator { get; set; }
-    /// <summary>
-    /// Gets the fixed step for the fixed update loop.
-    /// </summary>
-    protected TimeSpan FixedStep { get; init; } = TimeSpan.FromSeconds(1.0 / 30.0);
-    /// <summary>
-    /// Gets the maximum steps for the fixed update loop allowed per update cycle.
-    /// </summary>
-    protected int MaxSteps { get; init; } = 5;
-    /// <summary>
-    /// Gets the current number of steps for the fixed update loop.
-    /// </summary>
-    protected int Steps { get; set; } = 0;
-    /// <summary>
-    /// Gets an instance of <see cref="ServerSocket"/> to manage the networking functionality.
-    /// </summary>
-    protected ServerSocket Socket { get; set; }
 
     /// <inheritdoc />
     public virtual void Run()
@@ -136,14 +133,20 @@ public class ServerApplication : IApplication
                 // Create game time for the current update cycle.
                 GameTime gameTime = new(now, frameTime);
 
-                // Update the network socket first, as it may have data to process that affects the game state.
+                // 1. Update the network socket first, as it may have data to process that affects the game state.
                 this.Socket.Update();
 
-                // Update the game loop.
+                // 2. Handle variable updates (runs once per frame)
                 this.HandleVariableUpdate(gameTime);
 
-                // Pause thread execution to reduce CPU usage.
-                Thread.Sleep(1);
+                // 3. Handle fixed updates (runs at fixed intervals - physics, game logic)
+                this.HandleFixedUpdates(gameTime);
+
+                // 4. Late update - post-processing after all game logic
+                this.HandleLateUpdate(gameTime);
+
+                // 5. Frame timing control - prevent CPU spinning
+                this.ControlFrameTiming(frameTime);
             }
         }
         catch (Exception ex)
@@ -200,18 +203,86 @@ public class ServerApplication : IApplication
     }
 
     /// <summary>
-    /// Handles variable updates for the game loop.
+    /// Handles variable updates that run once per frame.
     /// </summary>
     /// <param name="gameTime">The current game time.</param>
     protected virtual void HandleVariableUpdate(GameTime gameTime)
         => this.PhaseService.ExecutePhase<IGameVariableUpdate>(phase => phase.OnVariableUpdate(gameTime));
 
     /// <summary>
-    /// Handles fixed updates for the game loop.
+    /// Handles fixed updates that run at a fixed interval (e.g., physics, game logic).
     /// </summary>
     /// <param name="gameTime">The current game time.</param>
+    protected virtual void HandleFixedUpdates(GameTime gameTime)
+    {
+        // Accumulate time since last fixed update
+        this.Accumulator += gameTime.ElapsedGameTime;
+
+        // Process fixed steps while accumulator exceeds the fixed step
+        while (this.Accumulator >= this.FixedStep && this.CurrentFixedSteps < this.MaxFixedSteps)
+        {
+            // Create a consistent game time for the fixed step
+            GameTime fixedGameTime = new(
+                this.Accumulator,
+                this.FixedStep);
+
+            // Process the fixed update
+            this.HandleFixedUpdate(fixedGameTime);
+
+            // Subtract the fixed step from the accumulator
+            this.Accumulator -= this.FixedStep;
+            this.CurrentFixedSteps++;
+        }
+
+        // Reset fixed steps counter if we've processed the maximum
+        if (this.CurrentFixedSteps >= this.MaxFixedSteps)
+        {
+            this.Accumulator = TimeSpan.Zero;
+            this.CurrentFixedSteps = 0;
+        }
+    }
+
+    /// <summary>
+    /// Handles a single fixed update step.
+    /// </summary>
+    /// <param name="gameTime">The game time for the fixed step.</param>
     protected virtual void HandleFixedUpdate(GameTime gameTime)
         => this.PhaseService.ExecutePhase<IGameFixedUpdate>(phase => phase.OnFixedUpdate(gameTime));
+
+    /// <summary>
+    /// Handles late update - runs after all Update logic, useful for post-processing, cleanup, etc.
+    /// </summary>
+    /// <param name="gameTime">The current game time.</param>
+    protected virtual void HandleLateUpdate(GameTime gameTime)
+        => this.PhaseService.ExecutePhase<IGameLateUpdate>(phase => phase.OnLateUpdate(gameTime));
+
+    /// <summary>
+    /// Controls frame timing to prevent excessive CPU usage while maintaining smooth gameplay.
+    /// Uses a more sophisticated approach than simple Thread.Sleep.
+    /// </summary>
+    /// <param name="frameTime">The time taken for the current frame.</param>
+    protected virtual void ControlFrameTiming(TimeSpan frameTime)
+    {
+        // Calculate sleep time based on target frame rate (30 FPS = ~33ms per frame)
+        TimeSpan targetFrameTime = TimeSpan.FromTicks(this.FixedStep.Ticks);
+        TimeSpan remainingTime = targetFrameTime - frameTime;
+
+        // If we have remaining time, sleep briefly to reduce CPU usage
+        if (remainingTime > TimeSpan.Zero)
+        {
+            // Only sleep if we have enough time to make it worthwhile
+            if (remainingTime > TimeSpan.FromMilliseconds(1))
+            {
+                System.Threading.Thread.Sleep(remainingTime);
+            }
+            else
+            {
+                // For very short remaining times, use a busy spin wait
+                Stopwatch stopwatch = Stopwatch.StartNew();
+                while (stopwatch.Elapsed < remainingTime) { }
+            }
+        }
+    }
 
     /// <inheritdoc />
     public virtual void Exit()

@@ -107,6 +107,22 @@ public interface IGameFixedUpdate : IGameLoopPhase
 }
 
 /// <summary>
+/// Game loop phase for late update operations.
+/// Runs after all Update logic, useful for post-processing, camera following, UI updates, etc.
+/// Runs every frame during late update - full DI support via constructor injection.
+/// </summary>
+public interface IGameLateUpdate : IGameLoopPhase
+{
+    /// <summary>
+    /// Called every frame after all Update logic has run.
+    /// Useful for post-processing, camera following, UI updates, and other late-stage processing.
+    /// Full DI support - constructor dependencies are resolved from the container.
+    /// </summary>
+    /// <param name="gameTime">Snapshot of the game timing state.</param>
+    void OnLateUpdate(GameTime gameTime);
+}
+
+/// <summary>
 /// Game loop phase for pre-rendering operations.
 /// Runs every frame before main rendering - full DI support via constructor injection.
 /// </summary>
