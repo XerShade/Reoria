@@ -1,4 +1,4 @@
-﻿using Autofac;
+using Autofac;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Reoria.Engine.Application.Enumerations;
@@ -46,6 +46,12 @@ public class GraphicsDeviceService : IGraphicsDeviceService, IGameInitializeGrap
         _ = services.RegisterInstance<GraphicsDevice>(graphicsDevice)
             .Keyed<GraphicsDevice>("GraphicsDevice")
             .As<GraphicsDevice>()
+            .SingleInstance();
+
+        // Register the graphics device service itself with its interfaces (including IGamePreRender)
+        _ = services.RegisterInstance<GraphicsDeviceService>(this)
+            .As<IGraphicsDeviceService>()
+            .AsImplementedInterfaces()
             .SingleInstance();
 
         // Store the graphics device and graphics device manager.

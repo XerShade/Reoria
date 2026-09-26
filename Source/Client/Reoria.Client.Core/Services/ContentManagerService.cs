@@ -1,4 +1,4 @@
-﻿using Autofac;
+using Autofac;
 using Microsoft.Xna.Framework.Content;
 using Reoria.Client.Core.Services.Interfaces;
 using Reoria.Engine.Application.Enumerations;
@@ -38,6 +38,12 @@ public class ContentManagerService : IContentManagerService, IGameLoadContent
         _ = services.RegisterInstance<ContentManager>(contentManager)
             .Keyed<ContentManager>("ContentManager")
             .As<ContentManager>()
+            .SingleInstance();
+
+        // Register the content manager service itself with its interfaces
+        _ = services.RegisterInstance<ContentManagerService>(this)
+            .As<IContentManagerService>()
+            .AsImplementedInterfaces()
             .SingleInstance();
     }
 }

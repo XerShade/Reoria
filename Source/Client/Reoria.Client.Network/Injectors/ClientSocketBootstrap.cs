@@ -1,4 +1,4 @@
-﻿using Autofac;
+using Autofac;
 using Reoria.Client.Network.Sockets;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Phases;
@@ -54,5 +54,11 @@ public class ClientSocketInjector : IBootstrapServices
     /// </summary>
     /// <param name="services">The container builder to register services with.</param>
     public void OnRegisterServices(ContainerBuilder services)
-        => services.RegisterType<ClientSocket>().As<ClientSocket>().As<Socket>().SingleInstance();
+    {
+        _ = services.RegisterType<ClientSocket>().As<ClientSocket>().As<Socket>().SingleInstance();
+        _ = services.RegisterType<Reoria.Client.Network.Services.ClientNetworkService>()
+            .AsSelf()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+    }
 }

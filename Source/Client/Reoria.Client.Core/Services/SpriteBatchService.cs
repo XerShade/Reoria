@@ -1,4 +1,4 @@
-﻿using Autofac;
+using Autofac;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Reoria.Client.Core.Services.Interfaces;
@@ -40,6 +40,12 @@ public class SpriteBatchService : ISpriteBatchService, IGamePreRender, IGamePost
         _ = services.RegisterInstance<SpriteBatch>(this.SpriteBatch ?? throw new ArgumentNullException("SpriteBatch is null."))
             .Keyed<SpriteBatch>("SpriteBatch")
             .As<SpriteBatch>()
+            .SingleInstance();
+
+        // Register the sprite batch service itself with its interfaces (including IGamePreRender, IGamePostRender)
+        _ = services.RegisterInstance<SpriteBatchService>(this)
+            .As<ISpriteBatchService>()
+            .AsImplementedInterfaces()
             .SingleInstance();
     }
 

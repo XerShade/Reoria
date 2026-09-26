@@ -6,7 +6,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Reoria.Client.Core.Services;
-using Reoria.Client.Network.Sockets;
 using Reoria.Engine.Application;
 using Reoria.Engine.Application.Enumerations;
 using Reoria.Engine.Application.Extensions;
@@ -15,9 +14,7 @@ using Reoria.Engine.Application.Phases;
 using Reoria.Engine.Application.Services;
 using Reoria.Engine.Application.Services.Interfaces;
 using System.Diagnostics;
-using ButtonState = Microsoft.Xna.Framework.Input.ButtonState;
 using GameBase = Microsoft.Xna.Framework.Game;
-using Keys = Microsoft.Xna.Framework.Input.Keys;
 
 namespace Reoria.Client.Core.Application;
 
@@ -83,10 +80,6 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// </summary>
     protected float DeltaTimeSmoothingFactor { get; init; } = 0.9f;
     /// <summary>
-    /// Gets an instance of <see cref="ClientSocket"/> to manage the networking functionality.
-    /// </summary>
-    protected ClientSocket Socket { get; set; }
-    /// <summary>
     /// Gets a value indicating whether this instance has been disposed.
     /// </summary>
     protected bool IsDisposed { get; private set; }
@@ -111,8 +104,10 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         this.Logger = logger;
         this.Logger.LogInformation("Initializing client application...");
 
-        // Store the phase service.
-        this.PhaseService = new PhaseService().AddAssemblies(AppDomain.CurrentDomain.GetAssemblies());
+        // Store the phase service and configure platform filtering.
+        this.PhaseService = new PhaseService()
+            .AddAssemblies(AppDomain.CurrentDomain.GetAssemblies())
+            .SetPlatform(this.Platform);
 
         // Get the configuration instance.
         this.Configuration = this.GetConfiguration(context.Args);
@@ -183,16 +178,8 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// </summary>
     protected virtual void FinalizeInitialization()
     {
-        // Temporary: Add services to the container.
-        _ = this.ContainerBuilder.RegisterType<GraphicsDeviceService>().AsImplementedInterfaces().SingleInstance();
-        _ = this.ContainerBuilder.RegisterType<ContentManagerService>().AsImplementedInterfaces().SingleInstance();
-        _ = this.ContainerBuilder.RegisterType<SpriteBatchService>().AsImplementedInterfaces().SingleInstance();
-
         // Initialize the dependency injection provider.
         this.InitializeProvider();
-
-        // Get the server network socket.
-        this.Socket = this.Provider.GetRequiredService<ClientSocket>();
 
         // Execute the game loop phase participants for game initialization.
         this.PhaseService.ExecutePhase<IGameInitialize>(
@@ -217,53 +204,26 @@ public class ClientApplication : GameBase, IApplication, IDisposable
     /// <inheritdoc />
     protected override void Update(GameTime gameTime)
     {
-        // 1. Process network socket updates first (as it may have data to process)
-        this.Socket.Update();
-
-        // 2. Handle user input
+        // 1. Handle user input
         this.PhaseService.ExecutePhase<IGameInput>(
             phase => phase.OnHandleInput(gameTime, Keyboard.GetState(), Mouse.GetState()));
 
-        // 3. Apply frame rate limiting
+        // 2. Apply frame rate limiting
         this.ApplyFrameRateLimiting(gameTime);
 
-        // 4. Calculate smoothed delta time
+        // 3. Calculate smoothed delta time
         this.CalculateSmoothedDeltaTime(gameTime);
 
-        // 5. Check for exit conditions
-#if !IOS
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-        {
-            this.Exit();
-        }
-#endif
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Start == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Enter))
-        {
-            if (!this.Socket.IsRunning)
-            {
-                this.Socket.Start();
-                _ = this.ConnectToServerAsync();
-            }
-        }
-
-        if (GamePad.GetState(PlayerIndex.One).Buttons.BigButton == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Back))
-        {
-            if (this.Socket.IsRunning)
-            {
-                this.Socket.Stop();
-            }
-        }
-
-        // 6. Process variable update (runs once per frame)
+        // 4. Process variable update (runs once per frame)
         this.HandleVariableUpdate(gameTime);
 
-        // 7. Process fixed updates (runs at fixed intervals)
+        // 5. Process fixed updates (runs at fixed intervals)
         this.HandleFixedUpdates(gameTime);
 
-        // 8. Late update - post-processing after all game logic
+        // 6. Late update - post-processing after all game logic
         this.HandleLateUpdate(gameTime);
 
-        // 9. Update previous game time
+        // 7. Update previous game time
         this.PreviousTotalGameTime = gameTime.TotalGameTime;
 
         // Call the base method (this triggers Draw)
@@ -374,32 +334,6 @@ public class ClientApplication : GameBase, IApplication, IDisposable
         this.SmoothedDeltaTime = TimeSpan.FromTicks((long)smoothedTicks);
     }
 
-    /// <summary>
-    /// Asynchronously connects to the server using configuration values.
-    /// </summary>
-    private async Task ConnectToServerAsync()
-    {
-        try
-        {
-            this.Logger.LogInformation("Attempting to connect to server...");
-
-            bool connected = await this.Socket.ConnectAsync();
-
-            if (connected)
-            {
-                this.Logger.LogInformation("Successfully connected to the server.");
-            }
-            else
-            {
-                this.Logger.LogError("Unable to connect to the server, check that it is running.");
-            }
-        }
-        catch (Exception ex)
-        {
-            this.Logger.LogError(ex, "Error occurred while connecting to the server.");
-        }
-    }
-
     /// <inheritdoc />
     protected override void Draw(GameTime gameTime)
     {
@@ -457,9 +391,6 @@ public class ClientApplication : GameBase, IApplication, IDisposable
             {
                 // Notify application phase participants that the application is stopping
                 this.PhaseService.ExecutePhase<IApplicationStop>(phase => phase.OnApplicationStop());
-
-                // Dispose the socket if it exists
-                this.Socket?.Dispose();
 
                 // Dispose the graphics device manager if it exists
                 this.GraphicsDeviceManager?.Dispose();
